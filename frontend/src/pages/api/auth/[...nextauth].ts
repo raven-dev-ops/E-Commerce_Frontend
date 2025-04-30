@@ -1,0 +1,35 @@
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { api } from '@/lib/api';
+
+export default NextAuth({
+  session: { strategy: 'jwt' },
+  providers: [
+    CredentialsProvider({
+      name: 'Email / Password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        const resp = await api.post('/auth/login/', credentials);
+        const user = resp.data.user;        // adjust to your /auth/login/ response
+        const token = resp.data.tokens.access;
+        if (user && token) {
+          return { ...user, token };
+        }
+        return null;
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.access = user.token;
+      return token;
+    },
+    async session({ session, token }) {
+      session.access = token.access;
+      return session;
+    },
+  },
+});
