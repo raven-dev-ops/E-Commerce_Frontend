@@ -1,0 +1,44 @@
+gitignore
+# Byte-code files
+*.pyc
+__pycache__/
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+eggs/
+*.egg-info
+.installed.cfg
+*.egg
+
+# Test and coverage
+.coverage
+.tox/
+.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.bak
+*.un~
+*.swo
+
+# Virtual environment
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Django specific
+*.log
+*.pot
+*.mo
+*.sqlite3
+media/
+static/

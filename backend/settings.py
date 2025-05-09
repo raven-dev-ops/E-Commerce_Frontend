@@ -30,13 +30,18 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'dj_rest_auth',
-
+]
+# Add django_mongoengine here so its apps are loaded correctly
+INSTALLED_APPS += [
+ 'django_mongoengine',
+]
+# Your apps
+INSTALLED_APPS += [
     # Your apps
     'products',
     'orders',
     'users',
 ]
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',           # must be first
     'django.middleware.security.SecurityMiddleware',
@@ -73,10 +78,16 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+ 'default': {
+ 'ENGINE': 'django_mongoengine', # Use the mongoengine engine
+ 'NAME': 'website',  # Use the database name configured for mongoengine
+ 'CLIENT': {
+ 'host': 'mongodb+srv://gptfleet:GyUeIj6ohuDZhnVi@website.ora74qp.mongodb.net/', # Your MONGODB_URI
+ 'authSource': 'admin', # Replace with your auth source if needed
+ 'retryWrites': True,
+ 'w': 'majority',
+            }
+ },
 }
 
 
