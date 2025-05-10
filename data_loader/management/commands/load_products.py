@@ -2,12 +2,17 @@
 
 from django.core.management.base import BaseCommand
 from products.models import Product
+import mongoengine
 import json
+
 
 class Command(BaseCommand):
     help = 'Loads initial product data into the database'
 
     def handle(self, *args, **options):
+        # Establish the MongoDB connection
+        mongoengine.connect('website', host='mongodb+srv://gptfleet:GyUeIj6ohuDZhnVi@website.ora74qp.mongodb.net/', authSource='admin', retryWrites=True, w='majority')
+
         product_list = [
           {
             "product_name": "Twiin Blend",

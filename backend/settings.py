@@ -1,5 +1,7 @@
 from pathlib import Path
 from datetime import timedelta
+import os
+import stripe
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -7,6 +9,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+stripe.api_key = STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
 
 SECRET_KEY = 'django-insecure-!7*3$gh=+1@9qh49!)tcrykeqon)&xpywhpye(j7+9jcz8x@wf'
 DEBUG = True
@@ -23,24 +29,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework.authtoken',
-
+    'django.contrib.sites', # For sites framework (optional but good practice)
+    'rest_framework.authtoken', # For DRF token authentication
     # 3rd-party
     'corsheaders',
-    'rest_framework',
-    'rest_framework_simplejwt',
+    'django_filters',
+    'rest_framework_simplejwt', # For JWT authentication
     'dj_rest_auth',
-]
-# Add django_mongoengine here so its apps are loaded correctly
-INSTALLED_APPS += [
- 'django_mongoengine',
 ]
 # Your apps
 INSTALLED_APPS += [
     # Your apps
     'products',
     'orders',
+    'rest_framework',
     'users',
+    'data_loader',
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',           # must be first
@@ -78,18 +82,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
- 'default': {
- 'ENGINE': 'django_mongoengine', # Use the mongoengine engine
- 'NAME': 'website',  # Use the database name configured for mongoengine
- 'CLIENT': {
- 'host': 'mongodb+srv://gptfleet:GyUeIj6ohuDZhnVi@website.ora74qp.mongodb.net/', # Your MONGODB_URI
- 'authSource': 'admin', # Replace with your auth source if needed
- 'retryWrites': True,
- 'w': 'majority',
-            }
- },
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
 }
-
+SITE_ID = 1
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
