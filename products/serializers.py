@@ -1,6 +1,6 @@
 from rest_framework_mongoengine.serializers import DocumentSerializer
 
-class ProductSerializer(serializers.DocumentSerializer):
+class ProductSerializer(DocumentSerializer):
 
     id = serializers.CharField(read_only=True) # Use id to match mongoengine's _id
     product_name = serializers.CharField(max_length=255)
