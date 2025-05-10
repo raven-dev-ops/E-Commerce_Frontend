@@ -60,7 +60,7 @@ class CartViewSet(ViewSet):
             is_active=True,
             valid_from__lte=now if 'valid_from' in Discount._fields else None,
             valid_to__gte=now if 'valid_to' in Discount._fields else None,
-        ).exclude('times_used__gte', models_usage_limit=F('usage_limit') if 'usage_limit' in Discount._fields else None) # Exclude if usage limit reached if field exists
+        ).exclude('times_used__gte', models_usage_limit=('usage_limit') if 'usage_limit' in Discount._fields else None)
 
         best_automatic_discount = None
         best_discount_amount = 0

@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'django.contrib.sites', # For sites framework (optional but good practice)
     'rest_framework.authtoken', # For DRF token authentication
     'rest_framework_mongoengine',
-    'djangorestframework-mongoengine',
     # 3rd-party
     'corsheaders',
     'django_filters',
