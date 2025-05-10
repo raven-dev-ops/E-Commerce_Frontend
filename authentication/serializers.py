@@ -11,12 +11,25 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('username', 'email', 'first_name', 'last_name')
+        model = User        
+        fields = ('username', 'email', 'first_name', 'last_name', 'date_joined', 'last_login', 'default_shipping_address', 'default_billing_address')
 
+    def get_default_shipping_address(self, obj):
+        """
+        Returns the user's default shipping address.
+        """
+        try:
+            address = Address.objects.get(user=obj, is_default_shipping=True)
+            return AddressSerializer(address).data
+        except Address.DoesNotExist:
+            return None
 
+    def get_default_billing_address(self, obj):
+        """
+        Returns the user's default billing address.
+        """
 class AddressSerializer(serializers.DocumentSerializer):
     class Meta:
         model = Address
-        fields = ('user', 'street', 'city', 'state', 'country', 'zip_code')
+        fields = ('user', 'street', 'city', 'state', 'country', 'zip_code', 'is_default_shipping', 'is_default_billing')
         read_only_fields = ('user',)

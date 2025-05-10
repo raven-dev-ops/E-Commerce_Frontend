@@ -15,3 +15,7 @@ class ProductSerializer(serializers.Serializer):
     scent_profile = serializers.CharField(max_length=100, allow_null=True, allow_blank=True)
     variants = serializers.ListField(child=serializers.CharField(), required=False) # Assuming variants are strings, adjust if needed
     tags = serializers.ListField(child=serializers.CharField(), required=False)
+    inventory = serializers.IntegerField()
+    reserved_inventory = serializers.IntegerField()
+    average_rating = serializers.FloatField(read_only=True)
+    review_count = serializers.IntegerField(read_only=True)

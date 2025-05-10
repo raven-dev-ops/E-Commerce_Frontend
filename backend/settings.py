@@ -13,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
 stripe.api_key = STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+LOW_STOCK_THRESHOLD = 10 # Or a suitable number
 
 SECRET_KEY = 'django-insecure-!7*3$gh=+1@9qh49!)tcrykeqon)&xpywhpye(j7+9jcz8x@wf'
 DEBUG = True
