@@ -94,13 +94,8 @@ DATABASES = {
 
 MONGODB_DATABASES = {
     'default': {
-        'name': 'your_db_name',
-        'host': 'localhost',
-        'port': 27017,
-        'username': 'your_username',
-        'password': 'your_password',
-        'authentication_source': 'admin',
-        'authentication_database': 'admin'
+        'name': 'website',
+        'authSource': 'admin'
     }
 }
 SITE_ID = 1

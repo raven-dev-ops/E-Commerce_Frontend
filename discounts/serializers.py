@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from reviews.documents import Review
-from products.documents import Product
-from users.documents import User
+from reviews.models import Review
+from products.models import Product
+from django.contrib.auth import get_user_model
 from rest_framework_mongoengine.serializers import DocumentSerializer
 
 
