@@ -58,7 +58,7 @@ export default function Checkout() {
       setLoadingDetails(false);
     };
 
-    cart.length > 0 ? fetchAllDetails() : setLoadingDetails(false);
+    if (cart.length > 0) fetchAllDetails(); else setLoadingDetails(false);
   }, [cart]);
 
   const total = useMemo(() => {
