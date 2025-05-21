@@ -28,7 +28,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
         const response = await axios.get(`/api/products/${productId}/`);
         setProduct(response.data);
         setLoading(false);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (err.response && err.response.status === 404) {
           setError('Product not found.');
         } else {

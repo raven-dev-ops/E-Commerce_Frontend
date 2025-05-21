@@ -6,11 +6,13 @@ import { useStore } from '@/store/useStore';
 import { api } from '@/lib/api';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
-import Image from 'next/image'; // Assuming you want to display images
 
-interface CartItem {
-  productId: number;
-  quantity: number;
+interface ProductDetails {
+  _id: string | number;
+  product_name: string;
+  // Add other properties if you fetch them and use them
+  price: number;
+  image?: string;
 }
 
 export default function Checkout() {
@@ -23,7 +25,7 @@ export default function Checkout() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // State to store fetched product details for summary
-  const [productDetails, setProductDetails] = useState<{ [productId: string | number]: any }>({});
+  const [productDetails, setProductDetails] = useState<{ [productId: string | number]: ProductDetails | { loading: boolean } | { error: true; message: string } | null }>({});
   const [loadingDetails, setLoadingDetails] = useState(true);
   const [errorFetchingDetails, setErrorFetchingDetails] = useState<string | null>(null);
 
@@ -44,7 +46,7 @@ export default function Checkout() {
       setLoadingDetails(true);
       setErrorFetchingDetails(null);
       const uniqueProductIds = Array.from(new Set(cart.map(item => item.productId)));
-      const detailsMap: { [productId: string | number]: any } = {};
+      const detailsMap: { [productId: string | number]: ProductDetails | null } = {};
       await Promise.all(uniqueProductIds.map(async (productId) => {
         detailsMap[productId] = await fetchProductDetails(productId);
       }));
@@ -85,10 +87,8 @@ export default function Checkout() {
         }
       );
       clearCart();
-      window.location.href = '/';
-    } catch (err: any) {
-      setErrorMsg(err.response?.data?.detail || 'Order failed');
-    } finally {
+      window.location.href = '/'; // Redirect on success
+    } catch (err: unknown) {
       setLoading(false);
     }
   };

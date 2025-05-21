@@ -4,6 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation'; // Import from next/navigation
 import { api } from '@/lib/api';
 
+interface ApiError {
+  response?: {
+    data?: {
+      detail?: string;
+    };
+  };
+}
+
 export default function Register() {
   const [form, setForm] = useState({
     email: '',
@@ -29,7 +37,7 @@ export default function Register() {
         password: form.password1,
       });
       router.push('/auth/login');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg(err.response?.data?.detail || 'Registration failed');
     }
   };
