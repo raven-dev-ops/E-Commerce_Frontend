@@ -29,7 +29,6 @@ async function getProduct(productId: string): Promise<Product | null> {
     }
     return res.json();
   } catch (_error) {
-    console.error('Error fetching product:', _error);
     throw new Error('Failed to fetch product details');
   }
 }
