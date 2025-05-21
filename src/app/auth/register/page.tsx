@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
-function isAxiosError(error: unknown): error is { response?: { data?: any } } {
+function isAxiosError(error: unknown): error is { response?: { data?: { detail?: string } } } {
   return typeof error === 'object' && error !== null && 'response' in error;
 }
 
@@ -21,7 +21,7 @@ export default function Register() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMsg(null);
 
