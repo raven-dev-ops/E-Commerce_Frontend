@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node -v && npm -v && tsc -v && npm ls typescript && tsc --noEmit --traceResolution && next build",
+    "build": "node -v && npm -v && next build",
     "start": "next start",
     "lint": "next lint"
   },
