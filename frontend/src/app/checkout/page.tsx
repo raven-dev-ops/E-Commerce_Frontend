@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useMemo } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useStore } from '@/store/useStore';
@@ -5,6 +7,11 @@ import { api } from '@/lib/api';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import Image from 'next/image'; // Assuming you want to display images
+
+interface CartItem {
+  productId: number;
+  quantity: number;
+}
 
 export default function Checkout() {
   const stripe = useStripe();
@@ -45,6 +52,7 @@ export default function Checkout() {
     };
     if (cart.length > 0) { fetchDetails(); } else { setProductDetails({}); setLoadingDetails(false); }
   }, [cart]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +104,7 @@ export default function Checkout() {
     });
     return calculatedTotal;
   }, [cart, productDetails]);
+
 
   return (
     <div className="max-w-md mx-auto p-4">

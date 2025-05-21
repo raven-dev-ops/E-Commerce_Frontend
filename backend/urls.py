@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include # Correct import
 from django_mongoengine.mongo_admin import site as mongo_admin_site
 from rest_framework.routers import DefaultRouter
 from products.views import ProductViewSet
@@ -37,6 +37,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('mongo-admin/', mongo_admin_site.urls),
     path('api/', include(router.urls)),
+    path('auth/', include('backend.authentication.urls')), # Include auth URLs under /auth/
     path('api/register/', UserRegistrationView.as_view(), name='user-registration'),
     path('api/login/', obtain_auth_token, name='api_token_auth'),
     path('api/profile/', ProfileView.as_view(), name='user_profile'), # New profile URL pattern

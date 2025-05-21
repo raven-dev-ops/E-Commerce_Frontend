@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation'; // Import useRouter from next/navigation in App Router
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -55,5 +57,5 @@ export default function Login() {
         </button>
       </form>
     </div>
-);
+  );
 }

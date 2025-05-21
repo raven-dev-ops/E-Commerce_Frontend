@@ -6,14 +6,33 @@ from rest_framework.authentication import TokenAuthentication, BasicAuthenticati
 from rest_framework.permissions import IsAuthenticated
 
 import logging # Keep logging import if you use it elsewhere
+from rest_framework.authtoken.models import Token
 from .serializers import UserRegistrationSerializer, UserProfileSerializer
 
+from django.contrib.auth import authenticate # Import authenticate
 class UserRegistrationView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = UserRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class LoginView(APIView):
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
+            # Authentication successful, get or create token
+            token, created = Token.objects.get_or_create(user=user)
+            # Serialize the user data for the response
+            user_serializer = UserProfileSerializer(user) # Use UserProfileSerializer for user data
+
+            return Response({"user": user_serializer.data, "tokens": { "access": token }}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
 
 # Keep the existing UserProfileView as it seems you have custom update logic
 class UserProfileView(APIView):

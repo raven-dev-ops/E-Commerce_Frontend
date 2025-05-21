@@ -1,75 +1,48 @@
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import axios from 'axios';
-import { useStore } from '@/store/useStore';
+// import { useStore } from '@/store/useStore'; // Client component hook
+import ProductItem from '@/components/ProductItem';
 
-export default function ProductsPage() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  image?: string;
+}
 
-  useEffect(() => {
-    // TODO: Define a type for the product data
+async function getProducts(): Promise<Product[]> {
+  const res = await fetch(`${process.env.BACKEND_URL}/products/`, { cache: 'no-store' });
+  if (!res.ok) {
+    // This will activate the closest error.js Error Boundary
+    throw new Error('Failed to fetch products');
+  }
+  return res.json();
+}
 
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get('/api/products/'); // Adjust the endpoint if needed
-        setProducts(response.data);
-      } catch (err) {
-        setError('Failed to fetch products');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+export default async function ProductsPage() {
+  let products: Product[] = [];
+  let error: string | null = null;
 
-    fetchProducts();
-  }, []);
+  try {
+    products = await getProducts();
+  } catch (err: any) {
+    error = err.message || 'An unknown error occurred';
+  }
 
-  const { addToCart } = useStore();
-
-  const handleAddToCart = (productId: string) => {
-    addToCart(productId); // Assuming product._id is a string or can be converted to one
-  };
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Products</h1>
-      {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
-      {!loading && !error && (
+      {!error && (
         products.length === 0 ? (
           <p>No products available.</p>
         ) : (
-          <ul className="list-disc pl-5">
-            {products.map((product: any) => (
-              // TODO: Use a more specific type for product
-              <li key={product._id} className="mb-4">
-                <Link href={`/products/${product._id}`} passHref>
-                  <div>
-                    {product.image && (
-                      <Image
-                        src={product.image}
-                        alt={product.product_name}
-                        width={100}
-                        height={100}
-                      />
-                    )}
-                    <div>{product.product_name} - ${product.price}</div>
-                    <div className="text-gray-600 text-sm">{product.description}</div>
-                  </div>
-                </Link>
-                <button
-                  onClick={() => handleAddToCart(product._id)}
-                  className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Add to Cart
-                </button>
-              </li>
-              // Assuming each product has a unique '_id', 'product_name', 'price',
-              // 'description', and optionally 'image'
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {products.map((product) => (
+              <ProductItem key={product.id} product={product} />
             ))}
-          </ul>
+          </div>
         )
       )}
     </div>
