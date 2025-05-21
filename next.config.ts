@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  output: 'export', // ✅ Needed for Netlify static hosting
+  // output: 'export', // ✅ Needed for Netlify static hosting
 
   webpack(config) {
     if (!config.externals) config.externals = [];
