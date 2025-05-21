@@ -33,8 +33,8 @@ async function getProduct(productId: string): Promise<Product | null> {
   }
 }
 
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
-  const { productId } = params;
+export default async function ProductDetailPage({ params }: { params: { productId: string } }) {
+  const { productId } = params as { productId: string };
 
   let product: Product | null = null;
   let error: string | null = null;
