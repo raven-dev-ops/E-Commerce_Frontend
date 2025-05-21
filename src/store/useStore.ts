@@ -1,5 +1,5 @@
 // frontend/src/store/useStore.ts
-import create from 'zustand';
+import { create } from 'zustand';
 
 export interface CartItem {
   // Note: Based on backend models, productId might be a number, but ensure consistency
