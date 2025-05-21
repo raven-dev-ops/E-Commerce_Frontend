@@ -20,7 +20,7 @@ export default function ProductItem({ product }: ProductItemProps) {
   const { addToCart } = useStore();
 
   const handleAddToCart = () => {
-    addToCart(product.id);
+    addToCart(Number(product.id)); // Convert string ID to number here
   };
 
   return (

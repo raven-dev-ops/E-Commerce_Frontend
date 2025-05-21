@@ -1,4 +1,3 @@
-
 import ProductItem from '@/components/ProductItem';
 
 interface Product {
@@ -25,7 +24,11 @@ export default async function ProductsPage() {
   try {
     products = await getProducts();
   } catch (err: unknown) {
-    error = err.message || 'An unknown error occurred';
+    if (err instanceof Error) {
+      error = err.message;
+    } else {
+      error = 'An unknown error occurred';
+    }
   }
 
   return (

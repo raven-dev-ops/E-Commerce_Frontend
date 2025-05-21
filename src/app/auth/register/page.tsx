@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Import from next/navigation
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import axios from 'axios';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -19,6 +20,8 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+
     if (form.password1 !== form.password2) {
       setErrorMsg('Passwords do not match');
       return;
@@ -30,7 +33,13 @@ export default function Register() {
       });
       router.push('/auth/login');
     } catch (err: unknown) {
-      setErrorMsg(err.response?.data?.detail || 'Registration failed');
+      if (axios.isAxiosError(err) && err.response) {
+        setErrorMsg(err.response.data?.detail || 'Registration failed');
+      } else if (err instanceof Error) {
+        setErrorMsg(err.message);
+      } else {
+        setErrorMsg('Registration failed');
+      }
     }
   };
 
