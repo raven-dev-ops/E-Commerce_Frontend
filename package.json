@@ -30,5 +30,10 @@
     "eslint-plugin-react": "^7.36.0",
     "tailwindcss": "^4",
     "typescript": "5.8.3"
+  },
+  "peerDependencies": {
+    "@opentelemetry/api": "^1.10.0",
+    "@playwright/test": "^1.43.0",
+    "babel-plugin-react-compiler": "^1.1.0"
   }
 }
