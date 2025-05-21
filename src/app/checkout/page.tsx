@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -11,64 +11,68 @@ interface ProductDetails {
   id: string | number;
   product_name: string;
   price: number;
-  // add more fields if your API returns more info you need
 }
 
 export default function Checkout() {
   const stripe = useStripe();
   const elements = useElements();
+  const { data: session } = useSession();
+
   const cart = useStore(state => state.cart);
   const clearCart = useStore(state => state.clearCart);
-  const { data: session } = useSession();
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(true);
+  const [errorFetchingDetails, setErrorFetchingDetails] = useState<string | null>(null);
 
   const [productDetails, setProductDetails] = useState<{
     [productId: string | number]: ProductDetails | null;
   }>({});
-  const [loadingDetails, setLoadingDetails] = useState(true);
-  const [errorFetchingDetails, setErrorFetchingDetails] = useState<string | null>(null);
-
-  const fetchProductDetails = async (productId: string | number) => {
-    try {
-      const response = await axios.get(`/api/products/${productId}/`);
-      return response.data as ProductDetails;
-    } catch (error) {
-      console.error(`Error fetching details for product ${productId}:`, error);
-      return null;
-    }
-  };
 
   useEffect(() => {
-    const fetchDetails = async () => {
+    const fetchProductDetails = async (productId: string | number) => {
+      try {
+        const response = await axios.get(`/api/products/${productId}/`);
+        return response.data as ProductDetails;
+      } catch (err) {
+        console.error(`Error fetching product ${productId}:`, err);
+        return null;
+      }
+    };
+
+    const fetchAllDetails = async () => {
       setLoadingDetails(true);
       setErrorFetchingDetails(null);
-      const uniqueProductIds = Array.from(new Set(cart.map(item => item.productId)));
-      const detailsMap: { [productId: string | number]: ProductDetails | null } = {};
+
+      const ids = Array.from(new Set(cart.map(item => item.productId)));
+      const results: typeof productDetails = {};
 
       await Promise.all(
-        uniqueProductIds.map(async (productId) => {
-          detailsMap[productId] = await fetchProductDetails(productId);
+        ids.map(async id => {
+          results[id] = await fetchProductDetails(id);
         })
       );
 
-      setProductDetails(detailsMap);
+      setProductDetails(results);
       setLoadingDetails(false);
     };
 
-    if (cart.length > 0) {
-      fetchDetails();
-    } else {
-      setProductDetails({});
-      setLoadingDetails(false);
-    }
+    cart.length > 0 ? fetchAllDetails() : setLoadingDetails(false);
   }, [cart]);
+
+  const total = useMemo(() => {
+    return cart.reduce((sum, item) => {
+      const product = productDetails[item.productId];
+      return product ? sum + product.price * item.quantity : sum;
+    }, 0);
+  }, [cart, productDetails]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
-    setLoading(true);
 
+    setLoading(true);
     const card = elements.getElement(CardElement);
     if (!card) {
       setLoading(false);
@@ -99,24 +103,14 @@ export default function Checkout() {
           },
         }
       );
+
       clearCart();
       window.location.href = '/';
     } catch {
-      setLoading(false);
       setErrorMsg('Payment failed, please try again.');
+      setLoading(false);
     }
   };
-
-  const total = useMemo(() => {
-    let calculatedTotal = 0;
-    cart.forEach(item => {
-      const product = productDetails[item.productId];
-      if (product && product.price) {
-        calculatedTotal += product.price * item.quantity;
-      }
-    });
-    return calculatedTotal;
-  }, [cart, productDetails]);
 
   return (
     <div className="max-w-md mx-auto p-4">
@@ -126,26 +120,29 @@ export default function Checkout() {
         <h2 className="text-xl font-semibold mb-2">Order Summary</h2>
         {loadingDetails && <p>Loading summary details...</p>}
         {errorFetchingDetails && <p className="text-red-500">{errorFetchingDetails}</p>}
-        {!loadingDetails && !errorFetchingDetails && cart.length > 0 && (
-          <ul>
-            {cart.map(item => {
-              const product = productDetails[item.productId];
-              if (!product) return null;
-              const itemSubtotal = product.price * item.quantity;
-              return (
-                <li key={item.productId} className="flex justify-between py-1 border-b border-gray-200">
-                  <span>{product.product_name} x {item.quantity}</span>
-                  <span>${itemSubtotal.toFixed(2)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {!loadingDetails && !errorFetchingDetails && cart.length > 0 && (
-          <div className="font-bold mt-2 flex justify-between">
-            <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
-          </div>
+        {!loadingDetails && cart.length > 0 && (
+          <>
+            <ul>
+              {cart.map(item => {
+                const product = productDetails[item.productId];
+                if (!product) return null;
+                const subtotal = product.price * item.quantity;
+                return (
+                  <li
+                    key={item.productId}
+                    className="flex justify-between py-1 border-b border-gray-200"
+                  >
+                    <span>{product.product_name} x {item.quantity}</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="font-bold mt-2 flex justify-between">
+              <span>Total:</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
+          </>
         )}
       </div>
 
