@@ -41,7 +41,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   try {
     product = await getProduct(productId);
-  } catch (_err) {
+  } catch (_error) {
+    console.error('Error in ProductDetailPage:', _error);
     error = 'Failed to fetch product details.';
   }
 
