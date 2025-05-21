@@ -1,7 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
-import { PageProps } from 'next/types';
 
 interface Product {
   _id: string | number;
@@ -17,11 +16,11 @@ interface Product {
 async function getProduct(productId: string): Promise<Product | null> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${productId}/`, {
-      cache: 'no-store', // Fetch data on every request
+      cache: 'no-store',
     });
 
     if (!res.ok) {
-      if (res.status === 404) return null; // Product not found
+      if (res.status === 404) return null;
       throw new Error('Failed to fetch product details');
     }
     return res.json();
@@ -30,7 +29,13 @@ async function getProduct(productId: string): Promise<Product | null> {
   }
 }
 
-export default async function ProductDetailPage({ params }: PageProps<{ productId: string }>) {
+type Props = {
+  params: {
+    productId: string;
+  };
+};
+
+export default async function ProductDetailPage({ params }: Props) {
   const { productId } = params;
 
   let product: Product | null = null;
@@ -48,10 +53,8 @@ export default async function ProductDetailPage({ params }: PageProps<{ productI
   }
 
   if (!product) {
-    // Use Next.js notFound to render the not-found page
     notFound();
   }
 
-  // Pass the fetched product data to the Client Component
   return <ProductDetailsClient product={product} />;
 }
