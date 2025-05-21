@@ -19,7 +19,7 @@ interface ProductDetailPageProps {
   params: { productId: string };
 }
 
-export default function ProductDetailPage({ params }: ProductDetailPageProps) {
+function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { productId } = params;
   const [loading, setLoading] = useState<boolean>(true);
   const [product, setProduct] = useState<Product | null>(null);
@@ -126,3 +126,4 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     </>
   );
 }
+export default ProductDetailPage as React.FC<ProductDetailPageProps>;
