@@ -4,10 +4,21 @@ import axios from 'axios';
 import Image from 'next/image';
 import { useStore } from '@/store/useStore';
 
+interface Product {
+  _id: string | number;
+  product_name: string;
+  price: number;
+  description?: string;
+  image?: string;
+  images?: string[];
+  ingredients?: string[];
+  benefits?: string[];
+}
+
 export default function ProductDetailPage({ params }: { params: { productId: string } }) {
   const { productId } = params;
-  const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { addToCart } = useStore();
@@ -55,9 +66,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
               <Image
                 src={imgSrc}
                 alt={`${product.product_name} image ${index + 1}`}
-                layout="fill"
-                objectFit="cover"
-                className="rounded"
+                fill className="rounded object-cover"
               />
             </div>
           ))}
@@ -67,20 +76,18 @@ export default function ProductDetailPage({ params }: { params: { productId: str
           <Image
             src={product.image}
             alt={product.product_name}
-            layout="fill"
-            objectFit="cover"
-            className="rounded"
+            fill className="rounded object-cover"
           />
         </div>
 
-      )}
+      ) : null}
       <h1 className="text-3xl font-bold mb-2">{product.product_name}</h1>
       <p className="text-lg font-semibold mb-2">${product.price}</p>
       <p>{product.description}</p>
       <button
         onClick={() => {
           if (product && product._id !== undefined) {
-            addToCart(Number(product._id));
+            addToCart(product._id);
           }
         }}
         className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
