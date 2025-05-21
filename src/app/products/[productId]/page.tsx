@@ -28,8 +28,8 @@ async function getProduct(productId: string): Promise<Product | null> {
       throw new Error('Failed to fetch product details');
     }
     return res.json();
-  } catch (error) {
-    console.error('Error fetching product:', error);
+  } catch (_error) {
+    console.error('Error fetching product:', _error);
     throw new Error('Failed to fetch product details');
   }
 }
@@ -42,7 +42,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   try {
     product = await getProduct(productId);
-  } catch (err) {
+  } catch (_err) {
     error = 'Failed to fetch product details.';
   }
 
