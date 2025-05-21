@@ -10,25 +10,33 @@ const fetchProductDetails = async (productId: string | number) => {
   try {
     const response = await axios.get(`/api/products/${productId}/`);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error fetching product ${productId} details:`, error);
     return { error: true, message: error.message || 'Failed to fetch details' };
   }
 };
 
+// Define interface for ProductDetails
+interface ProductDetails {
+  _id: string | number;
+  product_name: string;
+  price: number;
+  image?: string;
+}
+
 export default function CartPage() {
   const { cart, updateCartItemQuantity, removeFromCart } = useStore();
-  const [productDetails, setProductDetails] = useState<{ [productId: string | number]: any }>({});
+  const [productDetails, setProductDetails] = useState<{ [productId: string | number]: { _id?: string | number; product_name?: string; price?: number; image?: string; loading?: boolean; error?: boolean; message?: string } }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDetails = async () => {
-      setLoading(true);
+      setLoading(true); // This loading state is for the overall fetch, not individual products
       setError(null);
 
       const ids = Array.from(new Set(cart.map(item => item.productId)));
-      const detailsMap: { [id: string]: any } = {};
+      const detailsMap: { [id: string]: { _id?: string | number; product_name?: string; price?: number; image?: string; error?: boolean; message?: string } | null } = {};
 
       await Promise.all(ids.map(async (id) => {
         setProductDetails(prev => ({ ...prev, [id]: { loading: true } }));

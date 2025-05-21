@@ -25,12 +25,12 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.access = (user as any).token; // Type assertion if user type doesn't include token yet
+        token.access = user.token; // Type assertion if user type doesn\'t include token yet
       }
       return token;
     },
     async session({ session, token }) {
-      (session as any).access = (token as any).access; // Type assertion if session/token types don't include access yet
+      session.access = token.access; // Type assertion if session/token types don't include access yet
       return session;
     },
   },

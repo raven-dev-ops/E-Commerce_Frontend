@@ -1,6 +1,4 @@
-import Image from 'next/image';
-import Link from 'next/link';
-// import { useStore } from '@/store/useStore'; // Client component hook
+
 import ProductItem from '@/components/ProductItem';
 
 interface Product {
@@ -26,7 +24,7 @@ export default async function ProductsPage() {
 
   try {
     products = await getProducts();
-  } catch (err: any) {
+  } catch (err: unknown) {
     error = err.message || 'An unknown error occurred';
   }
 
