@@ -16,14 +16,6 @@ const fetchProductDetails = async (productId: string | number) => {
   }
 };
 
-// Define interface for ProductDetails
-interface ProductDetails {
-  _id: string | number;
-  product_name: string;
-  price: number;
-  image?: string;
-}
-
 export default function CartPage() {
   const { cart, updateCartItemQuantity, removeFromCart } = useStore();
   const [productDetails, setProductDetails] = useState<{ [productId: string | number]: { _id?: string | number; product_name?: string; price?: number; image?: string; loading?: boolean; error?: boolean; message?: string } }>({});
@@ -36,7 +28,7 @@ export default function CartPage() {
       setError(null);
 
       const ids = Array.from(new Set(cart.map(item => item.productId)));
-      const detailsMap: { [id: string]: { _id?: string | number; product_name?: string; price?: number; image?: string; error?: boolean; message?: string } | null } = {};
+      const detailsMap: { [id: string]: { _id?: string | number; product_name?: string; price?: number; image?: string; error?: boolean; message?: string } | null } = {};\n
 
       await Promise.all(ids.map(async (id) => {
         setProductDetails(prev => ({ ...prev, [id]: { loading: true } }));
