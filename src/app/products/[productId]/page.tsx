@@ -1,6 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
+import { PageProps } from 'next/types';
 
 interface Product {
   _id: string | number;
@@ -11,10 +12,6 @@ interface Product {
   images?: string[];
   ingredients?: string[];
   benefits?: string[];
-}
-
-interface ProductDetailPageProps {
-  params: { productId: string };
 }
 
 async function getProduct(productId: string): Promise<Product | null> {
@@ -33,8 +30,8 @@ async function getProduct(productId: string): Promise<Product | null> {
   }
 }
 
-export default async function ProductDetailPage({ params }: { params: { productId: string } }) {
-  const { productId } = params as { productId: string };
+export default async function ProductDetailPage({ params }: PageProps<{ productId: string }>) {
+  const { productId } = params;
 
   let product: Product | null = null;
   let error: string | null = null;
