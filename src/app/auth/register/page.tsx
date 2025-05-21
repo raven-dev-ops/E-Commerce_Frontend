@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from 'react';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import axios from 'axios';
+
+function isAxiosError(error: unknown): error is { response?: { data?: any } } {
+  return typeof error === 'object' && error !== null && 'response' in error;
+}
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -14,7 +18,7 @@ export default function Register() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -26,6 +30,7 @@ export default function Register() {
       setErrorMsg('Passwords do not match');
       return;
     }
+
     try {
       await api.post('/auth/register/', {
         email: form.email,
@@ -33,8 +38,9 @@ export default function Register() {
       });
       router.push('/auth/login');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response) {
-        setErrorMsg(err.response.data?.detail || 'Registration failed');
+      if (isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        setErrorMsg(detail || 'Registration failed');
       } else if (err instanceof Error) {
         setErrorMsg(err.message);
       } else {
