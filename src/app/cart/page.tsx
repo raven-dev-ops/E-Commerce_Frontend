@@ -43,7 +43,7 @@ export default function CartPage() {
 
       setProductDetails(detailsMap);
 
-      if (Object.values(detailsMap).some(d => d.error)) {
+      if (Object.values(detailsMap).some(d => d && d.error)) {
         setError("Some product details failed to load.");
       }
 
