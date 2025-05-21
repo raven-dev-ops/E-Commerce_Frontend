@@ -33,23 +33,24 @@ type Props = {
   params: {
     productId: string;
   };
+  searchParams?: Record<string, string | string[] | undefined>;
 };
 
-export default async function ProductDetailPage({ params }: Props) {
+export default async function ProductDetailPage({ params, searchParams }: Props) {
   const { productId } = params;
 
   let product: Product | null = null;
-  let error: string | null = null;
+  let fetchError: string | null = null;
 
   try {
     product = await getProduct(productId);
-  } catch (error) {
-    console.error('Error in ProductDetailPage:', error);
-    error = 'Failed to fetch product details.';
+  } catch (err) {
+    console.error('Error in ProductDetailPage:', err);
+    fetchError = 'Failed to fetch product details.';
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
+  if (fetchError) {
+    return <div>Error: {fetchError}</div>;
   }
 
   if (!product) {

@@ -3,4 +3,4 @@ build:
     web: Dockerfile
 
 run:
-  web: python app.py  # Or your backend start command
+  web: python app.py

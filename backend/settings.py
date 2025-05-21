@@ -3,25 +3,25 @@ from datetime import timedelta
 import os
 import stripe
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
+# Stripe keys from environment
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
 stripe.api_key = STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+
 LOW_STOCK_THRESHOLD = 10
 MONGO_URI = os.environ.get('MONGO_URI')
-SECRET_KEY = 'django-insecure-!7*3$gh=+1@9qh49!)tcrykeqon)&xpywhpye(j7+9jcz8x@wf'
-DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-!7*3$gh=+1@9qh49!)tcrykeqon)&xpywhpye(j7+9jcz8x@wf')
 
-# Application definition
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
+
+# Applications
 INSTALLED_APPS = [
     # Django
     'django.contrib.admin',
@@ -32,17 +32,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_mongoengine',
     'django_mongoengine.mongo_admin',
-    'django.contrib.sites', # For sites framework (optional but good practice)
-    'rest_framework.authtoken', # For DRF token authentication
+    'django.contrib.sites',
+    'rest_framework.authtoken',
     'rest_framework_mongoengine',
-    # 3rd-party
+
+    # 3rd party
     'corsheaders',
     'django_filters',
-    'rest_framework_simplejwt', # For JWT authentication
+    'rest_framework_simplejwt',
     'dj_rest_auth',
-]
-# Your apps
-INSTALLED_APPS += [
+
     # Your apps
     'products',
     'orders',
@@ -50,8 +49,9 @@ INSTALLED_APPS += [
     'users',
     'data_loader',
 ]
+
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',           # must be first
+    'corsheaders.middleware.CorsMiddleware',  # must be first
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -66,7 +66,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # add project-level template dirs here if needed
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,10 +81,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
+# SQLite used only in memory for testing, real DB is MongoDB
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -94,12 +91,11 @@ DATABASES = {
 
 MONGODB_DATABASES = {
     'default': {
-        'host': os.environ.get('MONGO_URI', 'mongodb://localhost:27017/website') # Use a default local connection string if MONGO_URI is not set
+        'host': MONGO_URI or 'mongodb://localhost:27017/website',
     }
 }
+
 SITE_ID = 1
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -108,24 +104,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'America/Chicago'
 USE_I18N = True
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = 'static/'
 
-
-# DRF + JWT configuration
-
+# DRF + JWT config
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -141,14 +127,9 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-
-# CORS
-
+# CORS allowed origins for frontend running locally
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
 ]
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
