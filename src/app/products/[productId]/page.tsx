@@ -36,7 +36,7 @@ type Props = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
-export default async function ProductDetailPage({ params, searchParams }: Props) {
+export default async function ProductDetailPage({ params}: Props) {
   const { productId } = params;
 
   let product: Product | null = null;
