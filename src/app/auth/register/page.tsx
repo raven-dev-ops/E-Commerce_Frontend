@@ -4,14 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation'; // Import from next/navigation
 import { api } from '@/lib/api';
 
-interface ApiError {
-  response?: {
-    data?: {
-      detail?: string;
-    };
-  };
-}
-
 export default function Register() {
   const [form, setForm] = useState({
     email: '',

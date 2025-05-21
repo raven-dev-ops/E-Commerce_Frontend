@@ -4,7 +4,7 @@ import { useStore } from '@/store/useStore';
 const Header: React.FC = () => {
   const { cart } = useStore();
   const { data: session, status } = useSession();
- const { } = useSession();
+ 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (

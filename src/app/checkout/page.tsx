@@ -7,13 +7,6 @@ import { api } from '@/lib/api';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 
-interface ProductDetails {
-  _id: string | number;
-  product_name: string;
-  // Add other properties if you fetch them and use them
-  price: number;
-  image?: string;
-}
 
 export default function Checkout() {
   const stripe = useStripe();
@@ -88,7 +81,7 @@ export default function Checkout() {
       );
       clearCart();
       window.location.href = '/'; // Redirect on success
-    } catch (err: unknown) {
+    } catch (err) {
       setLoading(false);
     }
   };
