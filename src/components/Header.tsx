@@ -3,7 +3,6 @@ import React from 'react';
 import { useStore } from '@/store/useStore';
 const Header: React.FC = () => {
   const { cart } = useStore();
-  const {} = useSession();
  
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 

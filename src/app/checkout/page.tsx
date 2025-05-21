@@ -7,6 +7,12 @@ import { api } from '@/lib/api';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 
+interface ProductDetails {
+  id: string | number;
+  product_name: string;
+  price: number;
+  // add more fields if your API returns more info you need
+}
 
 export default function Checkout() {
   const stripe = useStripe();
@@ -17,49 +23,63 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // State to store fetched product details for summary
-  const [productDetails, setProductDetails] = useState<{ [productId: string | number]: ProductDetails | { loading: boolean } | { error: true; message: string } | null }>({});
+  const [productDetails, setProductDetails] = useState<{
+    [productId: string | number]: ProductDetails | null;
+  }>({});
   const [loadingDetails, setLoadingDetails] = useState(true);
   const [errorFetchingDetails, setErrorFetchingDetails] = useState<string | null>(null);
 
-  // Helper function to fetch single product details
   const fetchProductDetails = async (productId: string | number) => {
     try {
       const response = await axios.get(`/api/products/${productId}/`);
-      return response.data;
+      return response.data as ProductDetails;
     } catch (error) {
       console.error(`Error fetching details for product ${productId}:`, error);
       return null;
     }
   };
 
-  // Fetch product details for items in the cart for summary
   useEffect(() => {
     const fetchDetails = async () => {
       setLoadingDetails(true);
       setErrorFetchingDetails(null);
       const uniqueProductIds = Array.from(new Set(cart.map(item => item.productId)));
       const detailsMap: { [productId: string | number]: ProductDetails | null } = {};
-      await Promise.all(uniqueProductIds.map(async (productId) => {
-        detailsMap[productId] = await fetchProductDetails(productId);
-      }));
-      setProductDetails(detailsMap); setLoadingDetails(false);
-    };
-    if (cart.length > 0) { fetchDetails(); } else { setProductDetails({}); setLoadingDetails(false); }
-  }, [cart]);
 
+      await Promise.all(
+        uniqueProductIds.map(async (productId) => {
+          detailsMap[productId] = await fetchProductDetails(productId);
+        })
+      );
+
+      setProductDetails(detailsMap);
+      setLoadingDetails(false);
+    };
+
+    if (cart.length > 0) {
+      fetchDetails();
+    } else {
+      setProductDetails({});
+      setLoadingDetails(false);
+    }
+  }, [cart]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
     setLoading(true);
+
     const card = elements.getElement(CardElement);
-    if (!card) return;
+    if (!card) {
+      setLoading(false);
+      return;
+    }
 
     const { error, paymentMethod } = await stripe.createPaymentMethod({
       type: 'card',
       card,
     });
+
     if (error) {
       setErrorMsg(error.message || 'Payment error');
       setLoading(false);
@@ -83,10 +103,10 @@ export default function Checkout() {
       window.location.href = '/';
     } catch {
       setLoading(false);
+      setErrorMsg('Payment failed, please try again.');
     }
   };
 
-  // Calculate total price for the summary
   const total = useMemo(() => {
     let calculatedTotal = 0;
     cart.forEach(item => {
@@ -97,7 +117,6 @@ export default function Checkout() {
     });
     return calculatedTotal;
   }, [cart, productDetails]);
-
 
   return (
     <div className="max-w-md mx-auto p-4">
@@ -111,8 +130,8 @@ export default function Checkout() {
           <ul>
             {cart.map(item => {
               const product = productDetails[item.productId];
-              if (!product) return null; // Don't display if product details are not available
-              const itemSubtotal = (product.price || 0) * item.quantity;
+              if (!product) return null;
+              const itemSubtotal = product.price * item.quantity;
               return (
                 <li key={item.productId} className="flex justify-between py-1 border-b border-gray-200">
                   <span>{product.product_name} x {item.quantity}</span>
@@ -122,7 +141,12 @@ export default function Checkout() {
             })}
           </ul>
         )}
-        {!loadingDetails && !errorFetchingDetails && cart.length > 0 && <div className="font-bold mt-2 flex justify-between"><span>Total:</span><span>${total.toFixed(2)}</span></div>}
+        {!loadingDetails && !errorFetchingDetails && cart.length > 0 && (
+          <div className="font-bold mt-2 flex justify-between">
+            <span>Total:</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit}>
