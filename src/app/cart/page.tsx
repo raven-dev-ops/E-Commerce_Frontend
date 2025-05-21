@@ -11,14 +11,19 @@ const fetchProductDetails = async (productId: string | number) => {
     const response = await axios.get(`/api/products/${productId}/`);
     return response.data;
   } catch (error: unknown) {
-    console.error(`Error fetching product ${productId} details:`, error);
-    return { error: true, message: error.message || 'Failed to fetch details' };
+    if (error instanceof Error) {
+      console.error(`Error fetching product ${productId} details:`, error.message);
+      return { error: true, message: error.message };
+    } else {
+      console.error(`Error fetching product ${productId} details:`, 'An unknown error occurred', error);
+      return { error: true, message: 'An unknown error occurred' };
+    }
   }
 };
 
 export default function CartPage() {
   const { cart, updateCartItemQuantity, removeFromCart } = useStore();
-  const [productDetails, setProductDetails] = useState<{ [productId: string | number]: { _id?: string | number; product_name?: string; price?: number; image?: string; loading?: boolean; error?: boolean; message?: string } }>({});
+  const [productDetails, setProductDetails] = useState<{ [productId: string | number]: { _id?: string | number; product_name?: string; price?: number; image?: string; loading?: boolean; error?: boolean; message?: string } | null }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +61,7 @@ export default function CartPage() {
   const total = useMemo(() => {
     return cart.reduce((sum, item) => {
       const detail = productDetails[item.productId];
-      if (detail && !detail.error && detail.price) {
+      if (detail && !detail.error && detail.price) { // Accessing detail for price and error check
         return sum + detail.price * item.quantity;
       }
       return sum;
@@ -75,7 +80,7 @@ export default function CartPage() {
           <ul>
             {cart.map(item => {
               const detail = productDetails[item.productId];
-              return (
+              return ( // Accessing detail for rendering image, product name, and price
                 <li key={item.productId} className="flex items-center gap-4 py-2 border-b">
                   {detail?.image && (
                     <Image
