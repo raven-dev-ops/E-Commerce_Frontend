@@ -15,7 +15,11 @@ interface Product {
   benefits?: string[];
 }
 
-export default function ProductDetailPage({ params }: { params: { productId: string } }) {
+interface ProductDetailPageProps {
+  params: { productId: string };
+}
+
+export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { productId } = params;
   const [loading, setLoading] = useState<boolean>(true);
   const [product, setProduct] = useState<Product | null>(null);
