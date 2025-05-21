@@ -45,6 +45,7 @@ export default function ProductDetailPage({ params }: { params: { productId: str
   // Assuming product data structure includes product_name, price, description,
   // and optionally images (array of strings), image (string), ingredients (array of strings), benefits (array of strings)
   return (
+    <>
     <div className="container mx-auto p-4">
       {/* Image Gallery or Single Image */}
       {product.images && Array.isArray(product.images) && product.images.length > 0 ? (
@@ -111,5 +112,6 @@ export default function ProductDetailPage({ params }: { params: { productId: str
         </div>
       )}
     </div>
+    </>
   );
 }
