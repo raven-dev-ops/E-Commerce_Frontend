@@ -2,12 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { useEffect } from 'react';
-import Header from "@/components/Header";
-import { useState } from 'react';
-
-
-import { useStore } from '@/store/useStore';
+import ClientLayout from "@/components/ClientLayout";
 
 const geistSans = Geist({
  variable: "--font-geist-sans",
@@ -29,29 +24,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) { 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userInfo, setUserInfo] = useState<any>(null); // Use a more specific type if available
-  const hydrateCart = useStore(state => state.hydrateCart);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Cart hydration logic
-      hydrateCart();
-
-      // Authentication logic
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        setIsLoggedIn(true);
-        // If you store user info alongside the token, parse and set it here
-        // Example: const userData = localStorage.getItem('userInfo');
-        // if (userData) setUserInfo(JSON.parse(userData));
-      } else {
-        setIsLoggedIn(false);
-        setUserInfo(null);
-      }
-    }
-  }, [hydrateCart]); // Include hydrateCart in dependencies if it's part of component scope
-
   return (
     <html lang="en">
       <body
@@ -59,7 +31,7 @@ export default function RootLayout({
       >
  <Header />
         {children}
-      </body>
+ <ClientLayout>{children}</ClientLayout>      </body>
     </html>
   );
 }
