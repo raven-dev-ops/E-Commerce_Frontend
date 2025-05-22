@@ -2,7 +2,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
 const api: AxiosInstance = axios.create({
-  baseURL: 'https://twiinz-beard-website-ff3fce7fad2d.herokuapp.com/api/',
+  baseURL: 'https://twiinz-beard-backend-11dfd7158830.herokuapp.com/api/',
   headers: {
     'Content-Type': 'application/json',
   },
