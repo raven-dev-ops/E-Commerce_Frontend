@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { CardElement, useStripe, useElements, Elements } from '@stripe/react-stripe-js';
 import { useStore } from '@/store/useStore';
 import { api } from '@/lib/api';
 import axios from 'axios';
@@ -11,6 +11,8 @@ interface ProductDetails {
   product_name: string;
   price: number;
 }
+
+import { loadStripe } from '@stripe/stripe-js';
 
 export default function Checkout() {
   const stripe = useStripe();
@@ -102,6 +104,12 @@ export default function Checkout() {
     }
   };
 
+const stripePublicKey = process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY;
+if (!stripePublicKey) {
+  throw new Error('Stripe public key not found in environment variables');
+}
+const stripePromise = loadStripe(stripePublicKey);
+
   return (
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Checkout</h1>
@@ -136,19 +144,21 @@ export default function Checkout() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <CardElement className="p-2 border rounded" />
-        </div>
-        {errorMsg && <div className="text-red-600 mb-4">{errorMsg}</div>}
-        <button
-          type="submit"
-          disabled={!stripe || loading}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          {loading ? 'Processing…' : 'Pay Now'}
-        </button>
-      </form>
+      <Elements stripe={stripePromise}>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <CardElement className="p-2 border rounded" />
+          </div>
+          {errorMsg && <div className="text-red-600 mb-4">{errorMsg}</div>}
+          <button
+            type="submit"
+            disabled={!stripe || loading}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            {loading ? 'Processing…' : 'Pay Now'}
+          </button>
+        </form>
+      </Elements>
     </div>
   );
 }
