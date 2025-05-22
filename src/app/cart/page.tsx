@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useStore } from "@/store/useStore";
 import axios from "axios";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 
 type ProductDetail = {
@@ -36,11 +37,16 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Authentication check effect
   useEffect(() => {
+    // Check for authentication on component mount
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) {
+      redirect("/auth/login");
+    }
+
     const fetchAllDetails = async () => {
       setLoading(true);
-      setError(null);
-
       const ids = Array.from(new Set(cart.map((item) => item.productId)));
       const detailMap: Record<string | number, ProductDetail | null> = {};
 
