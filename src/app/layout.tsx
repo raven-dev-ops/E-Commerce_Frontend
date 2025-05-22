@@ -1,7 +1,10 @@
+'use client';
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { useEffect } from 'react';
 import Header from "@/components/Header";
 import SessionWrapper from "@/components/SessionWrapper";
 const geistSans = Geist({
@@ -13,6 +16,7 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+import { useStore } from '@/store/useStore';
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -23,12 +27,19 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) { 
+  const hydrateCart = useStore(state => state.hydrateCart);
+
+  useEffect(() => {
+    hydrateCart();
+  }, [hydrateCart]);
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+      {/* Wrap components that need session context */}
  <SessionWrapper>
  <Header />
  {children}

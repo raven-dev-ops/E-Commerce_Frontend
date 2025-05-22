@@ -13,6 +13,7 @@ interface StoreState {
   clearCart: () => void;
   updateCartItemQuantity: (productId: number, newQuantity: number) => void;
   removeFromCart: (productId: number) => void;
+  hydrateCart: () => void;
 }
 
 const CART_STORAGE_KEY = 'cart';
@@ -44,11 +45,14 @@ const loadCartFromLocalStorage = (): CartItem[] => {
 };
 
 export const useStore = create<StoreState>((set) => {
-  // Load initial state from localStorage
-  const initialCart = loadCartFromLocalStorage();
+  // Initialize cart with empty array on the server
+  return ({
+    cart: [],
 
-  return {
-    cart: initialCart,
+    // Add a new action to hydrate the store from localStorage on the client
+    hydrateCart: () => {
+      set({ cart: loadCartFromLocalStorage() });
+    },
     addToCart: (productId, qty = 1) =>
       set((state) => {
         const existing = state.cart.find((i) => i.productId === productId);
@@ -85,5 +89,5 @@ export const useStore = create<StoreState>((set) => {
         saveCartToLocalStorage(updatedCart); // Save to localStorage after update
         return { cart: updatedCart };
       }),
-  };
+  });
 });
