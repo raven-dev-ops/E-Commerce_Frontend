@@ -1,8 +1,10 @@
 "use client";
 
 import Image from 'next/image';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/store/useStore';
+import { addItemToCart } from '@/lib/cartApi'; // Import the API function
 
 interface Product {
   id: string;
@@ -17,10 +19,28 @@ interface ProductItemProps {
 }
 
 export default function ProductItem({ product }: ProductItemProps) {
-  const { addToCart } = useStore();
+  const { addToCart } = useStore(); // Use 'addToCart' action from the store
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAddToCart = () => {
-    addToCart(Number(product.id)); // Convert string ID to number here
+  const handleAddToCart = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Call the addItemToCart API function
+      // Assuming your backend expects { product_id: number, quantity: number }
+      const addedItem = await addItemToCart({ product_id: Number(product.id), quantity: 1 });
+      addToCart(Number(product.id), 1); // Update the state in your store using addToCart
+    } catch (err) {
+      // Handle the error and set the error state as a string
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,7 +64,7 @@ export default function ProductItem({ product }: ProductItemProps) {
         </div>
       </Link>
       <button
-        onClick={handleAddToCart}
+        onClick={handleAddToCart} // Use the async handler
         className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 self-start"
       >
         Add to Cart
