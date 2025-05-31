@@ -32,14 +32,16 @@ async function getProduct(productId: string): Promise<Product | null> {
 }
 
 type PageProps = {
-  params: Readonly<{ productId: string }>;
-  searchParams?: Readonly<Record<string, string | string[] | undefined>>;
+  params: { productId: string };
+  searchParams?: Record<string, string | string[] | undefined>;
 };
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const product = await getProduct(params.productId);
 
-  if (!product) notFound();
+  if (!product) {
+    notFound();
+  }
 
   return <ProductDetailsClient product={product} />;
 }
