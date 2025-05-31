@@ -1,4 +1,4 @@
-// src/app/products/page.tsx
+// src/app/product/page.tsx
 
 'use client';
 
@@ -7,7 +7,7 @@ import ProductItem from '@/components/ProductItem';
 import type { Product } from '@/types/product';
 
 async function getProducts(): Promise<Product[]> {
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`;
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/product/`;
   console.log('Fetching products from:', url);
 
   const res = await fetch(url, { cache: 'no-store' });
