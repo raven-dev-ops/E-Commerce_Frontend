@@ -32,12 +32,14 @@ async function getProduct(productId: string): Promise<Product | null> {
 }
 
 type PageProps = {
-  params: { productId: string };
+  params: { productId: string | string[] }; // Modified to allow string | string[]
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
 export default async function ProductDetailPage({ params }: PageProps) {
-  const product = await getProduct(params.productId);
+  // Ensure productId is a string for the getProduct function
+  const productId = Array.isArray(params.productId) ? params.productId[0] : params.productId;
+  const product = await getProduct(productId);
 
   if (!product) {
     notFound();
