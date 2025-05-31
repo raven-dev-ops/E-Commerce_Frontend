@@ -29,7 +29,8 @@
     "@types/react-dom": "^19.1.5",
     "tailwindcss": "^4",
     "typescript": "5.8.3",
-    "undici-types": "^7.10.0"
+    "undici-types": "^7.10.0",
+    "typescript-plugin-css-modules": "*"
   },
   "peerDependencies": {
     "@opentelemetry/api": "^1.9.0",
