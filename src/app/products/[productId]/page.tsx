@@ -32,13 +32,13 @@ async function getProduct(productId: string): Promise<Product | null> {
 }
 
 type PageProps = {
-  params: { productId: string | string[] }; // Modified to allow string | string[]
+  params: { productId: string }; // Changed back to string
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
 export default async function ProductDetailPage({ params }: PageProps) {
-  // Ensure productId is a string for the getProduct function
-  const productId = Array.isArray(params.productId) ? params.productId[0] : params.productId;
+  // The type is now string, no need for Array.isArray check based on type
+  const productId: string = params.productId;
   const product = await getProduct(productId);
 
   if (!product) {
