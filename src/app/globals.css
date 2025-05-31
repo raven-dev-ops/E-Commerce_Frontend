@@ -2,20 +2,21 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --pale-orange: #EEEBE4;
+  --pale-grey: #A49594;
+  --pale-yellow: #D2D1CC;
+  --dark-green: #2E382D;
+  --dark-grey: #242424;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--dark-grey);
+    --pale-orange: #EEEBE4;
+    --pale-grey: #A49594;
+    --pale-yellow: #D2D1CC;
+    --dark-green: #2E382D;
+    --dark-grey: #242424;
   }
 }
 
