@@ -1,4 +1,4 @@
-// src/app/product/[productId]/page.tsx
+// src/app/products/[productId]/page.tsx
 
 import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
@@ -30,8 +30,8 @@ async function getProduct(productId: string): Promise<Product | null> {
 }
 
 type PageProps = {
-  params: { productId: string };
-  searchParams?: Record<string, string | string[] | undefined>;
+  readonly params: { readonly productId: string };
+  readonly searchParams?: Record<string, string | string[] | undefined>;
 };
 
 export default async function ProductDetailPage({ params }: PageProps) {
@@ -41,3 +41,4 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
   return <ProductDetailsClient product={product} />;
 }
+
