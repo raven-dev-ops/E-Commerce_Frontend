@@ -9,7 +9,7 @@ interface Product {
 }
 
 async function getProducts(): Promise<Product[]> {
-  const res = await fetch(`${process.env.BACKEND_URL}/products/`, { cache: 'no-store' });
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`, { cache: 'no-store' });
   if (!res.ok) {
     // This will activate the closest error.js Error Boundary
     throw new Error('Failed to fetch products');
