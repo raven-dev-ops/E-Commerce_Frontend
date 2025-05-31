@@ -1,4 +1,4 @@
-// src/app/product/page.tsx
+// src/app/products/page.tsx
 
 'use client';
 
