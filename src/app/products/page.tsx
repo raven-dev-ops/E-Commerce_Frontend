@@ -1,53 +1,47 @@
+// src/app/products/page.tsx     ⬅ adjust path to where this file lives
 import { useEffect, useState } from 'react';
-import ProductItem from '@/components/ProductItem'; // Adjust path based on actual location
-import type { Product } from '../types'; // Ensure you have a Product interface defined
+import ProductItem from '@/components/ProductItem';
+import type { Product } from '@/types/product';   // ✅ correct path
 
 async function getProducts(): Promise<Product[]> {
-  try {
-    console.log('Fetching products from:', `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`, { cache: 'no-store' });
-    if (!res.ok) {
-      throw new Error('Failed to fetch products');
-    }
-    return res.json();
-  } catch (error) {
-    throw new Error('Failed to fetch products');
-  }
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`;
+  console.log('Fetching products from:', url);
+
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch products');
+  return res.json();
 }
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [products, setProducts]   = useState<Product[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [error,   setError]       = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    (async () => {
       try {
-        const fetchedProducts = await getProducts();
-        setProducts(fetchedProducts);
-        setLoading(false);
-      } catch (error) {
+        setProducts(await getProducts());
+      } catch (err) {
         setError('Failed to fetch products');
+      } finally {
         setLoading(false);
       }
-    };
-
-    fetchProducts();
+    })();
   }, []);
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Products</h1>
-      {loading && <p>Loading products...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
+
+      {loading && <p>Loading products…</p>}
+      {error   && <p className="text-red-500">Error: {error}</p>}
+
       {!loading && !error && (
         products.length === 0 ? (
           <p>No products available.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {products.map((product) => (
-              <ProductItem key={product.id} product={product} />
-            ))}
+            {products.map(p => <ProductItem key={p.id} product={p} />)}
           </div>
         )
       )}
