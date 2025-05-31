@@ -1,42 +1,46 @@
-import ProductItem from '@/components/ProductItem';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  image?: string;
-}
+import { useEffect, useState } from 'react';
+import ProductItem from '@/components/ProductItem'; // Adjust path based on actual location
+import type { Product } from '../types'; // Ensure you have a Product interface defined
 
 async function getProducts(): Promise<Product[]> {
-  console.log('Fetching products from:', `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`);
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`, { cache: 'no-store' });
-  if (!res.ok) {
-    // This will activate the closest error.js Error Boundary
+  try {
+    console.log('Fetching products from:', `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`, { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error('Failed to fetch products');
+    }
+    return res.json();
+  } catch (error) {
     throw new Error('Failed to fetch products');
   }
-  return res.json();
 }
 
-export default async function ProductsPage() {
-  let products: Product[] = [];
-  let error: string | null = null;
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    products = await getProducts();
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      error = err.message;
-    } else {
-      error = 'An unknown error occurred';
-    }
-  }
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const fetchedProducts = await getProducts();
+        setProducts(fetchedProducts);
+        setLoading(false);
+      } catch (error) {
+        setError('Failed to fetch products');
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Products</h1>
+      {loading && <p>Loading products...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
-      {!error && (
+      {!loading && !error && (
         products.length === 0 ? (
           <p>No products available.</p>
         ) : (
