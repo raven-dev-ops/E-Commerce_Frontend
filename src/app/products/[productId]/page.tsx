@@ -1,4 +1,4 @@
-// src/app/products/[productId]/page.tsx
+// src/app/product/[productId]/page.tsx
 
 import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
@@ -20,10 +20,8 @@ async function getProduct(productId: string): Promise<Product | null> {
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${productId}/`,
       { cache: 'no-store' }
     );
-
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
     return (await res.json()) as Product;
   } catch (err) {
     console.error('Failed to fetch product details:', err);
@@ -32,18 +30,14 @@ async function getProduct(productId: string): Promise<Product | null> {
 }
 
 type PageProps = {
-  params: { productId: string }; // Changed back to string
+  params: { productId: string };
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
 export default async function ProductDetailPage({ params }: PageProps) {
-  // The type is now string, no need for Array.isArray check based on type
-  const productId: string = params.productId;
-  const product = await getProduct(productId);
-
+  const product = await getProduct(params.productId);
   if (!product) {
     notFound();
   }
-
   return <ProductDetailsClient product={product} />;
 }
