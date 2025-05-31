@@ -1,3 +1,5 @@
+// src/components/ProductItem.tsx
+
 "use client";
 
 import Image from 'next/image';

@@ -1,4 +1,5 @@
-import React from 'react';
+// src/app/products/[productId]/page.tsx
+
 import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
 
@@ -15,31 +16,28 @@ interface Product {
 
 async function getProduct(productId: string): Promise<Product | null> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${productId}/`, {
-      cache: 'no-store',
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${productId}/`,
+      { cache: 'no-store' }
+    );
 
-    if (!res.ok) {
-      if (res.status === 404) return null;
-      throw new Error('Failed to fetch product details');
-    }
-    return res.json();
-  } catch (error) {
-    throw new Error(`Failed to fetch product details: ${error}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    return (await res.json()) as Product;
+  } catch (err) {
+    console.error('Failed to fetch product details:', err);
+    throw err;                    // bubbles to /app/error.tsx if you have one
   }
 }
 
 type PageProps = {
   params: { productId: string };
-  searchParams?: Record<string, string | string[] | undefined>;
 };
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const product = await getProduct(params.productId);
-
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
 
   return <ProductDetailsClient product={product} />;
 }

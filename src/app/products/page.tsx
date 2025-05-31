@@ -1,7 +1,10 @@
-// src/app/products/page.tsx     ⬅ adjust path to where this file lives
+// src/app/products/page.tsx
+
+'use client';
+
 import { useEffect, useState } from 'react';
 import ProductItem from '@/components/ProductItem';
-import type { Product } from '@/types/product';   // ✅ correct path
+import type { Product } from '@/types/product';
 
 async function getProducts(): Promise<Product[]> {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/`;
@@ -13,19 +16,15 @@ async function getProducts(): Promise<Product[]> {
 }
 
 export default function ProductsPage() {
-  const [products, setProducts]   = useState<Product[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [error,   setError]       = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      try {
-        setProducts(await getProducts());
-      } catch (err) {
-        setError('Failed to fetch products');
-      } finally {
-        setLoading(false);
-      }
+      try   { setProducts(await getProducts()); }
+      catch { setError('Failed to fetch products'); }
+      finally { setLoading(false); }
     })();
   }, []);
 
@@ -41,7 +40,9 @@ export default function ProductsPage() {
           <p>No products available.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {products.map(p => <ProductItem key={p.id} product={p} />)}
+            {products.map(p => (
+              <ProductItem key={p.id} product={p} />
+            ))}
           </div>
         )
       )}
