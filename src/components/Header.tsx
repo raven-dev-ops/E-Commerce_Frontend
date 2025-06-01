@@ -3,6 +3,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import React from 'react';
 import { useStore } from '@/store/useStore';
 import { useRouter } from 'next/navigation';
@@ -28,16 +29,38 @@ const Header: React.FC = () => {
     if (isAuthenticated) {
       router.push('/cart');
     } else {
-      router.push('/auth/login'); // Google Auth here
+      router.push('/auth/login');
     }
   };
 
   return (
-    <header className="bg-gray-800 text-white p-4">
+    <header
+      className="p-4"
+      style={{
+        background: 'var(--background)',
+        color: 'var(--foreground)',
+        borderBottom: '1px solid var(--dark-grey)',
+      }}
+    >
       <nav className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <Link href="/">Home</Link>
-          <Link href="/products">Products</Link>
+          <Link href="/" className="flex items-center" aria-label="Home">
+            <Image
+              src="/images/logos/logo.png"
+              alt="Home"
+              width={40}
+              height={40}
+              className="transition-transform duration-200 hover:scale-110"
+              priority
+            />
+          </Link>
+          <Link
+            href="/products"
+            className="font-semibold hover:underline"
+            style={{ color: 'var(--foreground)' }}
+          >
+            Products
+          </Link>
         </div>
         <div className="flex items-center space-x-4">
           {isAuthenticated && (
@@ -47,7 +70,8 @@ const Header: React.FC = () => {
               </span>
               <button
                 onClick={handleLogout}
-                className="cursor-pointer px-2 py-1 rounded hover:bg-gray-700 transition"
+                className="cursor-pointer px-2 py-1 rounded hover:bg-gray-200 transition"
+                style={{ color: 'var(--foreground)' }}
               >
                 Logout
               </button>
@@ -55,8 +79,9 @@ const Header: React.FC = () => {
           )}
           <button
             onClick={handleCartClick}
-            className="relative flex items-center p-2 rounded hover:bg-gray-700 focus:outline-none"
+            className="relative flex items-center p-2 rounded hover:bg-gray-200 focus:outline-none"
             aria-label="Cart"
+            style={{ color: 'var(--foreground)' }}
           >
             <ShoppingCart className="w-6 h-6" />
             {totalItems > 0 && (
