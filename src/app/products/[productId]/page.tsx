@@ -20,7 +20,8 @@ async function getProduct(productId: string): Promise<Product | null> {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/') 
       ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1) 
       : process.env.NEXT_PUBLIC_API_BASE_URL;
-    const url = `${baseUrl}/api/products/${productId}/`;
+    // Corrected URL to match backend: /products/{productId}/
+    const url = `${baseUrl}/products/${productId}/`;
 
     const res = await fetch(
       url,

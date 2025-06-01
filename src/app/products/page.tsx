@@ -11,7 +11,8 @@ async function getProducts(): Promise<Product[]> {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/') 
     ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1) 
     : process.env.NEXT_PUBLIC_API_BASE_URL;
-  const url = `${baseUrl}/product/`;
+  // Corrected URL to match backend: /products/
+  const url = `${baseUrl}/products/`;
 
   console.log('Fetching products from:', url);
 
