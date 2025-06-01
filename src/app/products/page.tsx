@@ -11,13 +11,10 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-// Import Image component for placeholder
-import Image from 'next/image';
-
 // Define an interface for the raw product data from the API response
 interface ApiResponseProduct {
   id: string; // Backend sends ID as 'id' string
-  _id?: string | { $oid: string } | null | undefined; // Keep this optional if the backend might still send it
+  _id?: string | { $oid: string } | null | undefined;
   product_name: string;
   price: string | number;
   description?: string;
@@ -26,7 +23,7 @@ interface ApiResponseProduct {
   ingredients?: string[];
   benefits?: string[];
   category?: string;
-  variants?: any[]; 
+  variants?: any[];
   tags?: string[];
   availability?: boolean;
   variations?: any[];
@@ -44,8 +41,6 @@ async function getProducts(): Promise<Product[]> {
     : process.env.NEXT_PUBLIC_API_BASE_URL;
   const url = `${baseUrl}/products/`;
 
-  console.log('Fetching products from:', url);
-
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch products');
 
@@ -54,25 +49,27 @@ async function getProducts(): Promise<Product[]> {
   // Map the raw API response to the Product type, using 'id' for _id and normalizing price
   const products = data.results.map((product: ApiResponseProduct): Product => ({
     ...product,
-    _id: String(product.id), // Use product.id from the backend response
-    price: Number(product.price), // Ensure price is a number
+    _id: String(product.id),
+    price: Number(product.price),
   }));
 
   // Filter out products where _id is not a valid non-empty string
-  const filteredProducts = products.filter((product: Product) => { 
-    const isValidId = typeof product._id === 'string' && product._id.length > 0 && product._id !== 'undefined' && product._id !== 'null';
-    if (!isValidId) {
-      console.warn(`Filtering out product with invalid _id: ${product.product_name || 'Unknown Product'}`);
-    }
+  const filteredProducts = products.filter((product: Product) => {
+    const isValidId =
+      typeof product._id === 'string' &&
+      product._id.length > 0 &&
+      product._id !== 'undefined' &&
+      product._id !== 'null';
     return isValidId;
   });
 
   return filteredProducts;
 }
 
-// Define fallback image path for empty categories
-const FALLBACK_IMAGE_PLACEHOLDER = '/images/products/beard-balm.jpg'; // Using the same fallback as ProductItem for consistency
+// Fallback image path for empty categories
+const FALLBACK_IMAGE_PLACEHOLDER = '/images/products/beard-balm.jpg';
 
+// Main Products Page
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,26 +88,30 @@ export default function ProductsPage() {
         // Group products by category, initializing with all target categories
         const grouped: { [key: string]: Product[] } = {};
         categories.forEach(category => {
-          grouped[category] = []; // Initialize each target category with an empty array
+          grouped[category] = [];
         });
 
         fetchedProducts.forEach(product => {
-          // Only group if product.category is a non-empty string and is one of the target categories
-          if (typeof product.category === 'string' && product.category && categories.includes(product.category)) {
-             grouped[product.category].push(product);
+          if (
+            typeof product.category === 'string' &&
+            product.category &&
+            categories.includes(product.category)
+          ) {
+            grouped[product.category].push(product);
           }
         });
-        setProductsByCategory(grouped);
 
+        setProductsByCategory(grouped);
       } catch {
         setError('Failed to fetch products');
       } finally {
         setLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Settings for react-slick carousel with multiple items
+  // react-slick settings for multiple items
   const multiItemSettings = {
     dots: true,
     infinite: true,
@@ -124,28 +125,28 @@ export default function ProductsPage() {
           slidesToShow: 3,
           slidesToScroll: 1,
           infinite: true,
-          dots: true
-        }
+          dots: true,
+        },
       },
       {
         breakpoint: 600,
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
-          initialSlide: 2
-        }
+          initialSlide: 2,
+        },
       },
       {
         breakpoint: 480,
         settings: {
           slidesToShow: 1,
-          slidesToScroll: 1
-        }
-      }
-    ]
+          slidesToScroll: 1,
+        },
+      },
+    ],
   };
 
-  // Settings for react-slick carousel with a single item (placeholder)
+  // react-slick settings for single item
   const singleItemSettings = {
     dots: false,
     infinite: false,
@@ -168,38 +169,36 @@ export default function ProductsPage() {
         ) : (
           <div>
             {categories.map(category => {
-              // Determine which settings to use based on whether there are products in the category
-              const currentSettings = productsByCategory[category] && productsByCategory[category].length > 0
+              const hasProducts =
+                productsByCategory[category] &&
+                productsByCategory[category].length > 0;
+
+              const currentSettings = hasProducts
                 ? multiItemSettings
                 : singleItemSettings;
-
-              console.log(`Category: ${category}, Using settings:`, currentSettings);
 
               return (
                 <div key={category} className="mb-8">
                   <h2 className="text-xl font-bold mb-3 capitalize">{category}</h2>
-                  <Slider {...currentSettings}> {/* Use the determined settings */}
-                    {productsByCategory[category] && productsByCategory[category].length > 0 ? (
+                  <Slider {...currentSettings}>
+                    {hasProducts ? (
                       productsByCategory[category].map(p => (
-                        <div key={p._id} className="px-2"> {/* Added padding for spacing in carousel */}
+                        <div key={p._id} className="px-2">
                           <ProductItem product={p} />
                         </div>
                       ))
                     ) : (
-                      // Placeholder content for empty categories, wrapped to be treated as a single slide
-                      <div className="px-2"> 
-                        <div className="border p-4 rounded flex flex-col items-center justify-center h-full text-center"> {/* Adjusted styling for placeholder container */}
-                           <div className="relative w-full h-48 mb-4"> {/* Container for the image */} 
-                            <Image
-                              src={FALLBACK_IMAGE_PLACEHOLDER}
-                              alt="No products available placeholder"
-                              fill
-                              className="rounded object-cover"
-                              sizes="(max-width: 768px) 100vw, 33vw"
-                            />
-                           </div>
-                          <p>No products available in this category.</p>
-                        </div>
+                      // Single, flat placeholder slide
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <img
+                          src={FALLBACK_IMAGE_PLACEHOLDER}
+                          alt="No products available"
+                          className="h-32 w-auto object-contain mb-4"
+                          draggable={false}
+                        />
+                        <p className="text-gray-500">
+                          No products available in this category.
+                        </p>
                       </div>
                     )}
                   </Slider>
