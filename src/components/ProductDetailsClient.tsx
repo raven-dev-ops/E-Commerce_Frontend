@@ -111,7 +111,9 @@ const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) 
             <div>
               <h1 className="text-3xl font-bold mb-2">{product.product_name}</h1>
               <p className="text-lg font-semibold mb-2">${formattedPrice}</p>
-              {product.description && <p className="mb-4">{product.description}</p>}
+              {product.description && (
+                <p className="mb-4 max-w-md">{product.description}</p>
+              )}
             </div>
             {Array.isArray(product.ingredients) && product.ingredients.length > 0 && (
               <div className="mt-6">
