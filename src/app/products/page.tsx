@@ -182,11 +182,12 @@ export default function ProductsPage() {
                       <div key={p._id} className="px-2">
                         <Link
                           href={`/products/${p._id}`}
-                          className="block group cursor-pointer focus:outline-none focus-visible:outline-2 focus-visible:outline-blue-400 outline-offset-2"
+                          className="block group cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition bg-white"
                           tabIndex={0}
                           aria-label={`View details for ${p.product_name}`}
+                          style={{ outline: "none" }} // ensures outline never stacks with ring
                         >
-                          <div className="flex flex-col items-center group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition rounded-xl bg-white">
+                          <div className="flex flex-col items-center">
                             <div className="relative w-full h-48 bg-gray-100 overflow-hidden rounded-xl flex items-center justify-center p-2">
                               <Image
                                 src={getProductImage(p)}
