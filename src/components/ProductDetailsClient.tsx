@@ -1,8 +1,6 @@
-// src/components/ProductDetailsClient.tsx
-
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useStore } from "@/store/useStore";
 import type { Product } from '@/types/product';
@@ -21,19 +19,16 @@ const getPublicImageUrl = (input?: string) => {
 };
 
 const IMAGE_WIDTH = 400;
-const IMAGE_HEIGHT = 500; // Adjust as needed for your site
+const IMAGE_HEIGHT = 500;
+const THUMB_SIZE = 80;
 
 const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) => {
   const { addToCart } = useStore();
 
-  const handleAddToCart = () => {
-    const id = typeof product._id === "number" ? product._id : Number(product._id);
-    if (!isNaN(id)) addToCart(id);
-  };
-
   const price = Number(product.price);
   const formattedPrice = !isNaN(price) ? price.toFixed(2) : "0.00";
 
+  // Build array of images
   let imagesToShow: string[] = [];
   if (Array.isArray(product.images) && product.images.length > 0) {
     imagesToShow = product.images
@@ -43,67 +38,106 @@ const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) 
     const publicPath = getPublicImageUrl(product.image);
     if (publicPath) imagesToShow = [publicPath];
   }
-  if (imagesToShow.length === 0) {
-    imagesToShow = [FALLBACK_IMAGE];
-  }
+  if (imagesToShow.length === 0) imagesToShow = [FALLBACK_IMAGE];
+
+  // State for currently selected main image
+  const [selectedIdx, setSelectedIdx] = useState(0);
+
+  const handleAddToCart = () => {
+    const id = typeof product._id === "number" ? product._id : Number(product._id);
+    if (!isNaN(id)) addToCart(id);
+  };
 
   return (
     <div className="container mx-auto p-4">
-      {/* Image Gallery */}
-      <div className={`grid ${imagesToShow.length > 1 ? "grid-cols-2 md:grid-cols-3 gap-4 mb-4" : ""}`}>
-        {imagesToShow.map((src, i) => (
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* LEFT: Images */}
+        <div className="flex flex-row lg:flex-col gap-4">
+          {/* Thumbnails (hide if only one image) */}
+          {imagesToShow.length > 1 && (
+            <div className="flex lg:flex-col flex-row gap-2 lg:mb-2">
+              {imagesToShow.map((src, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  aria-label={`Show image ${idx + 1}`}
+                  onClick={() => setSelectedIdx(idx)}
+                  className={`border rounded overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all
+                    ${selectedIdx === idx ? "ring-2 ring-blue-500 border-blue-500" : "border-gray-300"}
+                    bg-white w-[${THUMB_SIZE}px] h-[${THUMB_SIZE}px] flex items-center justify-center`}
+                  style={{
+                    width: THUMB_SIZE,
+                    height: THUMB_SIZE,
+                  }}
+                >
+                  <Image
+                    src={src}
+                    alt={`Thumbnail ${idx + 1}`}
+                    width={THUMB_SIZE}
+                    height={THUMB_SIZE}
+                    className="object-contain w-full h-full"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Main Image */}
           <div
-            key={i}
-            className="relative mx-auto mb-4 aspect-[4/5] w-full max-w-xs bg-gray-100 rounded overflow-hidden"
-            style={{ minWidth: `${IMAGE_WIDTH}px`, maxWidth: `${IMAGE_WIDTH}px` }}
+            className="relative rounded overflow-hidden bg-gray-100"
+            style={{ width: IMAGE_WIDTH, height: IMAGE_HEIGHT, minWidth: IMAGE_WIDTH }}
           >
             <Image
-              src={src}
-              alt={`${product.product_name} image ${i + 1}`}
+              src={imagesToShow[selectedIdx]}
+              alt={`${product.product_name} main image`}
               width={IMAGE_WIDTH}
               height={IMAGE_HEIGHT}
               className="object-contain w-full h-full"
-              priority={i === 0}
+              priority
             />
           </div>
-        ))}
+        </div>
+        {/* RIGHT: Details */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex flex-col h-full">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{product.product_name}</h1>
+              <p className="text-lg font-semibold mb-2">${formattedPrice}</p>
+              {product.description && <p className="mb-4">{product.description}</p>}
+            </div>
+            {Array.isArray(product.ingredients) && product.ingredients.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-2xl font-bold mb-2">Ingredients</h2>
+                <ul className="list-disc list-inside">
+                  {product.ingredients.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {Array.isArray(product.benefits) && product.benefits.length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-2xl font-bold mb-2">Benefits</h2>
+                <ul className="list-disc list-inside">
+                  {product.benefits.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {/* Spacer */}
+            <div className="flex-1" />
+            {/* Add to Cart button at the bottom */}
+            <div className="mt-8">
+              <button
+                onClick={handleAddToCart}
+                className="w-full bg-blue-500 text-white px-6 py-3 rounded font-bold text-lg hover:bg-blue-600 transition"
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Product Info */}
-      <h1 className="text-3xl font-bold mb-2">{product.product_name}</h1>
-      <p className="text-lg font-semibold mb-2">${formattedPrice}</p>
-      {product.description && <p className="mb-4">{product.description}</p>}
-
-      <button
-        onClick={handleAddToCart}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
-        Add to Cart
-      </button>
-
-      {/* Ingredients */}
-      {Array.isArray(product.ingredients) && product.ingredients.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-2xl font-bold mb-2">Ingredients</h2>
-          <ul className="list-disc list-inside">
-            {product.ingredients.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Benefits */}
-      {Array.isArray(product.benefits) && product.benefits.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-2xl font-bold mb-2">Benefits</h2>
-          <ul className="list-disc list-inside">
-            {product.benefits.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };
