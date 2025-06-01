@@ -32,6 +32,8 @@ interface ApiResponseProduct {
   review_count?: number;
 }
 
+const FALLBACK_IMAGE = "/images/products/beard-balm.jpg";
+
 async function getProducts(): Promise<Product[]> {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/')
     ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1)
@@ -61,62 +63,46 @@ async function getProducts(): Promise<Product[]> {
   return filteredProducts;
 }
 
-// Carousel settings generator for consistent card sizing
-const getCarouselSettings = (itemCount: number) => {
-  return {
-    dots: itemCount >= 4,
-    infinite: itemCount >= 4,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    arrows: itemCount >= 4,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: Math.min(3, itemCount),
-          slidesToScroll: 1,
-          infinite: itemCount >= 3,
-          dots: itemCount >= 3,
-          arrows: itemCount >= 3,
-        },
+const getCarouselSettings = (itemCount: number) => ({
+  dots: itemCount >= 4,
+  infinite: itemCount >= 4,
+  speed: 500,
+  slidesToShow: 4,
+  slidesToScroll: 1,
+  arrows: itemCount >= 4,
+  responsive: [
+    {
+      breakpoint: 1024,
+      settings: {
+        slidesToShow: Math.min(3, itemCount),
+        slidesToScroll: 1,
+        infinite: itemCount >= 3,
+        dots: itemCount >= 3,
+        arrows: itemCount >= 3,
       },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: Math.min(2, itemCount),
-          slidesToScroll: 1,
-          infinite: itemCount >= 2,
-          dots: itemCount >= 2,
-          arrows: itemCount >= 2,
-        },
+    },
+    {
+      breakpoint: 600,
+      settings: {
+        slidesToShow: Math.min(2, itemCount),
+        slidesToScroll: 1,
+        infinite: itemCount >= 2,
+        dots: itemCount >= 2,
+        arrows: itemCount >= 2,
       },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          infinite: false,
-          dots: false,
-          arrows: false,
-        },
+    },
+    {
+      breakpoint: 480,
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        infinite: false,
+        dots: false,
+        arrows: false,
       },
-    ],
-  };
-};
-
-const FALLBACK_IMAGE = "/images/products/beard-balm.jpg";
-const getProductImage = (product: Product) => {
-  if (Array.isArray(product.images) && product.images.length > 0) {
-    const fileName = product.images[0]?.split("/").pop();
-    return fileName ? `/images/products/${fileName}` : FALLBACK_IMAGE;
-  }
-  if (product.image) {
-    const fileName = product.image.split("/").pop();
-    return fileName ? `/images/products/${fileName}` : FALLBACK_IMAGE;
-  }
-  return FALLBACK_IMAGE;
-};
+    },
+  ],
+});
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -156,6 +142,64 @@ export default function ProductsPage() {
     })();
   }, []);
 
+  // Each card needs its own hovered image index and interval, so manage in child components
+  // For a simple approach, use an inline component here.
+  function ProductCard({ p }: { p: Product }) {
+    const productImages = Array.isArray(p.images) && p.images.length > 0
+      ? p.images.map(img => {
+          const fileName = img?.split("/").pop();
+          return fileName ? `/images/products/${fileName}` : FALLBACK_IMAGE;
+        })
+      : [FALLBACK_IMAGE];
+
+    const [hoveredIdx, setHoveredIdx] = useState(0);
+    const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+
+    const handleMouseEnter = () => {
+      if (productImages.length <= 1) return;
+      let idx = 0;
+      const id = setInterval(() => {
+        idx = (idx + 1) % productImages.length;
+        setHoveredIdx(idx);
+      }, 600);
+      setIntervalId(id);
+    };
+
+    const handleMouseLeave = () => {
+      if (intervalId) clearInterval(intervalId);
+      setHoveredIdx(0);
+    };
+
+    return (
+      <Link
+        href={`/products/${p._id}`}
+        className="block group cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition bg-white"
+        tabIndex={0}
+        aria-label={`View details for ${p.product_name}`}
+        style={{ outline: "none" }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="flex flex-col items-center transform transition-transform duration-200 group-hover:scale-105">
+          <div className="relative w-full h-48 bg-gray-100 overflow-hidden rounded-xl flex items-center justify-center p-2">
+            <Image
+              src={productImages[hoveredIdx]}
+              alt={p.product_name}
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 100vw, 25vw"
+              priority={false}
+            />
+          </div>
+          <div className="w-full flex flex-col items-center gap-1 mt-2 px-1 pb-2">
+            <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{p.product_name}</span>
+            <span className="text-sm font-bold text-blue-600">${Number(p.price).toFixed(2)}</span>
+          </div>
+        </div>
+      </Link>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Products</h1>
@@ -180,30 +224,7 @@ export default function ProductsPage() {
                   <Slider {...carouselSettings}>
                     {items.map(p => (
                       <div key={p._id} className="px-2">
-                        <Link
-                          href={`/products/${p._id}`}
-                          className="block group cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition bg-white"
-                          tabIndex={0}
-                          aria-label={`View details for ${p.product_name}`}
-                          style={{ outline: "none" }} // ensures outline never stacks with ring
-                        >
-                          <div className="flex flex-col items-center">
-                            <div className="relative w-full h-48 bg-gray-100 overflow-hidden rounded-xl flex items-center justify-center p-2">
-                              <Image
-                                src={getProductImage(p)}
-                                alt={p.product_name}
-                                fill
-                                className="object-contain"
-                                sizes="(max-width: 768px) 100vw, 25vw"
-                                priority={false}
-                              />
-                            </div>
-                            <div className="w-full flex flex-col items-center gap-1 mt-2 px-1 pb-2">
-                              <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{p.product_name}</span>
-                              <span className="text-sm font-bold text-blue-600">${Number(p.price).toFixed(2)}</span>
-                            </div>
-                          </div>
-                        </Link>
+                        <ProductCard p={p} />
                       </div>
                     ))}
                   </Slider>
