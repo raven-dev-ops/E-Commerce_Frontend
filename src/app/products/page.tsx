@@ -11,6 +11,9 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+// Import Image component for placeholder
+import Image from 'next/image';
+
 // Define an interface for the raw product data from the API response
 interface ApiResponseProduct {
   id: string; // Backend sends ID as 'id' string
@@ -66,6 +69,9 @@ async function getProducts(): Promise<Product[]> {
 
   return filteredProducts;
 }
+
+// Define fallback image path for empty categories
+const FALLBACK_IMAGE_PLACEHOLDER = '/images/products/beard-balm.jpg'; // Using the same fallback as ProductItem for consistency
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -180,8 +186,18 @@ export default function ProductsPage() {
                         </div>
                       ))
                     ) : (
-                      <div className="px-2"> {/* Wrap placeholder in px-2 div */}
-                        <div className="flex items-center justify-center h-48 w-full">
+                      // Placeholder content for empty categories, wrapped to be treated as a single slide
+                      <div className="px-2"> 
+                        <div className="border p-4 rounded flex flex-col items-center justify-center h-full text-center"> {/* Adjusted styling for placeholder container */}
+                           <div className="relative w-full h-48 mb-4"> {/* Container for the image */} 
+                            <Image
+                              src={FALLBACK_IMAGE_PLACEHOLDER}
+                              alt="No products available placeholder"
+                              fill
+                              className="rounded object-cover"
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                            />
+                           </div>
                           <p>No products available in this category.</p>
                         </div>
                       </div>
