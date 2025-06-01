@@ -11,7 +11,10 @@ const Header: React.FC = () => {
   const { cart, isAuthenticated, user, logout } = useStore();
   const router = useRouter();
 
-  const totalItems = cart?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+  const totalItems = cart?.reduce(
+    (sum: number, item: { quantity?: number }) => sum + (item.quantity || 0),
+    0
+  ) || 0;
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {

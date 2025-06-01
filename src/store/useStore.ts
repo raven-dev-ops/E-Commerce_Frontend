@@ -1,16 +1,23 @@
 // frontend/src/store/useStore.ts
-import { create } from 'zustand';
 
+import { create, StateCreator } from 'zustand';
+
+// Type for a cart item
 export interface CartItem {
   productId: number;
   quantity: number;
 }
 
-interface StoreState {
+interface User {
+  [key: string]: any;
+}
+
+// Store state type
+export interface StoreState {
   isAuthenticated: boolean;
-  user: { [key: string]: any } | null;
+  user: User | null;
   cart: CartItem[];
-  login: (userData: { [key: string]: any }) => void;
+  login: (userData: User) => void;
   logout: () => void;
   addToCart: (productId: number, qty?: number) => void;
   clearCart: () => void;
@@ -45,55 +52,57 @@ const loadCartFromLocalStorage = (): CartItem[] => {
   return [];
 };
 
-export const useStore = create<StoreState>((set) => ({
-  isAuthenticated: false,
-  user: null,
-  cart: [],
+export const useStore = create<StoreState>(
+  (set: Parameters<StateCreator<StoreState>>[0]) => ({
+    isAuthenticated: false,
+    user: null,
+    cart: [],
 
-  login: (userData) => set({ isAuthenticated: true, user: userData }),
+    login: (userData: User) => set({ isAuthenticated: true, user: userData }),
 
-  logout: () => set({ isAuthenticated: false, user: null }),
+    logout: () => set({ isAuthenticated: false, user: null }),
 
-  hydrateCart: () => {
-    set({ cart: loadCartFromLocalStorage() });
-  },
+    hydrateCart: () => {
+      set({ cart: loadCartFromLocalStorage() });
+    },
 
-  addToCart: (productId, qty = 1) =>
-    set((state) => {
-      const existing = state.cart.find((i) => i.productId === productId);
-      let updatedCart;
-      if (existing) {
-        updatedCart = state.cart.map((i) =>
-          i.productId === productId ? { ...i, quantity: i.quantity + qty } : i
-        );
-      } else {
-        updatedCart = [...state.cart, { productId, quantity: qty }];
-      }
-      saveCartToLocalStorage(updatedCart);
-      return { cart: updatedCart };
-    }),
+    addToCart: (productId: number, qty: number = 1) =>
+      set((state: StoreState) => {
+        const existing = state.cart.find((i) => i.productId === productId);
+        let updatedCart;
+        if (existing) {
+          updatedCart = state.cart.map((i) =>
+            i.productId === productId ? { ...i, quantity: i.quantity + qty } : i
+          );
+        } else {
+          updatedCart = [...state.cart, { productId, quantity: qty }];
+        }
+        saveCartToLocalStorage(updatedCart);
+        return { cart: updatedCart };
+      }),
 
-  clearCart: () => {
-    saveCartToLocalStorage([]);
-    set({ cart: [] });
-  },
+    clearCart: () => {
+      saveCartToLocalStorage([]);
+      set({ cart: [] });
+    },
 
-  updateCartItemQuantity: (productId, newQuantity) =>
-    set((state) => {
-      const updatedCart =
-        newQuantity <= 0
-          ? state.cart.filter((item) => item.productId !== productId)
-          : state.cart.map((item) =>
-              item.productId === productId ? { ...item, quantity: newQuantity } : item
-            );
-      saveCartToLocalStorage(updatedCart);
-      return { cart: updatedCart };
-    }),
+    updateCartItemQuantity: (productId: number, newQuantity: number) =>
+      set((state: StoreState) => {
+        const updatedCart =
+          newQuantity <= 0
+            ? state.cart.filter((item) => item.productId !== productId)
+            : state.cart.map((item) =>
+                item.productId === productId ? { ...item, quantity: newQuantity } : item
+              );
+        saveCartToLocalStorage(updatedCart);
+        return { cart: updatedCart };
+      }),
 
-  removeFromCart: (productId) =>
-    set((state) => {
-      const updatedCart = state.cart.filter((item) => item.productId !== productId);
-      saveCartToLocalStorage(updatedCart);
-      return { cart: updatedCart };
-    }),
-}));
+    removeFromCart: (productId: number) =>
+      set((state: StoreState) => {
+        const updatedCart = state.cart.filter((item) => item.productId !== productId);
+        saveCartToLocalStorage(updatedCart);
+        return { cart: updatedCart };
+      }),
+  })
+);

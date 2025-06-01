@@ -4,14 +4,15 @@
 
 import { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { useStore } from '@/store/useStore';
+import { useStore, StoreState } from '@/store/useStore'; // Import StoreState
 import { api } from '@/lib/api';
 
 export default function CheckoutForm() {
   const stripe = useStripe();
   const elements = useElements();
 
-  const clearCart = useStore(state => state.clearCart);
+  // Typed selector to fix the TS error
+  const clearCart = useStore((state: StoreState) => state.clearCart);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -38,11 +39,10 @@ export default function CheckoutForm() {
       return;
     }
 
- try {
+    try {
       await api.post('/orders/', {
         payment_method_id: paymentMethod.id,
-      }
-      );
+      });
 
       clearCart();
       window.location.href = '/';
