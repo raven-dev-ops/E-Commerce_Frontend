@@ -104,6 +104,81 @@ const getCarouselSettings = (itemCount: number) => ({
   ],
 });
 
+function ProductCard({ p }: { p: Product }) {
+  const productImages = Array.isArray(p.images) && p.images.length > 0
+    ? p.images.map(img => {
+        const fileName = img?.split("/").pop();
+        return fileName ? `/images/products/${fileName}` : FALLBACK_IMAGE;
+      })
+    : [FALLBACK_IMAGE];
+
+  const [hoveredIdx, setHoveredIdx] = useState(0);
+  const [prevIdx, setPrevIdx] = useState(0);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [fading, setFading] = useState(false);
+
+  const handleMouseEnter = () => {
+    if (productImages.length <= 1) return;
+    let idx = 0;
+    const id = setInterval(() => {
+      setPrevIdx(idx);
+      idx = (idx + 1) % productImages.length;
+      setHoveredIdx(idx);
+      setFading(true);
+      setTimeout(() => setFading(false), 350); // match fade duration
+    }, 1200); // slower by default, adjust if you want
+    setIntervalId(id);
+  };
+
+  const handleMouseLeave = () => {
+    if (intervalId) clearInterval(intervalId);
+    setHoveredIdx(0);
+    setPrevIdx(0);
+    setFading(false);
+  };
+
+  return (
+    <Link
+      href={`/products/${p._id}`}
+      className="block group cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition bg-white"
+      tabIndex={0}
+      aria-label={`View details for ${p.product_name}`}
+      style={{ outline: "none" }} // ensures outline never stacks with ring
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div className="flex flex-col items-center transform transition-transform duration-200 group-hover:scale-105">
+        <div className="relative w-full h-48 bg-gray-100 overflow-hidden rounded-xl flex items-center justify-center p-2">
+          {/* Previous image for fade out */}
+          {productImages.length > 1 && hoveredIdx !== prevIdx && (
+            <Image
+              src={productImages[prevIdx]}
+              alt={p.product_name + " previous"}
+              fill
+              className={`object-contain w-full h-full absolute inset-0 transition-opacity duration-300 pointer-events-none ${fading ? "opacity-0" : "opacity-0"}`}
+              sizes="(max-width: 768px) 100vw, 25vw"
+              priority={false}
+            />
+          )}
+          {/* Current image for fade in */}
+          <Image
+            src={productImages[hoveredIdx]}
+            alt={p.product_name}
+            fill
+            className={`object-contain w-full h-full absolute inset-0 transition-opacity duration-300 ${fading ? "opacity-100" : "opacity-100"}`}
+            sizes="(max-width: 768px) 100vw, 25vw"
+            priority={false}
+          />
+        </div>
+        <div className="w-full flex flex-col items-center gap-1 mt-2 px-1 pb-2">
+          <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{p.product_name}</span>
+          <span className="text-sm font-bold text-blue-600">${Number(p.price).toFixed(2)}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -141,64 +216,6 @@ export default function ProductsPage() {
       }
     })();
   }, []);
-
-  // Each card needs its own hovered image index and interval, so manage in child components
-  // For a simple approach, use an inline component here.
-  function ProductCard({ p }: { p: Product }) {
-    const productImages = Array.isArray(p.images) && p.images.length > 0
-      ? p.images.map(img => {
-          const fileName = img?.split("/").pop();
-          return fileName ? `/images/products/${fileName}` : FALLBACK_IMAGE;
-        })
-      : [FALLBACK_IMAGE];
-
-    const [hoveredIdx, setHoveredIdx] = useState(0);
-    const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
-
-    const handleMouseEnter = () => {
-      if (productImages.length <= 1) return;
-      let idx = 0;
-      const id = setInterval(() => {
-        idx = (idx + 1) % productImages.length;
-        setHoveredIdx(idx);
-      }, 600);
-      setIntervalId(id);
-    };
-
-    const handleMouseLeave = () => {
-      if (intervalId) clearInterval(intervalId);
-      setHoveredIdx(0);
-    };
-
-    return (
-      <Link
-        href={`/products/${p._id}`}
-        className="block group cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition bg-white"
-        tabIndex={0}
-        aria-label={`View details for ${p.product_name}`}
-        style={{ outline: "none" }}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className="flex flex-col items-center transform transition-transform duration-200 group-hover:scale-105">
-          <div className="relative w-full h-48 bg-gray-100 overflow-hidden rounded-xl flex items-center justify-center p-2">
-            <Image
-              src={productImages[hoveredIdx]}
-              alt={p.product_name}
-              fill
-              className="object-contain"
-              sizes="(max-width: 768px) 100vw, 25vw"
-              priority={false}
-            />
-          </div>
-          <div className="w-full flex flex-col items-center gap-1 mt-2 px-1 pb-2">
-            <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{p.product_name}</span>
-            <span className="text-sm font-bold text-blue-600">${Number(p.price).toFixed(2)}</span>
-          </div>
-        </div>
-      </Link>
-    );
-  }
 
   return (
     <div className="container mx-auto p-4">
