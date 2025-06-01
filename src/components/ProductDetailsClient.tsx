@@ -5,32 +5,32 @@
 import React from "react";
 import Image from "next/image";
 import { useStore } from "@/store/useStore";
-import type { Product } from '@/types/product'; // Import the shared Product type
+import type { Product } from '@/types/product';
 
 interface ProductDetailsClientProps {
-  product: Product; // Use the imported Product type
+  product: Product;
 }
 
-const FALLBACK_IMAGE = "/images/products/beard-balm.jpg"; // Fallback image in products folder
+const FALLBACK_IMAGE = "/images/products/beard-balm.jpg";
 
-// Always resolve to the filename, then use products folder
 const getPublicImageUrl = (input?: string) => {
   if (!input) return undefined;
-  const fileName = input.split("/").pop(); // Handles '/images/foo.jpg', '/media/bar.jpg', 'baz.jpg'
+  const fileName = input.split("/").pop();
   if (!fileName) return undefined;
   return `/images/products/${fileName}`;
 };
+
+const IMAGE_WIDTH = 400;
+const IMAGE_HEIGHT = 500; // Adjust as needed for your site
 
 const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) => {
   const { addToCart } = useStore();
 
   const handleAddToCart = () => {
-    // Use product._id for adding to cart
     const id = typeof product._id === "number" ? product._id : Number(product._id);
     if (!isNaN(id)) addToCart(id);
   };
 
-  // Ensure price is treated as a number
   const price = Number(product.price);
   const formattedPrice = !isNaN(price) ? price.toFixed(2) : "0.00";
 
@@ -52,15 +52,18 @@ const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) 
       {/* Image Gallery */}
       <div className={`grid ${imagesToShow.length > 1 ? "grid-cols-2 md:grid-cols-3 gap-4 mb-4" : ""}`}>
         {imagesToShow.map((src, i) => (
-          <div key={i} className="relative w-full h-48 mb-4">
+          <div
+            key={i}
+            className="relative mx-auto mb-4 aspect-[4/5] w-full max-w-xs bg-gray-100 rounded overflow-hidden"
+            style={{ minWidth: `${IMAGE_WIDTH}px`, maxWidth: `${IMAGE_WIDTH}px` }}
+          >
             <Image
               src={src}
               alt={`${product.product_name} image ${i + 1}`}
-              fill
-              className="rounded object-cover"
-              sizes="(max-width: 768px) 100vw, 33vw"
+              width={IMAGE_WIDTH}
+              height={IMAGE_HEIGHT}
+              className="object-contain w-full h-full"
               priority={i === 0}
-              // You can add onError here in future for even more graceful fallback
             />
           </div>
         ))}
