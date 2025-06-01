@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import ReactImageMagnify from "react-image-magnify";
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
 import { useStore } from "@/store/useStore";
 import type { Product } from "@/types/product";
 
@@ -92,26 +93,16 @@ const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) 
               maxWidth: IMAGE_WIDTH,
             }}
           >
-            <ReactImageMagnify
-              {...{
-                smallImage: {
-                  alt: `${product.product_name} main image`,
-                  isFluidWidth: false,
-                  src: imagesToShow[selectedIdx],
-                  width: IMAGE_WIDTH,
-                  height: IMAGE_HEIGHT,
-                },
-                largeImage: {
-                  src: imagesToShow[selectedIdx],
-                  width: IMAGE_WIDTH * 2,
-                  height: IMAGE_HEIGHT * 2,
-                },
-                enlargedImageContainerStyle: { zIndex: 999 },
-                isHintEnabled: true,
-                enlargedImagePosition: "over", // Or "beside" for a side zoom
-                className: "rounded",
-              }}
-            />
+            <Zoom>
+              <Image
+                src={imagesToShow[selectedIdx]}
+                alt={`${product.product_name} main image`}
+                width={IMAGE_WIDTH}
+                height={IMAGE_HEIGHT}
+                className="object-contain w-full h-full rounded"
+                priority
+              />
+            </Zoom>
           </div>
         </div>
         {/* RIGHT: Details */}
