@@ -6,14 +6,12 @@ import { useEffect, useState } from 'react';
 import ProductItem from '@/components/ProductItem';
 import type { Product } from '@/types/product';
 
-// Import Slider component and styles for react-slick
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-// Define an interface for the raw product data from the API response
 interface ApiResponseProduct {
-  id: string; // Backend sends ID as 'id' string
+  id: string;
   _id?: string | { $oid: string } | null | undefined;
   product_name: string;
   price: string | number;
@@ -46,14 +44,12 @@ async function getProducts(): Promise<Product[]> {
 
   const data = await res.json();
 
-  // Map the raw API response to the Product type, using 'id' for _id and normalizing price
   const products = data.results.map((product: ApiResponseProduct): Product => ({
     ...product,
     _id: String(product.id),
     price: Number(product.price),
   }));
 
-  // Filter out products where _id is not a valid non-empty string
   const filteredProducts = products.filter((product: Product) => {
     const isValidId =
       typeof product._id === 'string' &&
@@ -66,17 +62,12 @@ async function getProducts(): Promise<Product[]> {
   return filteredProducts;
 }
 
-// Fallback image path for empty categories
-const FALLBACK_IMAGE_PLACEHOLDER = '/images/products/beard-balm.jpg';
-
-// Main Products Page
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [productsByCategory, setProductsByCategory] = useState<{ [key: string]: Product[] }>({});
 
-  // Define the target categories
   const categories = ['Balms', 'Washes', 'Oils', 'Wax', 'Soap'];
 
   useEffect(() => {
@@ -85,7 +76,6 @@ export default function ProductsPage() {
         const fetchedProducts = await getProducts();
         setProducts(fetchedProducts);
 
-        // Group products by category, initializing with all target categories
         const grouped: { [key: string]: Product[] } = {};
         categories.forEach(category => {
           grouped[category] = [];
@@ -108,10 +98,9 @@ export default function ProductsPage() {
         setLoading(false);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // react-slick settings for multiple items
+  // Responsive carousel settings for multiple products
   const multiItemSettings = {
     dots: true,
     infinite: true,
@@ -133,7 +122,6 @@ export default function ProductsPage() {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
-          initialSlide: 2,
         },
       },
       {
@@ -146,7 +134,7 @@ export default function ProductsPage() {
     ],
   };
 
-  // react-slick settings for single item
+  // Settings for a single product (no dots, no infinite, single slide)
   const singleItemSettings = {
     dots: false,
     infinite: false,
@@ -169,38 +157,25 @@ export default function ProductsPage() {
         ) : (
           <div>
             {categories.map(category => {
-              const hasProducts =
-                productsByCategory[category] &&
-                productsByCategory[category].length > 0;
+              const items = productsByCategory[category] || [];
+              if (items.length === 0) {
+                // Do not render anything for empty categories
+                return null;
+              }
 
-              const currentSettings = hasProducts
-                ? multiItemSettings
-                : singleItemSettings;
+              const carouselSettings = items.length === 1
+                ? singleItemSettings
+                : multiItemSettings;
 
               return (
                 <div key={category} className="mb-8">
                   <h2 className="text-xl font-bold mb-3 capitalize">{category}</h2>
-                  <Slider {...currentSettings}>
-                    {hasProducts ? (
-                      productsByCategory[category].map(p => (
-                        <div key={p._id} className="px-2">
-                          <ProductItem product={p} />
-                        </div>
-                      ))
-                    ) : (
-                      // Single, flat placeholder slide
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <img
-                          src={FALLBACK_IMAGE_PLACEHOLDER}
-                          alt="No products available"
-                          className="h-32 w-auto object-contain mb-4"
-                          draggable={false}
-                        />
-                        <p className="text-gray-500">
-                          No products available in this category.
-                        </p>
+                  <Slider {...carouselSettings}>
+                    {items.map(p => (
+                      <div key={p._id} className="px-2">
+                        <ProductItem product={p} />
                       </div>
-                    )}
+                    ))}
                   </Slider>
                 </div>
               );
