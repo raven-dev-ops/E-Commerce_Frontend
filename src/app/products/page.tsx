@@ -13,7 +13,7 @@ import "slick-carousel/slick/slick-theme.css";
 
 // Define an interface for the raw product data from the API response
 interface ApiResponseProduct {
-  _id: string | { $oid: string };
+  _id: string | { $oid: string } | null | undefined; // Allow null/undefined for robustness
   product_name: string;
   price: string | number;
   description?: string;
@@ -47,14 +47,25 @@ async function getProducts(): Promise<Product[]> {
 
   const data = await res.json();
 
-  // Map the raw API response to the Product type
-  return data.results.map((product: ApiResponseProduct): Product => ({
+  // Map the raw API response to the Product type, normalize _id and price
+  const products = data.results.map((product: ApiResponseProduct): Product => ({
     ...product,
     _id: typeof product._id === "object" && product._id !== null && "$oid" in product._id
       ? product._id.$oid
       : String(product._id), // Ensure _id is always a string
     price: Number(product.price), // Ensure price is a number
   }));
+
+  // Filter out products where _id is not a valid non-empty string
+  const filteredProducts = products.filter((product: Product) => { // Explicitly type product here
+    const isValidId = typeof product._id === 'string' && product._id.length > 0 && product._id !== 'undefined' && product._id !== 'null';
+    if (!isValidId) {
+      console.warn(`Filtering out product with invalid _id: ${product.product_name || 'Unknown Product'}`);
+    }
+    return isValidId;
+  });
+
+  return filteredProducts;
 }
 
 export default function ProductsPage() {
@@ -144,18 +155,19 @@ export default function ProductsPage() {
             {categories.map(category => (
               <div key={category} className="mb-8">
                 <h2 className="text-xl font-bold mb-3 capitalize">{category}</h2>
-                {productsByCategory[category] && productsByCategory[category].length > 0 ? (
-                  <Slider {...settings}>
-                    {productsByCategory[category].map(p => (
+                <Slider {...settings}>
+                  {productsByCategory[category] && productsByCategory[category].length > 0 ? (
+                    productsByCategory[category].map(p => (
                       <div key={p._id} className="px-2"> {/* Added padding for spacing in carousel */}
                         <ProductItem product={p} />
                       </div>
                     ))
-                  }
-                  </Slider>
-                ) : ( /* No products available in this category */
-                  <p>No products available in this category.</p>
-                )}
+                  ) : (
+                    <div className="flex items-center justify-center h-48 w-full">
+                      <p>No products available in this category.</p>
+                    </div>
+                  )}
+                </Slider>
               </div>
             ))}
           </div>
