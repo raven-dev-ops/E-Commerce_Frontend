@@ -35,9 +35,18 @@ const RootLayout: React.FC<RootLayoutProps> = ({ metadata, children }) => {
         <meta name="twitter:description" content={metadata.description} />
         <meta name="twitter:image" content={metadata.image} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{
+          backgroundImage: "url('/images/background-image.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+          minHeight: "100vh",
+        }}
+      >
         <ClientLayout>
-          {children} {/* Render children within ClientLayout */}
+          {children}
         </ClientLayout>
       </body>
     </html>
