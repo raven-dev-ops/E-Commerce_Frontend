@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import Header from "@/components/Header";
+import Footer from "@/components/Footer"; // Import the Footer component
 import { useStore, StoreState } from '@/store/useStore'; // Import StoreState
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -32,6 +33,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <main className="flex flex-grow items-center justify-center"> 
         {children}
       </main>
+      <Footer /> {/* Add the Footer component here */}
     </div>
   );
 }
