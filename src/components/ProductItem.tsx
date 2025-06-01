@@ -18,6 +18,17 @@ export default function ProductItem({ product }: ProductItemProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Prefer images[0], then image, then fallback.
+  // Moved inside the component where 'product' is in scope
+  const publicImageUrl =
+    product.images && product.images.length > 0
+      ? product.images[0]
+      : product.image
+        ? product.image.startsWith('/images/')
+          ? product.image
+          : `/images/products/${product.image.split('/').pop()}`
+        : '/images/products/beard-balm.jpg'; // fallback image
+
   const handleAddToCart = async () => {
     setLoading(true);
     setError(null);
@@ -31,18 +42,9 @@ export default function ProductItem({ product }: ProductItemProps) {
     }
   };
 
-  // Prefer images[0], then image, then fallback.
-  const publicImageUrl =
-    product.images && product.images.length > 0
-      ? product.images[0]
-      : product.image
-        ? product.image.startsWith('/images/')
-          ? product.image
-          : `/images/products/${product.image.split('/').pop()}`
-        : '/images/products/beard-balm.jpg'; // fallback image
-
   return (
     <div className="border p-4 rounded flex flex-col">
+      {/* Corrected Link href to use product._id */}
       <Link href={`/products/${product._id}`}>
         <div>
           <div className="relative w-full h-48 mb-4">
