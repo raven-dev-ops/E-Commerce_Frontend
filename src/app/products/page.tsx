@@ -18,7 +18,10 @@ async function getProducts(): Promise<Product[]> {
 
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch products');
-  return res.json();
+  
+  const data = await res.json();
+  // Extract the results array from the paginated response
+  return data.results;
 }
 
 export default function ProductsPage() {
