@@ -11,8 +11,8 @@ interface Product {
   product_name: string;
   price: number | string;
   description?: string;
-  image?: string;
-  images?: string[];
+  image?: string; // This should now be the filename from the backend
+  images?: string[]; // These should also be filenames
   ingredients?: string[];
   benefits?: string[];
 }
@@ -21,7 +21,17 @@ interface ProductDetailsClientProps {
   product: Product;
 }
 
-const FALLBACK_IMAGE = "/images/beard-balm.jpg"; // Use your real fallback image path
+const FALLBACK_IMAGE = "/images/beard-balm.jpg"; // Use your real fallback image path in the public directory
+
+// Helper function to construct the full image URL relative to /public
+const getPublicImageUrl = (imageFileName?: string) => {
+  if (!imageFileName) return undefined; // Or return a fallback local image path
+  // Assuming images are in public/images/products/ and backend provides just the filename
+  // If backend provides a path like /media/products/filename.jpg, you might need to adjust this
+  const fileName = imageFileName.split('/').pop(); // Extract filename if path is provided
+  if (!fileName) return undefined; // Handle cases where split fails
+  return `/images/products/${fileName}`;
+};
 
 const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) => {
   const { addToCart } = useStore();
@@ -34,13 +44,17 @@ const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) 
   const price = Number(product.price);
   const formattedPrice = !isNaN(price) ? price.toFixed(2) : "0.00";
 
-  // Determine which images to show
+  // Determine which images to show, using the helper to get public paths
   let imagesToShow: string[] = [];
   if (Array.isArray(product.images) && product.images.length > 0) {
-    imagesToShow = product.images;
+    imagesToShow = product.images.map(img => getPublicImageUrl(img)).filter(Boolean) as string[]; // Map and filter out any undefined
   } else if (product.image) {
-    imagesToShow = [product.image];
-  } else {
+    const publicPath = getPublicImageUrl(product.image);
+    if (publicPath) imagesToShow = [publicPath];
+  }
+
+  // If no images are found, use the fallback
+  if (imagesToShow.length === 0) {
     imagesToShow = [FALLBACK_IMAGE];
   }
 
