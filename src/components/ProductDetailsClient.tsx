@@ -21,6 +21,8 @@ interface ProductDetailsClientProps {
   product: Product;
 }
 
+const FALLBACK_IMAGE = "/images/beard-balm.jpg"; // Use your real fallback image path
+
 const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) => {
   const { addToCart } = useStore();
 
@@ -32,32 +34,33 @@ const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) 
   const price = Number(product.price);
   const formattedPrice = !isNaN(price) ? price.toFixed(2) : "0.00";
 
+  // Determine which images to show
+  let imagesToShow: string[] = [];
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    imagesToShow = product.images;
+  } else if (product.image) {
+    imagesToShow = [product.image];
+  } else {
+    imagesToShow = [FALLBACK_IMAGE];
+  }
+
   return (
     <div className="container mx-auto p-4">
       {/* Image Gallery */}
-      {Array.isArray(product.images) && product.images.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-          {product.images.map((src, i) => (
-            <div key={i} className="relative w-full h-48">
-              <Image
-                src={src}
-                alt={`${product.product_name} image ${i + 1}`}
-                fill
-                className="rounded object-cover"
-              />
-            </div>
-          ))}
-        </div>
-      ) : product.image ? (
-        <div className="relative w-full h-64 mb-4">
-          <Image
-            src={product.image}
-            alt={product.product_name}
-            fill
-            className="rounded object-cover"
-          />
-        </div>
-      ) : null}
+      <div className={`grid ${imagesToShow.length > 1 ? "grid-cols-2 md:grid-cols-3 gap-4 mb-4" : ""}`}>
+        {imagesToShow.map((src, i) => (
+          <div key={i} className="relative w-full h-48 mb-4">
+            <Image
+              src={src}
+              alt={`${product.product_name} image ${i + 1}`}
+              fill
+              className="rounded object-cover"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              priority={i === 0}
+            />
+          </div>
+        ))}
+      </div>
 
       {/* Product Info */}
       <h1 className="text-3xl font-bold mb-2">{product.product_name}</h1>

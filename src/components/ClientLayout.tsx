@@ -33,7 +33,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <main className="flex flex-grow items-center justify-center"> 
         {children}
       </main>
-      <Footer /> {/* Add the Footer component here */}
     </div>
   );
 }
