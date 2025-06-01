@@ -3,7 +3,8 @@
 'use client';
 
 import { useState } from 'react';
-import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { CardElement, useStripe, useElements } from npm install @stripe/react-stripe-js
+;
 import { useStore } from '@/store/useStore';
 import { api } from '@/lib/api';
 
