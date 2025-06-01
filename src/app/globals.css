@@ -27,7 +27,13 @@ body {
 }
 
 .home-background {
-  background: url('/images/background-image.jpg') center center/cover no-repeat fixed !important;
-  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
+  height: 100vh;
+  background: url('/images/background-image.jpg') center center/contain no-repeat;
+  z-index: -1;
+  pointer-events: none; /* ensures clicks go through to your content */
 }
+
