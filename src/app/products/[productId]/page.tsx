@@ -2,34 +2,28 @@
 
 import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
-
-interface Product {
-  _id: string | number;
-  product_name: string;
-  price: number;
-  description?: string;
-  image?: string;
-  images?: string[];
-  ingredients?: string[];
-  benefits?: string[];
-}
+import type { Product } from '@/types/product';
 
 async function getProduct(productId: string): Promise<Product | null> {
   try {
-    // Ensure only one slash between base URL and path
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/') 
-      ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1) 
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/')
+      ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1)
       : process.env.NEXT_PUBLIC_API_BASE_URL;
-    // Corrected URL to match backend: /products/{productId}/
     const url = `${baseUrl}/products/${productId}/`;
 
-    const res = await fetch(
-      url,
-      { cache: 'no-store' }
-    );
+    const res = await fetch(url, { cache: 'no-store' });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as Product;
+    const data = await res.json();
+
+    // Ensure _id is string, price is number
+    const product: Product = {
+      ...data,
+      _id: String(data._id),
+      price: Number(data.price),
+    };
+
+    return product;
   } catch (err) {
     console.error('Failed to fetch product details:', err);
     throw err;
@@ -38,8 +32,6 @@ async function getProduct(productId: string): Promise<Product | null> {
 
 export default async function ProductDetailPage({ params }: any) {
   const product = await getProduct(params.productId);
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
   return <ProductDetailsClient product={product} />;
 }

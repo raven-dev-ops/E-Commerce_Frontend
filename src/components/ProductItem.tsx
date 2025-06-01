@@ -1,5 +1,7 @@
 // src/components/ProductItem.tsx
 
+// src/components/ProductItem.tsx
+
 "use client";
 
 import Image from 'next/image';
@@ -80,3 +82,4 @@ export default function ProductItem({ product }: ProductItemProps) {
     </div>
   );
 }
+
