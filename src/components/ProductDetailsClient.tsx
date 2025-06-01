@@ -52,38 +52,37 @@ const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) 
 
   return (
     <div className="container mx-auto p-4">
-      <div className="max-w-5xl mx-auto flex flex-col lg:flex-row gap-8">
-        {/* LEFT: Images */}
-        <div className="flex flex-row lg:flex-col gap-4">
-          {/* Thumbnails (hide if only one image) */}
-          {imagesToShow.length > 1 && (
-            <div className="flex lg:flex-col flex-row gap-2 lg:mb-2">
-              {imagesToShow.map((src, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  aria-label={`Show image ${idx + 1}`}
-                  onClick={() => setSelectedIdx(idx)}
-                  className={`border rounded overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all
-                    ${selectedIdx === idx ? "ring-2 ring-blue-500 border-blue-500" : "border-gray-300"}
-                    bg-white`}
-                  style={{
-                    width: THUMB_SIZE,
-                    height: THUMB_SIZE,
-                  }}
-                >
-                  <Image
-                    src={src}
-                    alt={`Thumbnail ${idx + 1}`}
-                    width={THUMB_SIZE}
-                    height={THUMB_SIZE}
-                    className="object-contain w-full h-full"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-          {/* Main Image with Medium Zoom (click to zoom) */}
+      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
+        {/* LEFT: Thumbnails */}
+        {imagesToShow.length > 1 && (
+          <div className="flex lg:flex-col flex-row gap-2 items-start">
+            {imagesToShow.map((src, idx) => (
+              <button
+                key={idx}
+                type="button"
+                aria-label={`Show image ${idx + 1}`}
+                onClick={() => setSelectedIdx(idx)}
+                className={`border rounded overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all
+                  ${selectedIdx === idx ? "ring-2 ring-blue-500 border-blue-500" : "border-gray-300"}
+                  bg-white`}
+                style={{
+                  width: THUMB_SIZE,
+                  height: THUMB_SIZE,
+                }}
+              >
+                <Image
+                  src={src}
+                  alt={`Thumbnail ${idx + 1}`}
+                  width={THUMB_SIZE}
+                  height={THUMB_SIZE}
+                  className="object-contain w-full h-full"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+        {/* MIDDLE: Main Image */}
+        <div className="flex justify-center items-start">
           <div
             className="relative rounded overflow-hidden bg-gray-100"
             style={{
