@@ -162,8 +162,10 @@ export default function ProductsPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="flex items-center justify-center h-48 w-full">
-                      <p>No products available in this category.</p>
+                    <div className="px-2"> {/* Wrap placeholder in px-2 div */}
+                      <div className="flex items-center justify-center h-48 w-full">
+                        <p>No products available in this category.</p>
+                      </div>
                     </div>
                   )}
                 </Slider>
