@@ -182,12 +182,12 @@ export default function ProductsPage() {
                       <div key={p._id} className="px-2">
                         <Link
                           href={`/products/${p._id}`}
-                          className="block group cursor-pointer focus:outline-none"
+                          className="block group cursor-pointer focus:outline-none focus-visible:outline-2 focus-visible:outline-blue-400 outline-offset-2"
                           tabIndex={0}
                           aria-label={`View details for ${p.product_name}`}
                         >
-                          <div className="flex flex-col items-center group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition rounded-lg bg-white py-4">
-                            <div className="relative w-full h-64 bg-gray-100 overflow-hidden rounded-lg flex items-center justify-center">
+                          <div className="flex flex-col items-center group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition rounded-xl bg-white">
+                            <div className="relative w-full h-64 bg-gray-100 overflow-hidden rounded-xl flex items-center justify-center p-4">
                               <Image
                                 src={getProductImage(p)}
                                 alt={p.product_name}
@@ -197,7 +197,7 @@ export default function ProductsPage() {
                                 priority={false}
                               />
                             </div>
-                            <div className="w-full flex flex-col items-center gap-1 mt-3 px-1">
+                            <div className="w-full flex flex-col items-center gap-1 mt-3 px-2 pb-3">
                               <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{p.product_name}</span>
                               <span className="text-sm font-bold text-blue-600">${Number(p.price).toFixed(2)}</span>
                             </div>
