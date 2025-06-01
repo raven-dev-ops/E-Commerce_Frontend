@@ -1,15 +1,14 @@
 // src/app/page.tsx
 
 import React from 'react';
-import Layout from '../components/Layout';
 
 const Page: React.FC = () => (
-  <Layout>
-    <div className="home-background" />
-    <h1 className="text-3xl text-white text-center drop-shadow-lg z-10">
+  <div className="relative w-full h-full"> {/* Simplified container div */}
+    <div className="home-background absolute inset-0 z-0" />
+    <h1 className="text-3xl text-white text-center drop-shadow-lg z-10 relative">
       Under Construction
     </h1>
-  </Layout>
+  </div>
 );
 
 export default Page;

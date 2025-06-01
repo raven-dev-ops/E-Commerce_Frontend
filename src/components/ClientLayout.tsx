@@ -26,9 +26,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }, [hydrateCart]);
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen"> {/* Added flex column to the root div */}
       <Header />
-      {children}
-    </>
+      {/* Main content area that takes remaining space and centers content */}
+      <main className="flex flex-grow items-center justify-center"> 
+        {children}
+      </main>
+    </div>
   );
 }
