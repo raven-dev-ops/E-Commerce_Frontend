@@ -46,8 +46,8 @@ const Header: React.FC = () => {
             <Image
               src="/images/logos/logo.png"
               alt="Home"
-              width={60}
-              height={60}
+              width={120}
+              height={120}
               className="transition-transform duration-200 hover:scale-110"
               priority
             />
