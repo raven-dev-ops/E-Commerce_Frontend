@@ -7,7 +7,12 @@ import ProductItem from '@/components/ProductItem';
 import type { Product } from '@/types/product';
 
 async function getProducts(): Promise<Product[]> {
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/product/`;
+  // Ensure only one slash between base URL and path
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/') 
+    ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1) 
+    : process.env.NEXT_PUBLIC_API_BASE_URL;
+  const url = `${baseUrl}/product/`;
+
   console.log('Fetching products from:', url);
 
   const res = await fetch(url, { cache: 'no-store' });

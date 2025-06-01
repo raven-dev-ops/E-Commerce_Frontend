@@ -16,8 +16,14 @@ interface Product {
 
 async function getProduct(productId: string): Promise<Product | null> {
   try {
+    // Ensure only one slash between base URL and path
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/') 
+      ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1) 
+      : process.env.NEXT_PUBLIC_API_BASE_URL;
+    const url = `${baseUrl}/api/products/${productId}/`;
+
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/products/${productId}/`,
+      url,
       { cache: 'no-store' }
     );
     if (res.status === 404) return null;
