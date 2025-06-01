@@ -39,21 +39,25 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [productsByCategory, setProductsByCategory] = useState<{ [key: string]: Product[] }>({});
 
+  // Define the target categories
+  const categories = ['Balms', 'Washes', 'Oils', 'Wax', 'Soap'];
+
   useEffect(() => {
     (async () => {
       try {
         const fetchedProducts = await getProducts();
         setProducts(fetchedProducts);
 
-        // Group products by category, ensuring category is a string
+        // Group products by category, initializing with all target categories
         const grouped: { [key: string]: Product[] } = {};
+        categories.forEach(category => {
+          grouped[category] = []; // Initialize each target category with an empty array
+        });
+
         fetchedProducts.forEach(product => {
-          // Only group if product.category is a non-empty string
-          if (typeof product.category === 'string' && product.category) {
-            if (!grouped[product.category]) {
-              grouped[product.category] = [];
-            }
-            grouped[product.category].push(product);
+          // Only group if product.category is a non-empty string and is one of the target categories
+          if (typeof product.category === 'string' && product.category && categories.includes(product.category)) {
+             grouped[product.category].push(product);
           }
         });
         setProductsByCategory(grouped);
@@ -109,20 +113,25 @@ export default function ProductsPage() {
       {error && <p className="text-red-500">Error: {error}</p>}
 
       {!loading && !error && (
-        Object.keys(productsByCategory).length === 0 ? (
-          <p>{products.length === 0 ? 'No products available.' : 'No categories found or categories are not strings.'}</p>
+        categories.length === 0 ? (
+          <p>No defined categories.</p>
         ) : (
           <div>
-            {Object.keys(productsByCategory).map(category => (
+            {categories.map(category => (
               <div key={category} className="mb-8">
                 <h2 className="text-xl font-bold mb-3 capitalize">{category}</h2>
-                <Slider {...settings}>
-                  {productsByCategory[category].map(p => (
-                    <div key={p._id} className="px-2"> {/* Added padding for spacing in carousel */}
-                      <ProductItem product={p} />
-                    </div>
-                  ))}
-                </Slider>
+                {productsByCategory[category] && productsByCategory[category].length > 0 ? (
+                  <Slider {...settings}>
+                    {productsByCategory[category].map(p => (
+                      <div key={p._id} className="px-2"> {/* Added padding for spacing in carousel */}
+                        <ProductItem product={p} />
+                      </div>
+                    ))
+                  }
+                  </Slider>
+                ) : ( /* No products available in this category */
+                  <p>No products available in this category.</p>
+                )}
               </div>
             ))}
           </div>
