@@ -62,6 +62,52 @@ async function getProducts(): Promise<Product[]> {
   return filteredProducts;
 }
 
+// Carousel settings generator for consistent card sizing
+const getCarouselSettings = (itemCount: number) => {
+  // Always show 4 slides for desktop for consistent width.
+  // For <4 items, disable infinite/dots and show empty space for remaining.
+  return {
+    dots: itemCount >= 4,
+    infinite: itemCount >= 4,
+    speed: 500,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    arrows: itemCount >= 4,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: Math.min(3, itemCount),
+          slidesToScroll: 1,
+          infinite: itemCount >= 3,
+          dots: itemCount >= 3,
+          arrows: itemCount >= 3,
+        },
+      },
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: Math.min(2, itemCount),
+          slidesToScroll: 1,
+          infinite: itemCount >= 2,
+          dots: itemCount >= 2,
+          arrows: itemCount >= 2,
+        },
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+          infinite: false,
+          dots: false,
+          arrows: false,
+        },
+      },
+    ],
+  };
+};
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,50 +146,6 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // Responsive carousel settings for multiple products
-  const multiItemSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-          infinite: true,
-          dots: true,
-        },
-      },
-      {
-        breakpoint: 600,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        },
-      },
-    ],
-  };
-
-  // Settings for a single product (no dots, no infinite, single slide)
-  const singleItemSettings = {
-    dots: false,
-    infinite: false,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-  };
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Products</h1>
@@ -158,14 +160,9 @@ export default function ProductsPage() {
           <div>
             {categories.map(category => {
               const items = productsByCategory[category] || [];
-              if (items.length === 0) {
-                // Do not render anything for empty categories
-                return null;
-              }
+              if (items.length === 0) return null; // Don't render empty carousels
 
-              const carouselSettings = items.length === 1
-                ? singleItemSettings
-                : multiItemSettings;
+              const carouselSettings = getCarouselSettings(items.length);
 
               return (
                 <div key={category} className="mb-8">
