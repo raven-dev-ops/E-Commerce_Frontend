@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import Image from "next/image";
 import type { Product } from '@/types/product';
 
@@ -62,8 +63,6 @@ async function getProducts(): Promise<Product[]> {
 
 // Carousel settings generator for consistent card sizing
 const getCarouselSettings = (itemCount: number) => {
-  // Always show 4 slides for desktop for consistent width.
-  // For <4 items, disable infinite/dots and show empty space for remaining.
   return {
     dots: itemCount >= 4,
     infinite: itemCount >= 4,
@@ -106,11 +105,9 @@ const getCarouselSettings = (itemCount: number) => {
   };
 };
 
-// Helper to get product image URL (you may want to move this to a shared util)
 const FALLBACK_IMAGE = "/images/products/beard-balm.jpg";
 const getProductImage = (product: Product) => {
   if (Array.isArray(product.images) && product.images.length > 0) {
-    // Use first image from images array
     const fileName = product.images[0]?.split("/").pop();
     return fileName ? `/images/products/${fileName}` : FALLBACK_IMAGE;
   }
@@ -173,7 +170,7 @@ export default function ProductsPage() {
           <div>
             {categories.map(category => {
               const items = productsByCategory[category] || [];
-              if (items.length === 0) return null; // Don't render empty carousels
+              if (items.length === 0) return null;
 
               const carouselSettings = getCarouselSettings(items.length);
 
@@ -183,22 +180,29 @@ export default function ProductsPage() {
                   <Slider {...carouselSettings}>
                     {items.map(p => (
                       <div key={p._id} className="px-2">
-                        <div className="relative w-full h-64 bg-gray-100 rounded-lg flex flex-col items-center justify-center overflow-hidden p-4">
-                          <Image
-                            src={getProductImage(p)}
-                            alt={p.product_name}
-                            fill
-                            className="object-contain"
-                            sizes="(max-width: 768px) 100vw, 25vw"
-                            priority={false}
-                          />
-                          <div className="absolute bottom-3 left-0 w-full px-3">
-                            <div className="bg-white/80 rounded shadow px-2 py-1 flex flex-col items-center">
-                              <span className="text-sm font-semibold text-gray-900 truncate w-full text-center">{p.product_name}</span>
-                              <span className="text-sm font-bold text-blue-600">${Number(p.price).toFixed(2)}</span>
+                        <Link
+                          href={`/products/${p._id}`}
+                          className="block group cursor-pointer focus:outline-none"
+                          tabIndex={0}
+                          aria-label={`View details for ${p.product_name}`}
+                        >
+                          <div className="relative w-full h-64 bg-gray-100 rounded-lg flex flex-col items-center justify-center overflow-hidden p-4 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition">
+                            <Image
+                              src={getProductImage(p)}
+                              alt={p.product_name}
+                              fill
+                              className="object-contain"
+                              sizes="(max-width: 768px) 100vw, 25vw"
+                              priority={false}
+                            />
+                            <div className="absolute bottom-3 left-0 w-full px-3">
+                              <div className="bg-white/80 rounded shadow px-2 py-1 flex flex-col items-center">
+                                <span className="text-sm font-semibold text-gray-900 truncate w-full text-center">{p.product_name}</span>
+                                <span className="text-sm font-bold text-blue-600">${Number(p.price).toFixed(2)}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       </div>
                     ))}
                   </Slider>
