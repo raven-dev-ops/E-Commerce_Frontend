@@ -6,6 +6,11 @@ import { useEffect, useState } from 'react';
 import ProductItem from '@/components/ProductItem';
 import type { Product } from '@/types/product';
 
+// Import Slider component and styles for react-slick
+import Slider from 'react-slick';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
 async function getProducts(): Promise<Product[]> {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/')
     ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1)
@@ -32,11 +37,27 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [productsByCategory, setProductsByCategory] = useState<{ [key: string]: Product[] }>({});
 
   useEffect(() => {
     (async () => {
       try {
-        setProducts(await getProducts());
+        const fetchedProducts = await getProducts();
+        setProducts(fetchedProducts);
+
+        // Group products by category, ensuring category is a string
+        const grouped: { [key: string]: Product[] } = {};
+        fetchedProducts.forEach(product => {
+          // Only group if product.category is a non-empty string
+          if (typeof product.category === 'string' && product.category) {
+            if (!grouped[product.category]) {
+              grouped[product.category] = [];
+            }
+            grouped[product.category].push(product);
+          }
+        });
+        setProductsByCategory(grouped);
+
       } catch {
         setError('Failed to fetch products');
       } finally {
@@ -44,6 +65,41 @@ export default function ProductsPage() {
       }
     })();
   }, []);
+
+  // Settings for react-slick carousel
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 3,
+          slidesToScroll: 1,
+          infinite: true,
+          dots: true
+        }
+      },
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+          initialSlide: 2
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1
+        }
+      }
+    ]
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -53,12 +109,21 @@ export default function ProductsPage() {
       {error && <p className="text-red-500">Error: {error}</p>}
 
       {!loading && !error && (
-        products.length === 0 ? (
-          <p>No products available.</p>
+        Object.keys(productsByCategory).length === 0 ? (
+          <p>{products.length === 0 ? 'No products available.' : 'No categories found or categories are not strings.'}</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {products.map(p => (
-              <ProductItem key={p._id} product={p} />
+          <div>
+            {Object.keys(productsByCategory).map(category => (
+              <div key={category} className="mb-8">
+                <h2 className="text-xl font-bold mb-3 capitalize">{category}</h2>
+                <Slider {...settings}>
+                  {productsByCategory[category].map(p => (
+                    <div key={p._id} className="px-2"> {/* Added padding for spacing in carousel */}
+                      <ProductItem product={p} />
+                    </div>
+                  ))}
+                </Slider>
+              </div>
             ))}
           </div>
         )

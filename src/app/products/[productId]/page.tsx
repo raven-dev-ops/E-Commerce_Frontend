@@ -2,7 +2,7 @@
 
 import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
-import type { Product } from '@/types/product';
+import type { Product } from '@/types/product'; // Use your shared Product type
 
 async function getProduct(productId: string): Promise<Product | null> {
   try {
@@ -35,3 +35,4 @@ export default async function ProductDetailPage({ params }: any) {
   if (!product) notFound();
   return <ProductDetailsClient product={product} />;
 }
+
