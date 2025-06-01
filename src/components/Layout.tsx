@@ -16,8 +16,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Footer section (if applicable) */}
       <footer className="bg-gray-800 text-white py-4">
-        <div className="container mx-auto px-4">
-          <p>&copy; {new Date().getFullYear()} Your Company. All rights reserved.</p>
+        <div className="container mx-auto px-4 text-center">
+          <p>
+            &copy; {new Date().getFullYear()} TwiinZ Beard Balm & Essentials. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>
