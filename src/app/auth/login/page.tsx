@@ -41,8 +41,6 @@ export default function Login() {
   return (
     <div className="max-w-sm mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Login</h1>
-      <GoogleAuthButton text="Continue with Google" />
-      <div className="text-center text-gray-500 my-2">or</div>
       <form onSubmit={handleSubmit}>
         <label className="block mb-2">
           Email
@@ -72,6 +70,7 @@ export default function Login() {
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
+        <GoogleAuthButton text="Continue with Google" />
       </form>
       <div className="mt-4 text-center text-gray-600">
         Need an account?{' '}
