@@ -16,7 +16,6 @@ export default function GoogleAuthButton({ text = "Continue with Google" }: Goog
       className="w-full flex justify-center items-center py-2 px-4 mt-3 bg-white border border-gray-300 rounded shadow text-gray-700 font-medium hover:bg-gray-50 transition"
       style={{ textDecoration: "none" }}
     >
-      {/* Optionally add a Google SVG icon here */}
       <svg className="w-6 h-6 mr-2" viewBox="0 0 48 48">
         <g>
           <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z"/>
