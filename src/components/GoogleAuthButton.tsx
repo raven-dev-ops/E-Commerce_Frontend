@@ -7,7 +7,7 @@ interface GoogleAuthButtonProps {
 }
 
 const GOOGLE_AUTH_URL =
-  'https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/social/login/google/';
+  'https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/login/google/';
 
 export default function GoogleAuthButton({ text = "Continue with Google" }: GoogleAuthButtonProps) {
   return (
