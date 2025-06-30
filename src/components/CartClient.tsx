@@ -1,4 +1,4 @@
-// app/cart/CartClient.tsx
+/// app/cart/CartClient.tsx
 
 'use client'
 
