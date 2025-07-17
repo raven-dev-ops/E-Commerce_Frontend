@@ -112,9 +112,9 @@ const Header: React.FC = () => {
             {/* Profile */}
             <button
               onClick={handleUserClick}
-              className="flex items-center p-2 rounded hover:bg-gray-200 focus:outline-none hover:scale-110 transition-transform"
+              className="flex items-center p-2 rounded focus:outline-none hover:scale-110 transition-transform"
               aria-label="Profile"
-              style={{ color: 'var(--foreground)' }}
+              style={{ color: 'var(--foreground)', background: 'transparent' }}
             >
               <User className="w-8 h-8" />
             </button>
@@ -146,9 +146,9 @@ const Header: React.FC = () => {
             {/* Cart */}
             <button
               onClick={handleCartClick}
-              className="relative flex items-center p-2 rounded hover:bg-gray-200 focus:outline-none hover:scale-110 transition-transform"
+              className="relative flex items-center p-2 rounded focus:outline-none hover:scale-110 transition-transform"
               aria-label="Cart"
-              style={{ color: 'var(--foreground)' }}
+              style={{ color: 'var(--foreground)', background: 'transparent' }}
             >
               <ShoppingCart className="w-9 h-9" />
               {totalItems > 0 && (
