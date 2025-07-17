@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer"; // Import the Footer component
+import { SessionProvider } from 'next-auth/react';
 import { useStore, StoreState } from '@/store/useStore'; // Import StoreState
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -27,12 +28,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }, [hydrateCart]);
 
   return (
-    <div className="flex flex-col min-h-screen"> {/* Added flex column to the root div */}
-      <Header />
-      {/* Main content area that takes remaining space and centers content */}
-      <main className="flex flex-grow items-center justify-center"> 
-        {children}
-      </main>
-    </div>
+    <SessionProvider>
+      <div className="flex flex-col min-h-screen"> {/* Added flex column to the root div */}
+        <Header />
+        {/* Main content area that takes remaining space and centers content */}
+        <main className="flex flex-grow items-center justify-center">
+          {children}
+        </main>
+      </div>
+    </SessionProvider>
   );
 }
