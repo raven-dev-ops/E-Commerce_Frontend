@@ -112,7 +112,7 @@ const Header: React.FC = () => {
             {/* Profile */}
             <button
               onClick={handleUserClick}
-              className="flex items-center p-2 rounded hover:bg-gray-200 focus:outline-none"
+              className="flex items-center p-2 rounded hover:bg-gray-200 focus:outline-none hover:scale-110 transition-transform"
               aria-label="Profile"
               style={{ color: 'var(--foreground)' }}
             >
@@ -146,7 +146,7 @@ const Header: React.FC = () => {
             {/* Cart */}
             <button
               onClick={handleCartClick}
-              className="relative flex items-center p-2 rounded hover:bg-gray-200 focus:outline-none"
+              className="relative flex items-center p-2 rounded hover:bg-gray-200 focus:outline-none hover:scale-110 transition-transform"
               aria-label="Cart"
               style={{ color: 'var(--foreground)' }}
             >
@@ -194,14 +194,8 @@ const Header: React.FC = () => {
                   <div className="mb-3 text-center text-red-600 font-semibold">{formError}</div>
                 )}
                 {formSuccess && (
- <div className="mb-3 text-center text-green-600 font-semibold">{formSuccess}</div>
- )}
-                {formError && (
- <div className="mb-3 text-center text-red-600 font-semibold">{formError}</div>
-					)}
-                {formSuccess && (
                   <div className="mb-3 text-center text-green-600 font-semibold">{formSuccess}</div>
-					)}
+                )}
                 {/* Sign Up form */}
                 {isSignUp ? (
                   <form 
