@@ -111,7 +111,7 @@ const Header: React.FC = () => {
           <div className="flex items-center">
             <Link href="/" className="flex items-center" aria-label="Home">
               <Image
-                src="/images/logos/logo.png"
+                src="/images/logos/Twiin_Logo_v3.png"
                 alt="Home"
                 width={120}
                 height={120}
