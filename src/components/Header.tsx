@@ -194,11 +194,17 @@ const Header: React.FC = () => {
                   <div className="mb-3 text-center text-red-600 font-semibold">{formError}</div>
                 )}
                 {formSuccess && (
+ <div className="mb-3 text-center text-green-600 font-semibold">{formSuccess}</div>
+ )}
+                {formError && (
+ <div className="mb-3 text-center text-red-600 font-semibold">{formError}</div>
+					)}
+                {formSuccess && (
                   <div className="mb-3 text-center text-green-600 font-semibold">{formSuccess}</div>
-                )}
+					)}
                 {/* Sign Up form */}
                 {isSignUp ? (
-                  <form
+                  <form 
                     onSubmit={handleSignUp}
                     className="flex flex-col space-y-4"
                   >
