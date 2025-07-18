@@ -1,5 +1,3 @@
-// app/auth/register/page.tsx
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -21,7 +19,7 @@ export default function Register() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { isAuthenticated } = useStore();
+  const { login, isAuthenticated } = useStore();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -65,6 +63,34 @@ export default function Register() {
     }
   };
 
+  const handleGoogleSuccess = async (credential: string) => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const response = await fetch('https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: credential }),
+      });
+
+      if (!response.ok) throw new Error('Google login failed');
+
+      const data = await response.json();
+      // Handle backend JWT/token & user
+      localStorage.setItem('accessToken', data.access_token ?? '');
+      login(data.user || {}); // update your state/store with user
+      router.push('/');
+    } catch (error: any) {
+      setErrorMsg('Google login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    setErrorMsg(error || 'Google login failed');
+  };
+
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -72,7 +98,11 @@ export default function Register() {
   return (
     <div className="max-w-sm mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Register</h1>
-      <GoogleAuthButton text="Register with Google" />
+      <GoogleAuthButton
+        text="Register with Google"
+        onSuccess={handleGoogleSuccess}
+        onError={handleGoogleError}
+      />
       <div className="text-center text-gray-500 my-2">or</div>
       <form onSubmit={handleSubmit}>
         <label className="block mb-2">
