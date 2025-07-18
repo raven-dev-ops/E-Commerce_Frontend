@@ -1,20 +1,38 @@
 // frontend/src/types/next-auth.d.ts
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import NextAuth, { DefaultSession } from 'next-auth';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { JWT } from 'next-auth/jwt';
 
-declare module 'next-auth' {
+import NextAuth, { DefaultSession, DefaultUser } from "next-auth";
+import { JWT as DefaultJWT } from "next-auth/jwt";
+
+declare module "next-auth" {
   interface Session extends DefaultSession {
-    /** Your JWT access token */
-    access?: string;
+    /** JWT access token for API calls */
+    accessToken?: string;
+    /** Optionally, attach the user id or more */
+    user?: {
+      id?: string;
+      email?: string | null;
+      name?: string | null;
+      image?: string | null;
+      /** Add more custom fields here if needed */
+      [key: string]: unknown;
+    } & DefaultSession["user"];
   }
-  interface User { token?: string; }
+
+  interface User extends DefaultUser {
+    /** Access token or custom token, e.g. from backend JWT */
+    accessToken?: string;
+    /** Optionally add more fields */
+    [key: string]: unknown;
+  }
 }
 
-declare module 'next-auth/jwt' {
-  interface JWT {
+declare module "next-auth/jwt" {
+  interface JWT extends DefaultJWT {
     /** Persist the access token here */
-    access?: string;
+    accessToken?: string;
+    /** User id if available */
+    id?: string;
+    /** Add more custom JWT claims as needed */
+    [key: string]: unknown;
   }
 }
