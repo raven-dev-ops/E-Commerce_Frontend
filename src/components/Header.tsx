@@ -198,7 +198,7 @@ const Header: React.FC = () => {
                 )}
                 {/* Sign Up form */}
                 {isSignUp ? (
-                  <form 
+                  <form
                     onSubmit={handleSignUp}
                     className="flex flex-col space-y-4"
                   >
@@ -280,7 +280,7 @@ const Header: React.FC = () => {
                   <span className="text-xs text-gray-500 uppercase px-2">or</span>
                   <span className="border-b w-1/5 lg:w-1/4"></span>
                 </div>
-                <GoogleAuthButton />
+                <GoogleAuthButton text="Continue with Google" />
                 {/* Facebook Login (disabled for now) */}
                 <button
                   disabled
