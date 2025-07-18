@@ -7,9 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ShoppingCart, ShoppingBag, User, X, Shirt } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useStore } from '@/store/useStore';
-
-const GOOGLE_AUTH_URL =
-  'https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/login/google/';
+import GoogleAuthButton from '@/components/GoogleAuthButton';
 
 const Header: React.FC = () => {
   const { data: session, status } = useSession();
@@ -104,6 +102,35 @@ const Header: React.FC = () => {
     } else {
       setShowLogin(false);
     }
+  };
+
+  // GOOGLE HANDLER for SPA login flow
+  const handleGoogleSuccess = async (credential: string) => {
+    setLoading(true);
+    setFormError(null);
+    try {
+      const response = await fetch('https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: credential }),
+      });
+
+      if (!response.ok) throw new Error('Google login failed');
+
+      const data = await response.json();
+      localStorage.setItem('accessToken', data.access_token ?? '');
+      // If you use your store's login, call here (optional)
+      // login(data.user || {});
+      window.location.reload(); // Or update UI/modal as needed
+    } catch (error: any) {
+      setFormError('Google login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    setFormError(error || 'Google login failed.');
   };
 
   return (
@@ -289,22 +316,12 @@ const Header: React.FC = () => {
                   <span className="text-xs text-gray-500 uppercase px-2">or</span>
                   <span className="border-b w-1/5 lg:w-1/4"></span>
                 </div>
-                {/* Custom Google Button */}
-                <a
-                  href={GOOGLE_AUTH_URL}
-                  className="w-full flex justify-center items-center py-2 px-4 mt-3 bg-white border border-gray-300 rounded shadow text-gray-700 font-medium hover:bg-gray-50 transition"
-                  style={{ textDecoration: "none" }}
-                >
-                  <svg className="w-6 h-6 mr-2" viewBox="0 0 48 48">
-                    <g>
-                      <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z"/>
-                      <path fill="#34A853" d="M6.3 14.6l7 5.1C15.2 16.2 19.2 13 24 13c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 16.3 3 9.3 7.7 6.3 14.6z"/>
-                      <path fill="#FBBC05" d="M24 45c5.6 0 10.6-1.8 14.7-4.8l-6.8-5.6c-2.1 1.4-4.8 2.4-7.9 2.4-5.8 0-10.7-3.9-12.5-9.2l-7 5.4C9.3 40.3 16.3 45 24 45z"/>
-                      <path fill="#EA4335" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12 0-1.4.2-2.8.5-4.1l-7-5.1C3.9 18.2 3 21 3 24c0 11.6 9.4 21 21 21 10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z"/>
-                    </g>
-                  </svg>
-                  Continue with Google
-                </a>
+                {/* Google Auth SPA Button */}
+                <GoogleAuthButton
+                  text="Continue with Google"
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                />
                 {/* Facebook Login (disabled for now) */}
                 <button
                   disabled
