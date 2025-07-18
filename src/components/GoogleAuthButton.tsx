@@ -1,7 +1,7 @@
 // GoogleAuthButton.tsx
 
-import React, { useState } from 'react';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import React from 'react';
+import { useGoogleLogin } from '@react-oauth/google';
 
 interface GoogleAuthButtonProps {
   text?: string;
@@ -16,35 +16,36 @@ export default function GoogleAuthButton({
   onError,
   className = '',
 }: GoogleAuthButtonProps) {
-  const [loading, setLoading] = useState(false);
-
-  const handleSuccess = (credentialResponse: CredentialResponse) => {
-    if (credentialResponse.credential) {
-      setLoading(true);
-      onSuccess && onSuccess(credentialResponse.credential);
-      setLoading(false);
-    } else {
-      onError && onError('No credential received');
-    }
-  };
-
-  const handleError = () => {
-    onError && onError('Google login failed');
-  };
+  const login = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      if (tokenResponse && tokenResponse.access_token) {
+        onSuccess && onSuccess(tokenResponse.access_token);
+      } else {
+        onError && onError('No access token received');
+      }
+    },
+    onError: () => {
+      onError && onError('Google login failed');
+    },
+    flow: 'implicit', // or 'auth-code' if your backend is set for that flow
+  });
 
   return (
-    <div className={`w-full mt-3 ${className}`}>
-      <GoogleLogin
-        onSuccess={handleSuccess}
-        onError={handleError}
-        useOneTap
-        // You can add additional props like size, theme, etc. if needed
-      />
-      {loading && (
-        <div className="mt-2 text-center text-gray-500 text-sm">Signing in with Google...</div>
-      )}
-      {/* Optional: Custom text/button (use Google default button for compliance) */}
-      {/* If you want a custom button, use Google API for branding rules */}
-    </div>
+    <button
+      type="button"
+      onClick={() => login()}
+      className={`w-full flex justify-center items-center py-2 px-4 bg-white border border-gray-300 rounded shadow text-gray-700 font-medium hover:bg-gray-50 transition ${className}`}
+      style={{ textDecoration: "none" }}
+    >
+      <svg className="w-6 h-6 mr-2" viewBox="0 0 48 48">
+        <g>
+          <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z"/>
+          <path fill="#34A853" d="M6.3 14.6l7 5.1C15.2 16.2 19.2 13 24 13c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 16.3 3 9.3 7.7 6.3 14.6z"/>
+          <path fill="#FBBC05" d="M24 45c5.6 0 10.6-1.8 14.7-4.8l-6.8-5.6c-2.1 1.4-4.8 2.4-7.9 2.4-5.8 0-10.7-3.9-12.5-9.2l-7 5.4C9.3 40.3 16.3 45 24 45z"/>
+          <path fill="#EA4335" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12 0-1.4.2-2.8.5-4.1l-7-5.1C3.9 18.2 3 21 3 24c0 11.6 9.4 21 21 21 10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z"/>
+        </g>
+      </svg>
+      {text}
+    </button>
   );
 }
