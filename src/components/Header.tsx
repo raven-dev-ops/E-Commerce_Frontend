@@ -8,6 +8,8 @@ import { ShoppingCart, ShoppingBag, User, X, Shirt } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useStore } from '@/store/useStore';
 import GoogleAuthButton from '@/components/GoogleAuthButton';
+import FacebookAuthButton from '@/components/FacebookAuthButton';
+import InstagramAuthButton from '@/components/InstagramAuthButton';
 
 const Header: React.FC = () => {
   const { data: session, status } = useSession();
@@ -198,7 +200,7 @@ const Header: React.FC = () => {
                 )}
                 {/* Sign Up form */}
                 {isSignUp ? (
-                  <form
+                  <form 
                     onSubmit={handleSignUp}
                     className="flex flex-col space-y-4"
                   >
@@ -280,29 +282,9 @@ const Header: React.FC = () => {
                   <span className="text-xs text-gray-500 uppercase px-2">or</span>
                   <span className="border-b w-1/5 lg:w-1/4"></span>
                 </div>
-                <GoogleAuthButton text="Continue with Google" />
-                {/* Facebook Login (disabled for now) */}
-                <button
-                  disabled
-                  onClick={() => signIn('facebook')}
-                  className="w-full flex items-center justify-center gap-3 py-2 px-4 mt-3 bg-blue-600 border border-blue-700 rounded text-white font-medium opacity-60 cursor-not-allowed"
-                >
-                  <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22 12c0-5.522-4.477-10-10-10S2 6.478 2 12c0 4.991 3.657 9.128 8.438 9.877v-6.987h-2.54v-2.89h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562v1.875h2.773l-.443 2.89h-2.33V21.877C18.343 21.128 22 16.991 22 12"/>
-                  </svg>
-                  Continue with Facebook
-                </button>
-                {/* Instagram Login (disabled for now) */}
-                <button
-                  disabled
-                  onClick={() => signIn('instagram')}
-                  className="w-full flex items-center justify-center gap-3 py-2 px-4 mt-3 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 border border-pink-700 rounded text-white font-medium opacity-60 cursor-not-allowed"
-                >
-                  <svg className="w-6 h-6 mr-2" viewBox="0 0 448 512" fill="currentColor">
-                    <path d="M224,202.66A53.34,53.34,0,1,0,277.34,256,53.38,53.38,0,0,0,224,202.66Zm124.71-41a54,54,0,0,0-30.19-30.19C293,117.44,265.09,112,224,112s-69,5.44-94.52,19.47A54,54,0,0,0,99.29,161.66C85.26,187.21,80,215.13,80,256s5.26,68.79,19.29,94.34a54,54,0,0,0,30.19,30.19C155,394.56,182.91,400,224,400s69-5.44,94.52-19.47a54,54,0,0,0,30.19-30.19C362.74,324.79,368,296.87,368,256S362.74,187.21,348.71,161.66ZM224,338a82,82,0,1,1,82-82A82,82,0,0,1,224,338Zm85.41-148.61a19.42,19.42,0,1,1-19.42-19.42A19.42,19.42,0,0,1,309.41,189.39Z" />
-                  </svg>
-                  Continue with Instagram
-                </button>
+                <GoogleAuthButton />
+                <FacebookAuthButton />
+                <InstagramAuthButton />
               </div>
             )}
           </div>
