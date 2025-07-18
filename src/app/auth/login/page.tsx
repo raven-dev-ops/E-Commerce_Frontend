@@ -1,5 +1,3 @@
-// app/auth/login/page.tsx
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -38,6 +36,34 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (credential: string) => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const response = await fetch('https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_token: credential }),
+      });
+
+      if (!response.ok) throw new Error('Google login failed');
+
+      const data = await response.json();
+      // Handle backend JWT/token & user
+      localStorage.setItem('accessToken', data.access_token ?? '');
+      login(data.user || {}); // update your state/store with user
+      router.push('/');
+    } catch (error: any) {
+      setErrorMsg('Google login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    setErrorMsg(error || 'Google login failed');
+  };
+
   return (
     <div className="max-w-sm mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Login</h1>
@@ -70,8 +96,14 @@ export default function Login() {
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
-        <GoogleAuthButton text="Continue with Google" />
       </form>
+      <div className="my-4">
+        <GoogleAuthButton
+          text="Continue with Google"
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+        />
+      </div>
       <div className="mt-4 text-center text-gray-600">
         Need an account?{' '}
         <a href="/auth/register" className="text-blue-700 underline">Register</a>
