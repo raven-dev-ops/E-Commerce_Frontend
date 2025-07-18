@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter, redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { loginWithEmailPassword } from '@/lib/auth';
 import { useStore } from '@/store/useStore';
 import GoogleAuthButton from '@/components/GoogleAuthButton';
@@ -16,9 +16,9 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      redirect('/');
+      router.push('/');
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +49,12 @@ export default function Login() {
       if (!response.ok) throw new Error('Google login failed');
 
       const data = await response.json();
-      // Handle backend JWT/token & user
-      localStorage.setItem('accessToken', data.access_token ?? '');
-      login(data.user || {}); // update your state/store with user
+
+      // Store JWTs
+      localStorage.setItem('accessToken', data.access ?? '');
+      localStorage.setItem('refreshToken', data.refresh ?? '');
+
+      login(data.user || {});
       router.push('/');
     } catch (error: any) {
       setErrorMsg('Google login failed');
