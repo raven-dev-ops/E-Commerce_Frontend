@@ -1,5 +1,3 @@
-// GoogleAuthButton.tsx
-
 import React from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 
@@ -18,38 +16,38 @@ export default function GoogleAuthButton({
 }: GoogleAuthButtonProps) {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
-      if (tokenResponse && tokenResponse.access_token) {
+      if (tokenResponse?.access_token) {
         fetch(
-          'https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/',
+          'https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/login/',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: tokenResponse.access_token }),
-            credentials: 'include',
+            credentials: 'include', // optional: include if using session auth
           }
         )
           .then(async (res) => {
+            const data = await res.json();
             if (!res.ok) {
-              const err = await res.json();
-              onError && onError(`Backend error: ${JSON.stringify(err)}`);
+              console.error('❌ Backend error:', data);
+              onError?.(`Backend error: ${JSON.stringify(data)}`);
             } else {
-              const data = await res.json();
               console.log('✅ Logged in successfully!', data);
-              onSuccess && onSuccess(data.key); // or pass full user info if needed
+              onSuccess?.(data.key || data.access || data.token || '');
             }
           })
           .catch((e) => {
             console.error('❌ Network error:', e);
-            onError && onError(`Network error: ${e.message}`);
+            onError?.(`Network error: ${e.message}`);
           });
       } else {
-        onError && onError('No access token received');
+        onError?.('No access token received from Google');
       }
     },
     onError: () => {
-      onError && onError('Google login failed');
+      onError?.('Google login failed');
     },
-    flow: 'implicit', // or 'auth-code' if your backend expects it
+    flow: 'implicit', // or 'auth-code' if backend expects server-side exchange
   });
 
   return (
@@ -61,10 +59,10 @@ export default function GoogleAuthButton({
     >
       <svg className="w-6 h-6 mr-2" viewBox="0 0 48 48">
         <g>
-          <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z"/>
-          <path fill="#34A853" d="M6.3 14.6l7 5.1C15.2 16.2 19.2 13 24 13c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 16.3 3 9.3 7.7 6.3 14.6z"/>
-          <path fill="#FBBC05" d="M24 45c5.6 0 10.6-1.8 14.7-4.8l-6.8-5.6c-2.1 1.4-4.8 2.4-7.9 2.4-5.8 0-10.7-3.9-12.5-9.2l-7 5.4C9.3 40.3 16.3 45 24 45z"/>
-          <path fill="#EA4335" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12 0-1.4.2-2.8.5-4.1l-7-5.1C3.9 18.2 3 21 3 24c0 11.6 9.4 21 21 21 10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z"/>
+          <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z" />
+          <path fill="#34A853" d="M6.3 14.6l7 5.1C15.2 16.2 19.2 13 24 13c3.1 0 5.9 1.1 8 2.9l6-6C34.6 5.1 29.6 3 24 3 16.3 3 9.3 7.7 6.3 14.6z" />
+          <path fill="#FBBC05" d="M24 45c5.6 0 10.6-1.8 14.7-4.8l-6.8-5.6c-2.1 1.4-4.8 2.4-7.9 2.4-5.8 0-10.7-3.9-12.5-9.2l-7 5.4C9.3 40.3 16.3 45 24 45z" />
+          <path fill="#EA4335" d="M44.5 20H24v8.5h11.7C34.7 33.5 29.8 36 24 36c-6.6 0-12-5.4-12-12 0-1.4.2-2.8.5-4.1l-7-5.1C3.9 18.2 3 21 3 24c0 11.6 9.4 21 21 21 10.5 0 20.1-8 20.1-20 0-1.3-.1-2.3-.3-3z" />
         </g>
       </svg>
       {text}
