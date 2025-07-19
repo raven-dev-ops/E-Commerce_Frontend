@@ -18,12 +18,12 @@ export default function GoogleAuthButton({
     onSuccess: (tokenResponse) => {
       if (tokenResponse?.access_token) {
         fetch(
-          'https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/login/',
+          'https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ access_token: tokenResponse.access_token }),
-            credentials: 'include', // optional: include if using session auth
+            credentials: 'include',
           }
         )
           .then(async (res) => {
@@ -33,7 +33,11 @@ export default function GoogleAuthButton({
               onError?.(`Backend error: ${JSON.stringify(data)}`);
             } else {
               console.log('✅ Logged in successfully!', data);
-              onSuccess?.(data.key || data.access || data.token || '');
+              const token = data.key || data.access || data.token || '';
+              if (token) {
+                document.cookie = `auth_token=${token}; path=/; secure; samesite=Lax`;
+              }
+              onSuccess?.(token);
             }
           })
           .catch((e) => {
@@ -47,7 +51,7 @@ export default function GoogleAuthButton({
     onError: () => {
       onError?.('Google login failed');
     },
-    flow: 'implicit', // or 'auth-code' if backend expects server-side exchange
+    flow: 'implicit', // Change to 'auth-code' if backend is configured for code flow
   });
 
   return (
