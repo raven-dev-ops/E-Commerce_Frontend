@@ -18,17 +18,16 @@ export default function GoogleAuthButton({
 }: GoogleAuthButtonProps) {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
-      if (tokenResponse?.access_token) {
+      if ('code' in tokenResponse && tokenResponse.code) {
         fetch('https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ access_token: tokenResponse.access_token }),
+          body: JSON.stringify({ code: tokenResponse.code }),
           credentials: 'include',
         })
           .then(async (res) => {
             const contentType = res.headers.get('Content-Type');
             const isJSON = contentType && contentType.includes('application/json');
-
             const rawText = await res.text();
 
             if (!isJSON) {
@@ -61,13 +60,13 @@ export default function GoogleAuthButton({
             onError?.(`Network error: ${e.message}`);
           });
       } else {
-        onError?.('No access token received from Google');
+        onError?.('No code received from Google');
       }
     },
     onError: () => {
       onError?.('Google login failed');
     },
-    flow: 'implicit', // Change to 'auth-code' if using backend exchange
+    flow: 'auth-code',
   });
 
   return (
@@ -75,7 +74,6 @@ export default function GoogleAuthButton({
       type="button"
       onClick={() => login()}
       className={`w-full flex justify-center items-center py-2 px-4 bg-white border border-gray-300 rounded shadow text-gray-700 font-medium hover:bg-gray-50 transition ${className}`}
-      style={{ textDecoration: 'none' }}
     >
       <svg className="w-6 h-6 mr-2" viewBox="0 0 48 48">
         <g>
