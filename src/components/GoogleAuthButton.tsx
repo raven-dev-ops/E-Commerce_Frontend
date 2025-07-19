@@ -26,19 +26,34 @@ export default function GoogleAuthButton({
           credentials: 'include',
         })
           .then(async (res) => {
-            const text = await res.text();
+            const contentType = res.headers.get('Content-Type');
+            const isJSON = contentType && contentType.includes('application/json');
+
+            const rawText = await res.text();
+
+            if (!isJSON) {
+              console.error('❌ Unexpected response type:', rawText);
+              onError?.(`Unexpected non-JSON response: ${rawText}`);
+              return;
+            }
+
             try {
-              const data = JSON.parse(text);
+              const data = JSON.parse(rawText);
               if (!res.ok) {
                 console.error('❌ Backend error:', data);
                 onError?.(`Backend error: ${JSON.stringify(data)}`);
               } else {
-                console.log('✅ Logged in successfully!', data);
-                onSuccess?.(data.key || data.access || data.token || '');
+                const token = data.key || data.access || data.token || '';
+                if (token) {
+                  console.log('✅ Logged in successfully!', token);
+                  onSuccess?.(token);
+                } else {
+                  onError?.('Login succeeded but no token returned.');
+                }
               }
             } catch (e) {
-              console.error('❌ Invalid JSON from backend:', text);
-              onError?.(`Unexpected non-JSON response: ${text}`);
+              console.error('❌ Invalid JSON response:', rawText);
+              onError?.(`Invalid JSON from backend: ${rawText}`);
             }
           })
           .catch((e) => {
@@ -52,7 +67,7 @@ export default function GoogleAuthButton({
     onError: () => {
       onError?.('Google login failed');
     },
-    flow: 'implicit', // or 'auth-code' if backend expects it
+    flow: 'implicit', // Change to 'auth-code' if using backend exchange
   });
 
   return (
