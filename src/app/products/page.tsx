@@ -5,8 +5,6 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import type { Product } from '@/types/product';
-
-// import ProductCard from './ProductCard'; // if using ProductCard
 import ProductItem from '@/components/ProductItem';
 
 interface ApiResponseProduct {
@@ -118,9 +116,8 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
   const [productsByCategory, setProductsByCategory] = useState<{ [key: string]: Product[] }>({});
-
-  const categories = ['Balms', 'Washes', 'Oils', 'Wax', 'Soap'];
 
   useEffect(() => {
     (async () => {
@@ -128,8 +125,20 @@ export default function ProductsPage() {
         const fetchedProducts = await getProducts();
         setProducts(fetchedProducts);
 
+        // Dynamic categories
+        const uniqueCategories = Array.from(
+          new Set(
+            fetchedProducts
+              .map(p => p.category)
+              .filter((cat): cat is string => typeof cat === 'string' && cat.length > 0)
+          )
+        );
+
+        setCategories(uniqueCategories);
+
+        // Group by category
         const grouped: { [key: string]: Product[] } = {};
-        categories.forEach(category => {
+        uniqueCategories.forEach(category => {
           grouped[category] = [];
         });
 
@@ -137,7 +146,7 @@ export default function ProductsPage() {
           if (
             typeof product.category === 'string' &&
             product.category &&
-            categories.includes(product.category)
+            uniqueCategories.includes(product.category)
           ) {
             grouped[product.category].push(product);
           }
@@ -161,7 +170,7 @@ export default function ProductsPage() {
 
       {!loading && !error && (
         categories.length === 0 ? (
-          <p>No defined categories.</p>
+          <p>No categories found.</p>
         ) : (
           <div>
             {categories.map(category => {
