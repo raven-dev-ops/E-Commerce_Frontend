@@ -16,10 +16,23 @@ async function getProduct(productId: string): Promise<Product | null> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    // Ensure _id is string, price is number
+    // Robust _id normalization
+    let id = '';
+    if (typeof data.id === 'string' && data.id) {
+      id = data.id;
+    } else if (typeof data._id === 'string' && data._id) {
+      id = data._id;
+    } else if (
+      typeof data._id === 'object' &&
+      data._id &&
+      '$oid' in data._id
+    ) {
+      id = (data._id as { $oid: string }).$oid;
+    }
+
     const product: Product = {
       ...data,
-      _id: String(data._id),
+      _id: id,
       price: Number(data.price),
     };
 
@@ -35,4 +48,3 @@ export default async function ProductDetailPage({ params }: any) {
   if (!product) notFound();
   return <ProductDetailsClient product={product} />;
 }
-
