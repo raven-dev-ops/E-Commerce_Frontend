@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { api } from '@/lib/api';
 import GoogleAuthButton from '@/components/GoogleAuthButton';
@@ -9,6 +9,8 @@ import GoogleAuthButton from '@/components/GoogleAuthButton';
 function isAxiosError(error: unknown): error is { response?: { data?: { detail?: string } } } {
   return typeof error === 'object' && error !== null && 'response' in error;
 }
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || '';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -23,11 +25,11 @@ export default function Register() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      redirect('/');
+      router.push('/');
     } else {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -67,7 +69,7 @@ export default function Register() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const response = await fetch('https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/', {
+      const response = await fetch(`${BASE_URL}/users/auth/google/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token: credential }),
@@ -76,9 +78,10 @@ export default function Register() {
       if (!response.ok) throw new Error('Google login failed');
 
       const data = await response.json();
-      // Handle backend JWT/token & user
-      localStorage.setItem('accessToken', data.access_token ?? '');
-      login(data.user || {}); // update your state/store with user
+      // Store JWTs
+      localStorage.setItem('accessToken', data.access ?? '');
+      localStorage.setItem('refreshToken', data.refresh ?? '');
+      login(data.user || {});
       router.push('/');
     } catch (error: any) {
       setErrorMsg('Google login failed');

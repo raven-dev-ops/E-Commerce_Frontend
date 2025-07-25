@@ -6,6 +6,8 @@ import { loginWithEmailPassword } from '@/lib/auth';
 import { useStore } from '@/store/useStore';
 import GoogleAuthButton from '@/components/GoogleAuthButton';
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || '';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +32,11 @@ export default function Login() {
       login(user);
       router.push('/');
     } catch (error: any) {
-      setErrorMsg(error.response?.data?.detail || 'Login failed');
+      if (error.response) {
+        setErrorMsg(error.response.data?.detail || 'Login failed');
+      } else {
+        setErrorMsg(error.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -40,7 +46,7 @@ export default function Login() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const response = await fetch('https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/', {
+      const response = await fetch(`${BASE_URL}/users/auth/google/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ access_token: credential }),
