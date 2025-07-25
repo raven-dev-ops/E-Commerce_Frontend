@@ -34,7 +34,7 @@ interface ApiResponseProduct {
 
 const FALLBACK_IMAGE = "/images/products/missing-image.png";
 
-// Improved getProducts with robust id/image handling
+// Normalize ID/images for all products, all categories
 async function getProducts(): Promise<Product[]> {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '');
   const url = `${baseUrl}/products/`;
@@ -45,7 +45,6 @@ async function getProducts(): Promise<Product[]> {
   const data = await res.json();
 
   const products = data.results.map((product: ApiResponseProduct): Product => {
-    // Robust _id mapping: handles id, _id string, or _id.$oid
     let rawId = '';
     if (typeof product.id === 'string' && product.id) {
       rawId = product.id;
@@ -55,7 +54,6 @@ async function getProducts(): Promise<Product[]> {
       rawId = (product._id as { $oid: string }).$oid;
     }
 
-    // Ensure images is always an array, even if only image is present
     let images: string[] = [];
     if (Array.isArray(product.images) && product.images.length > 0) {
       images = product.images;
@@ -71,8 +69,7 @@ async function getProducts(): Promise<Product[]> {
     };
   });
 
-  // Keep only products with valid id
-  const filteredProducts = products.filter((product: Product) => {
+  return products.filter((product: Product) => {
     const isValidId =
       typeof product._id === 'string' &&
       product._id.length > 0 &&
@@ -80,26 +77,25 @@ async function getProducts(): Promise<Product[]> {
       product._id !== 'null';
     return isValidId;
   });
-
-  return filteredProducts;
 }
 
+// Show arrows, but never dots
 const getCarouselSettings = (itemCount: number) => ({
-  dots: itemCount >= 4,
-  infinite: itemCount >= 4,
+  dots: false,
+  arrows: true,
+  infinite: itemCount > 1,
   speed: 500,
-  slidesToShow: 4,
+  slidesToShow: Math.min(4, itemCount),
   slidesToScroll: 1,
-  arrows: itemCount >= 4,
   responsive: [
     {
       breakpoint: 1024,
       settings: {
         slidesToShow: Math.min(3, itemCount),
         slidesToScroll: 1,
-        infinite: itemCount >= 3,
-        dots: itemCount >= 3,
-        arrows: itemCount >= 3,
+        infinite: itemCount > 1,
+        dots: false,
+        arrows: true,
       },
     },
     {
@@ -107,9 +103,9 @@ const getCarouselSettings = (itemCount: number) => ({
       settings: {
         slidesToShow: Math.min(2, itemCount),
         slidesToScroll: 1,
-        infinite: itemCount >= 2,
-        dots: itemCount >= 2,
-        arrows: itemCount >= 2,
+        infinite: itemCount > 1,
+        dots: false,
+        arrows: true,
       },
     },
     {
@@ -119,7 +115,7 @@ const getCarouselSettings = (itemCount: number) => ({
         slidesToScroll: 1,
         infinite: false,
         dots: false,
-        arrows: false,
+        arrows: true,
       },
     },
   ],
@@ -146,8 +142,8 @@ function ProductCard({ p }: { p: Product }) {
       idx = (idx + 1) % productImages.length;
       setHoveredIdx(idx);
       setFading(true);
-      setTimeout(() => setFading(false), 350); // match fade duration
-    }, 1200); // slower by default, adjust if you want
+      setTimeout(() => setFading(false), 350);
+    }, 1200);
     setIntervalId(id);
   };
 
@@ -170,7 +166,6 @@ function ProductCard({ p }: { p: Product }) {
     >
       <div className="flex flex-col items-center transform transition-transform duration-200 group-hover:scale-105">
         <div className="relative w-full h-48 bg-gray-100 overflow-hidden rounded-xl flex items-center justify-center p-2">
-          {/* Previous image for fade out */}
           {productImages.length > 1 && hoveredIdx !== prevIdx && (
             <Image
               src={productImages[prevIdx]}
@@ -181,7 +176,6 @@ function ProductCard({ p }: { p: Product }) {
               priority={false}
             />
           )}
-          {/* Current image for fade in */}
           <Image
             src={productImages[hoveredIdx]}
             alt={p.product_name}
