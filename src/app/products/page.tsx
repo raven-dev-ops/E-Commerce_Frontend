@@ -10,7 +10,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 interface ApiResponseProduct {
-  id: string;
+  id?: string;
   _id?: string | { $oid: string } | null | undefined;
   product_name: string;
   price: string | number;
@@ -32,12 +32,11 @@ interface ApiResponseProduct {
   review_count?: number;
 }
 
-const FALLBACK_IMAGE = "/images/products/beard-balm.jpg";
+const FALLBACK_IMAGE = "/images/products/missing-image.png";
 
+// Improved getProducts with robust id/image handling
 async function getProducts(): Promise<Product[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/')
-    ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1)
-    : process.env.NEXT_PUBLIC_API_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '');
   const url = `${baseUrl}/products/`;
 
   const res = await fetch(url, { cache: 'no-store' });
@@ -45,12 +44,34 @@ async function getProducts(): Promise<Product[]> {
 
   const data = await res.json();
 
-  const products = data.results.map((product: ApiResponseProduct): Product => ({
-    ...product,
-    _id: String(product.id),
-    price: Number(product.price),
-  }));
+  const products = data.results.map((product: ApiResponseProduct): Product => {
+    // Robust _id mapping: handles id, _id string, or _id.$oid
+    let rawId = '';
+    if (typeof product.id === 'string' && product.id) {
+      rawId = product.id;
+    } else if (typeof product._id === 'string' && product._id) {
+      rawId = product._id;
+    } else if (typeof product._id === 'object' && product._id && '$oid' in product._id) {
+      rawId = (product._id as { $oid: string }).$oid;
+    }
 
+    // Ensure images is always an array, even if only image is present
+    let images: string[] = [];
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      images = product.images;
+    } else if (typeof product.image === 'string' && product.image.length > 0) {
+      images = [product.image];
+    }
+
+    return {
+      ...product,
+      _id: rawId,
+      price: Number(product.price),
+      images,
+    };
+  });
+
+  // Keep only products with valid id
   const filteredProducts = products.filter((product: Product) => {
     const isValidId =
       typeof product._id === 'string' &&
@@ -143,7 +164,7 @@ function ProductCard({ p }: { p: Product }) {
       className="block group cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition bg-white"
       tabIndex={0}
       aria-label={`View details for ${p.product_name}`}
-      style={{ outline: "none" }} // ensures outline never stacks with ring
+      style={{ outline: "none" }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
