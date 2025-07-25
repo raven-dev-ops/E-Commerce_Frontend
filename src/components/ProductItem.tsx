@@ -1,5 +1,3 @@
-// src/components/ProductItem.tsx
-
 "use client";
 
 import Image from 'next/image';
@@ -22,20 +20,25 @@ const getPublicImageUrl = (input?: string) => {
   return `/images/products/${fileName}`;
 };
 
+const getDisplayImage = (product: Product) => {
+  // Priority: images array > image string > fallback
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    const normalized = getPublicImageUrl(product.images[0]);
+    if (normalized) return normalized;
+  }
+  if (product.image) {
+    const normalized = getPublicImageUrl(product.image);
+    if (normalized) return normalized;
+  }
+  return FALLBACK_IMAGE;
+};
+
 export default function ProductItem({ product }: ProductItemProps) {
   const { addToCart } = useStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Always use getPublicImageUrl logic
-  let imageToShow = FALLBACK_IMAGE;
-  if (product.images && product.images.length > 0) {
-    const first = getPublicImageUrl(product.images[0]);
-    if (first) imageToShow = first;
-  } else if (product.image) {
-    const resolved = getPublicImageUrl(product.image);
-    if (resolved) imageToShow = resolved;
-  }
+  const imageToShow = getDisplayImage(product);
 
   const handleAddToCart = async () => {
     setLoading(true);
@@ -62,6 +65,7 @@ export default function ProductItem({ product }: ProductItemProps) {
               className="rounded object-cover"
               sizes="(max-width: 768px) 100vw, 33vw"
               priority
+              unoptimized // remove if you want Next.js image optimization
             />
           </div>
           <h2 className="text-xl font-semibold">{product.product_name}</h2>
@@ -80,4 +84,3 @@ export default function ProductItem({ product }: ProductItemProps) {
     </div>
   );
 }
-
