@@ -21,7 +21,6 @@ const getPublicImageUrl = (input?: string) => {
 };
 
 const getDisplayImage = (product: Product) => {
-  // Priority: images array > image string > fallback
   if (Array.isArray(product.images) && product.images.length > 0) {
     const normalized = getPublicImageUrl(product.images[0]);
     if (normalized) return normalized;
@@ -44,8 +43,8 @@ export default function ProductItem({ product }: ProductItemProps) {
     setLoading(true);
     setError(null);
     try {
-      await addItemToCart({ product_id: Number(product._id), quantity: 1 });
-      addToCart(Number(product._id), 1);
+      await addItemToCart({ product_id: product._id, quantity: 1 });
+      addToCart(product._id, 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     } finally {
@@ -65,7 +64,7 @@ export default function ProductItem({ product }: ProductItemProps) {
               className="rounded object-cover"
               sizes="(max-width: 768px) 100vw, 33vw"
               priority
-              unoptimized // remove if you want Next.js image optimization
+              unoptimized // Remove this line for Next.js image optimization
             />
           </div>
           <h2 className="text-xl font-semibold">{product.product_name}</h2>

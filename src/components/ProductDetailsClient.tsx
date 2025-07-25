@@ -46,8 +46,7 @@ const ProductDetailsClient: React.FC<ProductDetailsClientProps> = ({ product }) 
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   const handleAddToCart = () => {
-    const id = typeof product._id === "number" ? product._id : Number(product._id);
-    if (!isNaN(id)) addToCart(id);
+    addToCart(product._id, 1); // <-- product._id is always string now
   };
 
   return (

@@ -2,40 +2,41 @@
 
 import { api } from '@/lib/api';
 
-interface CartItem {
-  id: number;
-  product_id: number;
+// All MongoDB IDs are strings
+export interface CartItem {
+  id: string;             // Cart item ID (MongoDB ObjectId as string)
+  product_id: string;     // Product ID (MongoDB ObjectId as string)
   product_name: string;
   quantity: number;
   price: number;
-  // Add other relevant item properties
+  // Add other relevant item properties if needed
 }
 
-interface Cart {
-  id: number;
+export interface Cart {
+  id: string;             // Cart ID (MongoDB ObjectId as string)
   items: CartItem[];
   total_price: string; // Or number, depending on your backend
-  // Add other relevant cart properties
+  // Add other relevant cart properties if needed
 }
 
-interface AddItemData {
-  product_id: number;
+export interface AddItemData {
+  product_id: string;     // CHANGED from number to string
   quantity: number;
 }
 
-interface UpdateItemData {
-  item_id: number;
+export interface UpdateItemData {
+  item_id: string;        // CHANGED from number to string
   quantity: number;
 }
 
-interface RemoveItemData {
-  item_id: number;
+export interface RemoveItemData {
+  item_id: string;        // CHANGED from number to string
 }
 
 // Function to fetch cart contents
 export async function fetchCartContents(): Promise<Cart> {
   try {
-    const response = await api.get<Cart>('/cart/'); // Use the simplified endpoint
+    const response = await api.get<Cart>('/cart/');
     return response.data;
   } catch (error) {
     console.error('Error fetching cart contents:', error);
@@ -68,7 +69,7 @@ export async function updateCartItemQuantity(updateData: UpdateItemData): Promis
 // Function to remove an item from the cart
 export async function removeCartItem(removeData: RemoveItemData): Promise<Cart> {
   try {
-    const response = await api.delete<Cart>('/cart/', { data: removeData }); // Using DELETE request body for item_id
+    const response = await api.delete<Cart>('/cart/', { data: removeData }); // DELETE request body for item_id
     return response.data;
   } catch (error) {
     console.error('Error removing item from cart:', error);
@@ -76,7 +77,7 @@ export async function removeCartItem(removeData: RemoveItemData): Promise<Cart> 
   }
 }
 
-// Optional: Function to clear the entire cart (assuming backend supports it)
+// Optional: Function to clear the entire cart (uncomment if backend supports)
 // export async function clearCart(): Promise<void> {
 //   try {
 //     await api.delete<void>('/cart/'); // Or api.post('/cart/clear/') depending on backend

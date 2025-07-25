@@ -4,7 +4,7 @@ import { create, StateCreator } from 'zustand';
 
 // Type for a cart item
 export interface CartItem {
-  productId: number;
+  productId: string; // CHANGED from number to string
   quantity: number;
 }
 
@@ -19,10 +19,10 @@ export interface StoreState {
   cart: CartItem[];
   login: (userData: User) => void;
   logout: () => void;
-  addToCart: (productId: number, qty?: number) => void;
+  addToCart: (productId: string, qty?: number) => void; // CHANGED
   clearCart: () => void;
-  updateCartItemQuantity: (productId: number, newQuantity: number) => void;
-  removeFromCart: (productId: number) => void;
+  updateCartItemQuantity: (productId: string, newQuantity: number) => void; // CHANGED
+  removeFromCart: (productId: string) => void; // CHANGED
   hydrateCart: () => void;
 }
 
@@ -66,7 +66,7 @@ export const useStore = create<StoreState>(
       set({ cart: loadCartFromLocalStorage() });
     },
 
-    addToCart: (productId: number, qty: number = 1) =>
+    addToCart: (productId: string, qty: number = 1) =>
       set((state: StoreState) => {
         const existing = state.cart.find((i) => i.productId === productId);
         let updatedCart;
@@ -86,7 +86,7 @@ export const useStore = create<StoreState>(
       set({ cart: [] });
     },
 
-    updateCartItemQuantity: (productId: number, newQuantity: number) =>
+    updateCartItemQuantity: (productId: string, newQuantity: number) =>
       set((state: StoreState) => {
         const updatedCart =
           newQuantity <= 0
@@ -98,7 +98,7 @@ export const useStore = create<StoreState>(
         return { cart: updatedCart };
       }),
 
-    removeFromCart: (productId: number) =>
+    removeFromCart: (productId: string) =>
       set((state: StoreState) => {
         const updatedCart = state.cart.filter((item) => item.productId !== productId);
         saveCartToLocalStorage(updatedCart);
