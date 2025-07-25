@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from "next/image";
-import type { Product } from '@/types/product';
-
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import type { Product } from '@/types/product';
+
+// import ProductCard from './ProductCard'; // if using ProductCard
+import ProductItem from '@/components/ProductItem';
 
 interface ApiResponseProduct {
-  id?: string;
+  id: string;
   _id?: string | { $oid: string } | null | undefined;
   product_name: string;
   price: string | number;
@@ -32,45 +32,10 @@ interface ApiResponseProduct {
   review_count?: number;
 }
 
-// MUST match the file in /public/images/products/missing-image.png
-const FALLBACK_IMAGE = "/images/products/missing-image.png";
-
-// Always returns at least one valid, absolute image path
-function normalizeImages(product: ApiResponseProduct): string[] {
-  let images: string[] = [];
-
-  // 1. Prefer 'images' array if present
-  if (Array.isArray(product.images) && product.images.length > 0) {
-    images = product.images.filter(Boolean);
-  }
-  // 2. Fallback to 'image' field if present
-  else if (typeof product.image === 'string' && product.image.length > 0) {
-    images = [product.image];
-  }
-
-  // 3. If still empty, use fallback
-  if (!images.length) {
-    images = [FALLBACK_IMAGE];
-  }
-
-  // 4. Clean: ensure all are absolute or full URLs
-  images = images.map(img => {
-    if (!img) return FALLBACK_IMAGE;
-    // If already a valid http(s) URL, use as is
-    if (/^https?:\/\//.test(img)) return img;
-    // If already the fallback, return as is
-    if (img === FALLBACK_IMAGE) return img;
-    // If starts with '/', return as is
-    if (img.startsWith('/')) return img;
-    // Otherwise, treat as filename, prepend local path
-    return `/images/products/${img.split('/').pop()}`;
-  });
-
-  return images;
-}
-
 async function getProducts(): Promise<Product[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '');
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/')
+    ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1)
+    : process.env.NEXT_PUBLIC_API_BASE_URL;
   const url = `${baseUrl}/products/`;
 
   const res = await fetch(url, { cache: 'no-store' });
@@ -78,25 +43,11 @@ async function getProducts(): Promise<Product[]> {
 
   const data = await res.json();
 
-  const products = data.results.map((product: ApiResponseProduct): Product => {
-    let rawId = '';
-    if (typeof product.id === 'string' && product.id) {
-      rawId = product.id;
-    } else if (typeof product._id === 'string' && product._id) {
-      rawId = product._id;
-    } else if (typeof product._id === 'object' && product._id && '$oid' in product._id) {
-      rawId = (product._id as { $oid: string }).$oid;
-    }
-
-    const images = normalizeImages(product);
-
-    return {
-      ...product,
-      _id: rawId,
-      price: Number(product.price),
-      images,
-    };
-  });
+  const products = data.results.map((product: ApiResponseProduct): Product => ({
+    ...product,
+    _id: String(product.id),
+    price: Number(product.price),
+  }));
 
   return products.filter((product: Product) => {
     const isValidId =
@@ -108,7 +59,7 @@ async function getProducts(): Promise<Product[]> {
   });
 }
 
-// Carousel settings: arrows always, dots never
+// Show arrows, but never dots
 const getCarouselSettings = (itemCount: number) => ({
   dots: false,
   arrows: true,
@@ -149,81 +100,6 @@ const getCarouselSettings = (itemCount: number) => ({
     },
   ],
 });
-
-function ProductCard({ p }: { p: Product }) {
-  // Always at least one valid image (fallback if needed)
-  const productImages: string[] = Array.isArray(p.images) && p.images.length > 0
-    ? p.images
-    : [FALLBACK_IMAGE];
-
-  const [hoveredIdx, setHoveredIdx] = useState(0);
-  const [prevIdx, setPrevIdx] = useState(0);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
-  const [fading, setFading] = useState(false);
-
-  const handleMouseEnter = () => {
-    if (productImages.length <= 1) return;
-    let idx = 0;
-    const id = setInterval(() => {
-      setPrevIdx(idx);
-      idx = (idx + 1) % productImages.length;
-      setHoveredIdx(idx);
-      setFading(true);
-      setTimeout(() => setFading(false), 350);
-    }, 1200);
-    setIntervalId(id);
-  };
-
-  const handleMouseLeave = () => {
-    if (intervalId) clearInterval(intervalId);
-    setHoveredIdx(0);
-    setPrevIdx(0);
-    setFading(false);
-  };
-
-  // DEBUG: log every image attempted for broken cases
-  // Remove or comment this after you confirm it's always correct!
-  // console.log('Product image src:', productImages[hoveredIdx], p.product_name);
-
-  return (
-    <Link
-      href={`/products/${p._id}`}
-      className="block group cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-0 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-blue-400 transition bg-white"
-      tabIndex={0}
-      aria-label={`View details for ${p.product_name}`}
-      style={{ outline: "none" }}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="flex flex-col items-center transform transition-transform duration-200 group-hover:scale-105">
-        <div className="relative w-full h-48 bg-gray-100 overflow-hidden rounded-xl flex items-center justify-center p-2">
-          {productImages.length > 1 && hoveredIdx !== prevIdx && (
-            <Image
-              src={productImages[prevIdx]}
-              alt={p.product_name + " previous"}
-              fill
-              className={`object-contain w-full h-full absolute inset-0 transition-opacity duration-300 pointer-events-none ${fading ? "opacity-0" : "opacity-0"}`}
-              sizes="(max-width: 768px) 100vw, 25vw"
-              priority={false}
-            />
-          )}
-          <Image
-            src={productImages[hoveredIdx]}
-            alt={p.product_name}
-            fill
-            className={`object-contain w-full h-full absolute inset-0 transition-opacity duration-300 ${fading ? "opacity-100" : "opacity-100"}`}
-            sizes="(max-width: 768px) 100vw, 25vw"
-            priority={false}
-          />
-        </div>
-        <div className="w-full flex flex-col items-center gap-1 mt-2 px-1 pb-2">
-          <span className="text-sm font-semibold text-gray-900 text-center truncate w-full">{p.product_name}</span>
-          <span className="text-sm font-bold text-blue-600">${Number(p.price).toFixed(2)}</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -287,7 +163,7 @@ export default function ProductsPage() {
                   <Slider {...carouselSettings}>
                     {items.map(p => (
                       <div key={p._id} className="px-2">
-                        <ProductCard p={p} />
+                        <ProductItem product={p} />
                       </div>
                     ))}
                   </Slider>
