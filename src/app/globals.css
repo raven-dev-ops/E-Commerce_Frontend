@@ -4,6 +4,10 @@ html, body, #__next {
   height: 100%;
   margin: 0;
   padding: 0;
+  
+  /* Add text-size-adjust for modern browsers */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 :root {
@@ -33,4 +37,8 @@ body {
   height: 100%; /* ensures the body fills the viewport */
   margin: 0;
   padding: 0;
+  
+  /* For better font rendering on some devices */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
