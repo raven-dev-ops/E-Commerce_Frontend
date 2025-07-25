@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
-// If you control the type, do this:
-// type Product = { ...; images: string[]; ... };
 import type { Product } from '@/types/product';
 
 import Slider from 'react-slick';
@@ -34,27 +32,38 @@ interface ApiResponseProduct {
   review_count?: number;
 }
 
-const FALLBACK_IMAGE = "public/images/products/missing-image.png";
+// MUST match the file in /public/images/products/missing-image.png
+const FALLBACK_IMAGE = "/images/products/missing-image.png";
 
-// Always returns at least one valid image path for every product
+// Always returns at least one valid, absolute image path
 function normalizeImages(product: ApiResponseProduct): string[] {
   let images: string[] = [];
 
+  // 1. Prefer 'images' array if present
   if (Array.isArray(product.images) && product.images.length > 0) {
     images = product.images.filter(Boolean);
-  } else if (typeof product.image === 'string' && product.image.length > 0) {
+  }
+  // 2. Fallback to 'image' field if present
+  else if (typeof product.image === 'string' && product.image.length > 0) {
     images = [product.image];
   }
 
+  // 3. If still empty, use fallback
   if (!images.length) {
     images = [FALLBACK_IMAGE];
   }
 
-  // Optionally always resolve to your local folder (remove if storing full URLs)
+  // 4. Clean: ensure all are absolute or full URLs
   images = images.map(img => {
-    const fileName = img?.split('/').pop();
-    if (!fileName || fileName === FALLBACK_IMAGE.split('/').pop()) return FALLBACK_IMAGE;
-    return `/images/products/${fileName}`;
+    if (!img) return FALLBACK_IMAGE;
+    // If already a valid http(s) URL, use as is
+    if (/^https?:\/\//.test(img)) return img;
+    // If already the fallback, return as is
+    if (img === FALLBACK_IMAGE) return img;
+    // If starts with '/', return as is
+    if (img.startsWith('/')) return img;
+    // Otherwise, treat as filename, prepend local path
+    return `/images/products/${img.split('/').pop()}`;
   });
 
   return images;
@@ -85,7 +94,7 @@ async function getProducts(): Promise<Product[]> {
       ...product,
       _id: rawId,
       price: Number(product.price),
-      images, // always string[]
+      images,
     };
   });
 
@@ -142,7 +151,7 @@ const getCarouselSettings = (itemCount: number) => ({
 });
 
 function ProductCard({ p }: { p: Product }) {
-  // This guarantees productImages is always string[] (never undefined or empty)
+  // Always at least one valid image (fallback if needed)
   const productImages: string[] = Array.isArray(p.images) && p.images.length > 0
     ? p.images
     : [FALLBACK_IMAGE];
@@ -171,6 +180,10 @@ function ProductCard({ p }: { p: Product }) {
     setPrevIdx(0);
     setFading(false);
   };
+
+  // DEBUG: log every image attempted for broken cases
+  // Remove or comment this after you confirm it's always correct!
+  // console.log('Product image src:', productImages[hoveredIdx], p.product_name);
 
   return (
     <Link
