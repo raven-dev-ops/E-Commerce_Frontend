@@ -1,8 +1,8 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
-// Replace with your backend login logic
+// Example backend auth helper
 async function authenticateWithBackend(email: string, password: string) {
   const res = await fetch(`${process.env.BACKEND_URL}/authentication/login/`, {
     method: "POST",
@@ -14,7 +14,7 @@ async function authenticateWithBackend(email: string, password: string) {
   return { id: data.user.id, email: data.user.email, ...data.user };
 }
 
-export const authOptions: NextAuthOptions = {
+const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -34,17 +34,15 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  session: { strategy: "jwt" as const },   // Type-safe!
+  session: { strategy: "jwt" as const },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/login",
     signOut: "/auth/logout",
     error: "/auth/error",
   },
-  // Optionally, callbacks can go here if you want to persist backend tokens
-  // callbacks: { ... }
 };
 
 const handler = NextAuth(authOptions);
 
-export { handler as GET, handler as POST };
+export { handler as GET, handler as POST }; // <- ONLY these exports!
