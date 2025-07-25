@@ -34,7 +34,7 @@ interface ApiResponseProduct {
   review_count?: number;
 }
 
-const FALLBACK_IMAGE = "/images/products/missing-image.png";
+const FALLBACK_IMAGE = "public/images/products/missing-image.png";
 
 // Always returns at least one valid image path for every product
 function normalizeImages(product: ApiResponseProduct): string[] {
