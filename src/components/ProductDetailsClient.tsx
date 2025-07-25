@@ -11,7 +11,7 @@ interface ProductDetailsClientProps {
   product: Product;
 }
 
-const FALLBACK_IMAGE = "/images/products/beard-balm.jpg";
+const FALLBACK_IMAGE = "/images/products/missing-image.png";
 
 const getPublicImageUrl = (input?: string) => {
   if (!input) return undefined;

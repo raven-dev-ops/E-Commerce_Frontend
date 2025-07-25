@@ -10,7 +10,7 @@ import type { Product } from '@/types/product';
 import ProductItem from '@/components/ProductItem';
 
 interface ApiResponseProduct {
-  id: string;
+  id?: string;
   _id?: string | { $oid: string } | null | undefined;
   product_name: string;
   price: string | number;
@@ -43,20 +43,33 @@ async function getProducts(): Promise<Product[]> {
 
   const data = await res.json();
 
-  const products = data.results.map((product: ApiResponseProduct): Product => ({
-    ...product,
-    _id: String(product.id),
-    price: Number(product.price),
-  }));
+  const products = data.results.map((product: ApiResponseProduct): Product => {
+    let id = '';
+    if (typeof product.id === 'string' && product.id) {
+      id = product.id;
+    } else if (typeof product._id === 'string' && product._id) {
+      id = product._id;
+    } else if (
+      typeof product._id === 'object' &&
+      product._id &&
+      '$oid' in product._id
+    ) {
+      id = (product._id as { $oid: string }).$oid;
+    }
+    return {
+      ...product,
+      _id: id,
+      price: Number(product.price),
+    };
+  });
 
-  return products.filter((product: Product) => {
-    const isValidId =
+  return products.filter(
+    (product: Product) =>
       typeof product._id === 'string' &&
       product._id.length > 0 &&
       product._id !== 'undefined' &&
-      product._id !== 'null';
-    return isValidId;
-  });
+      product._id !== 'null'
+  );
 }
 
 // Show arrows, but never dots

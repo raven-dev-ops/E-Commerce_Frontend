@@ -16,11 +16,11 @@ export const metadata: Metadata = {
     template: '%s | TwiinZ Beard Balms & Essentials',
   },
   description:
-    'TwiinZ Beard Balm & Essentials began in 2022 in our Kansas City kitchen. Founded by veterans seeking non-oily, lightly-fragranced, affordable grooming, we now craft 7 balms, 8 oils, 6 washes and 1 wax, with more on the way. Proudly veteran-owned and operated.',
+    'TwiinZ Beard Balm & Essentials began in 2022 in our Kansas City kitchen. Founded by seeking non-oily, lightly-fragranced, affordable grooming, we now craft 7 balms, 8 oils, 6 washes and 1 wax, with more on the way. Proudly veteran-owned and operated.',
   openGraph: {
     title: 'TwiinZ Beard Balms & Essentials',
     description:
-      'Hand-blended beard care from Kansas City veterans. Balms, oils, washes and wax built for performance, not perfume.',
+      'Hand-blended beard care from Kansas City. Balms, oils, washes and wax built for performance, not perfume.',
     images: [
       {
         url: '/images/logos/logo.png',
