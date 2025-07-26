@@ -6,8 +6,8 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Product } from '@/types/product';
-import FallbackImage from '@/components/FallbackImage';  // <-- NEW
 
 interface ApiResponseProduct {
   _id: string;
@@ -21,33 +21,29 @@ interface ApiResponseProduct {
 const CATEGORY_ORDER = ['Washes', 'Oils', 'Balms', 'Wax'];
 
 function getPublicImageUrl(path?: string) {
-  if (!path) return undefined;
+  if (!path) return '/images/products/missing-image.png';
   const fname = path.split('/').pop();
-  return fname ? `/images/products/${fname}` : undefined;
+  return fname ? `/images/products/${fname}` : '/images/products/missing-image.png';
 }
 
 async function getAllProducts(): Promise<Product[]> {
+  // build base URL
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
-  const base = raw;
-  let url = `${base}/products/?page=1`;
-  const all: ApiResponseProduct[] = [];
+  const url = `${raw}/products/`;
 
-  while (url) {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-    const json = await res.json();
-    all.push(...(json.results as ApiResponseProduct[]));
-    if (json.next) {
-      const next = (json.next as string).replace(/^http:\/\//, 'https://');
-      const u = new URL(next);
-      url = `${base}/products/${u.search}`;
-    } else {
-      url = '';
-    }
-  }
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+  const json = await res.json();
 
-  return all
+  // support both raw-array and paginated { results, next, ... }
+  const list: ApiResponseProduct[] = Array.isArray(json)
+    ? json
+    : Array.isArray(json.results)
+      ? json.results
+      : [];
+
+  return list
     .map(p => ({
       _id: String(p._id),
       product_name: p.product_name,
@@ -85,12 +81,17 @@ export default function ProductsPage() {
     (async () => {
       try {
         const all = await getAllProducts();
+
+        // group into our four categories in fixed order
         const grouped: Record<string, Product[]> = {};
         CATEGORY_ORDER.forEach(cat => grouped[cat] = []);
         all.forEach(p => {
-          if (p.category && grouped[p.category]) grouped[p.category].push(p);
+          if (p.category && grouped[p.category]) {
+            grouped[p.category].push(p);
+          }
         });
         setByCategory(grouped);
+
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Failed to load products');
@@ -100,7 +101,7 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // Accessibility: disable focus in hidden slides
+  // a11y: disable focus in hidden slides
   useEffect(() => {
     if (!containerRef.current) return;
     containerRef.current
@@ -117,12 +118,12 @@ export default function ProductsPage() {
       });
   }, [loading, error, byCategory]);
 
+  if (loading) return <p className="p-4">Loading products…</p>;
+  if (error)   return <p className="p-4 text-red-500">Error: {error}</p>;
+
   return (
     <div className="container mx-auto p-4" ref={containerRef}>
-      {loading && <p>Loading products…</p>}
-      {error   && <p className="text-red-500">Error: {error}</p>}
-
-      {!loading && !error && CATEGORY_ORDER.map(cat => {
+      {CATEGORY_ORDER.map(cat => {
         const items = byCategory[cat] || [];
         if (items.length === 0) return null;
         return (
@@ -130,26 +131,24 @@ export default function ProductsPage() {
             <h2 className="text-xl font-semibold mb-4">{cat}</h2>
             <Slider {...getCarouselSettings(items.length)}>
               {items.map(p => {
-                // pick first image or fallback via FallbackImage
-                const src =
-                  Array.isArray(p.images) && p.images[0]
-                    ? getPublicImageUrl(p.images[0])
-                    : getPublicImageUrl(p.image);
-
+                const img = Array.isArray(p.images) && p.images[0]
+                  ? getPublicImageUrl(p.images[0])
+                  : getPublicImageUrl(p.image);
                 return (
                   <div key={p._id} className="px-2">
                     <div className="rounded overflow-hidden">
                       <Link href={`/products/${p._id}`}>
                         <a className="block">
                           <div className="relative w-full h-48 bg-gray-100">
-                            <FallbackImage
-                              src={src}
+                            <Image
+                              src={img}
                               alt={p.product_name}
                               fill
                               className="object-cover"
+                              priority
                             />
                           </div>
-                          <div className="p-4">
+                          <div className="p-2">
                             <div className="flex justify-between items-center">
                               <h3 className="font-medium text-lg">{p.product_name}</h3>
                               <span className="font-bold">${p.price.toFixed(2)}</span>
