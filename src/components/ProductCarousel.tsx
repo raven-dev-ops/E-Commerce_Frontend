@@ -9,6 +9,55 @@ import type { Product } from '@/types/product';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
+// --- Chevron arrow components ---
+function ArrowLeft(props: any) {
+  const { className, style, onClick } = props;
+  return (
+    <button
+      type="button"
+      aria-label="Previous"
+      className={`${className} z-10 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-300 hover:bg-gray-200 transition-all`}
+      style={{ ...style, left: '-30px', width: 40, height: 40 }}
+      onClick={onClick}
+      tabIndex={0}
+    >
+      <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+        <path
+          d="M13 16l-5-5 5-5"
+          stroke="black"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
+function ArrowRight(props: any) {
+  const { className, style, onClick } = props;
+  return (
+    <button
+      type="button"
+      aria-label="Next"
+      className={`${className} z-10 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-300 hover:bg-gray-200 transition-all`}
+      style={{ ...style, right: '-30px', width: 40, height: 40 }}
+      onClick={onClick}
+      tabIndex={0}
+    >
+      <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+        <path
+          d="M7 4l5 5-5 5"
+          stroke="black"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
 interface ProductCarouselProps {
   products: Product[];
   title?: string;
@@ -37,8 +86,8 @@ function getCarouselSettings(count: number) {
     slidesToScroll: 1,
     responsive: [
       { breakpoint: 1024, settings: { slidesToShow: Math.min(3, count), arrows: true } },
-      { breakpoint: 600,  settings: { slidesToShow: Math.min(2, count), arrows: true } },
-      { breakpoint: 480,  settings: { slidesToShow: 1, arrows: true } },
+      { breakpoint: 600, settings: { slidesToShow: Math.min(2, count), arrows: true } },
+      { breakpoint: 480, settings: { slidesToShow: 1, arrows: true } },
     ],
   };
 }
@@ -72,10 +121,16 @@ export default function ProductCarousel({
 
   if (!products || products.length === 0) return null;
 
+  const settings = {
+    ...getCarouselSettings(products.length),
+    prevArrow: <ArrowLeft />,
+    nextArrow: <ArrowRight />,
+  };
+
   return (
     <section className="mb-12" ref={containerRef}>
       {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
-      <Slider {...getCarouselSettings(products.length)}>
+      <Slider {...settings}>
         {products.map(p => {
           const src = Array.isArray(p.images) && p.images[0]
             ? getPublicImageUrl(p.images[0])

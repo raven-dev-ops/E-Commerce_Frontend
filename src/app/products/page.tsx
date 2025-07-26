@@ -134,11 +134,9 @@ export default function ProductsPage() {
         if (items.length === 0) return null;
         return (
           <section key={cat} className="mb-12">
-            {/* This div centers & limits width just like ProductDetailsClient */}
             <div className="max-w-6xl mx-auto">
               <ProductCarousel
                 products={items}
-                title={cat}
                 showPrice
                 showRatings
               />
