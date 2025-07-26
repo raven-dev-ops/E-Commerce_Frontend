@@ -29,12 +29,29 @@ interface ApiResponseProduct {
   review_count?: number;
 }
 
-async function getProducts(): Promise<Product[]> {
+// Fetch all pages of /products/ by following `next` links
+async function getAllProductsRaw(): Promise<ApiResponseProduct[]> {
   const base = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
-  const res = await fetch(`${base}/products/`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to fetch products');
-  const json = await res.json();
-  const raw: ApiResponseProduct[] = json.results;
+  let url: string | null = `${base}/products/`;
+  const all: ApiResponseProduct[] = [];
+
+  while (url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch products');
+    const { results, next } = await res.json() as {
+      results: ApiResponseProduct[];
+      next: string | null;
+    };
+    all.push(...results);
+    url = next;
+  }
+
+  return all;
+}
+
+// Convert raw API items into our `Product` type
+async function getProducts(): Promise<Product[]> {
+  const raw = await getAllProductsRaw();
   return raw
     .map(p => ({
       ...p,
@@ -45,9 +62,10 @@ async function getProducts(): Promise<Product[]> {
       p._id &&
       p._id !== 'undefined' &&
       p._id !== 'null'
-    );
+    ) as Product[];
 }
 
+// Carousel settings factory
 const getCarouselSettings = (count: number) => ({
   dots: false,
   arrows: true,
@@ -56,43 +74,20 @@ const getCarouselSettings = (count: number) => ({
   slidesToShow: Math.min(4, count),
   slidesToScroll: 1,
   responsive: [
-    {
-      breakpoint: 1024,
-      settings: {
-        slidesToShow: Math.min(3, count),
-        slidesToScroll: 1,
-        infinite: count > 1,
-        arrows: true,
-      },
-    },
-    {
-      breakpoint: 600,
-      settings: {
-        slidesToShow: Math.min(2, count),
-        slidesToScroll: 1,
-        infinite: count > 1,
-        arrows: true,
-      },
-    },
-    {
-      breakpoint: 480,
-      settings: {
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        infinite: false,
-        arrows: true,
-      },
-    },
+    { breakpoint: 1024, settings: { slidesToShow: Math.min(3, count), slidesToScroll: 1, infinite: count > 1, arrows: true } },
+    { breakpoint: 600,  settings: { slidesToShow: Math.min(2, count), slidesToScroll: 1, infinite: count > 1, arrows: true } },
+    { breakpoint: 480,  settings: { slidesToShow: 1,                slidesToScroll: 1, infinite: false,       arrows: true } },
   ],
 });
 
 export default function ProductsPage() {
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [byCategory, setByCategory] = useState<Record<string, Product[]>>({});
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState<string | null>(null);
+  const [categories, setCategories]     = useState<string[]>([]);
+  const [byCategory, setByCategory]     = useState<Record<string, Product[]>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Fetch + group on mount
   useEffect(() => {
     (async () => {
       try {
@@ -118,22 +113,21 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // a11y: disable focus in hidden slides
+  // A11y: strip focus from hidden slides
   useEffect(() => {
     if (!containerRef.current) return;
-    const slides = containerRef.current.querySelectorAll<HTMLElement>(
-      '.slick-slide[aria-hidden="true"]'
-    );
-    slides.forEach(slide => {
-      slide.querySelectorAll<HTMLElement>(
-        'a, button, input, select, textarea, [tabindex]'
-      ).forEach(el => {
-        el.setAttribute('tabindex', '-1');
-        if (['BUTTON','INPUT','SELECT','TEXTAREA'].includes(el.tagName)) {
-          (el as HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).disabled = true;
-        }
+    containerRef.current
+      .querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
+      .forEach(slide => {
+        slide.querySelectorAll<HTMLElement>(
+          'a, button, input, select, textarea, [tabindex]'
+        ).forEach(el => {
+          el.setAttribute('tabindex', '-1');
+          if (['BUTTON','INPUT','SELECT','TEXTAREA'].includes(el.tagName)) {
+            (el as HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).disabled = true;
+          }
+        });
       });
-    });
   }, [loading, error, byCategory]);
 
   return (
