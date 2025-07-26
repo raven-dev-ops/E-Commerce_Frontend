@@ -1,12 +1,24 @@
-import axios from 'axios';
+// src/lib/auth.ts
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || '';
+import { api } from '@/lib/api';
 
-export async function loginWithEmailPassword(email: string, password: string) {
-  const response = await axios.post(`${BASE_URL}/authentication/login/`, {
+export interface LoginResponse {
+  token: string;
+  user: Record<string, any>;
+  // …extend with whatever your backend actually returns
+}
+
+/**
+ * Logs in with email + password.
+ * Uses our normalized `api` (so HTTPS is enforced, `/api` is appended, etc).
+ */
+export async function loginWithEmailPassword(
+  email: string,
+  password: string
+): Promise<LoginResponse> {
+  const { data } = await api.post<LoginResponse>('/authentication/login/', {
     email,
     password,
   });
-  return response.data;
+  return data;
 }

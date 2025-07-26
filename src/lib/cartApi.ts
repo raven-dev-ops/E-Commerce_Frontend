@@ -1,37 +1,41 @@
+// src/lib/cartApi.ts
+
 import { api } from '@/lib/api';
 
-// MongoDB ObjectId strings used everywhere for IDs
+// All MongoDB IDs are strings
 export interface CartItem {
-  id: string;             // Cart item ID (MongoDB ObjectId)
-  product_id: string;     // Product ID (MongoDB ObjectId)
+  id: string;             // Cart item ID (MongoDB ObjectId as string)
+  product_id: string;     // Product ID (MongoDB ObjectId as string)
   product_name: string;
   quantity: number;
   price: number;
-  // Add other properties if needed
+  // Add other relevant item properties if needed
 }
 
 export interface Cart {
-  id: string;             // Cart ID (MongoDB ObjectId)
+  id: string;             // Cart ID (MongoDB ObjectId as string)
   items: CartItem[];
-  total_price: string;    // Or number depending on backend
-  // Add other properties if needed
+  total_price: string;    // Or number, depending on your backend
+  // Add other relevant cart properties if needed
 }
 
 export interface AddItemData {
-  product_id: string;     // Changed to string
+  product_id: string;     // CHANGED from number to string
   quantity: number;
 }
 
 export interface UpdateItemData {
-  item_id: string;        // Changed to string
+  item_id: string;        // CHANGED from number to string
   quantity: number;
 }
 
 export interface RemoveItemData {
-  item_id: string;        // Changed to string
+  item_id: string;        // CHANGED from number to string
 }
 
-// Fetch cart contents
+/**
+ * Fetch the current user's cart.
+ */
 export async function fetchCartContents(): Promise<Cart> {
   try {
     const response = await api.get<Cart>('/cart/');
@@ -42,7 +46,9 @@ export async function fetchCartContents(): Promise<Cart> {
   }
 }
 
-// Add product to cart
+/**
+ * Add an item to the cart.
+ */
 export async function addItemToCart(itemData: AddItemData): Promise<Cart> {
   try {
     const response = await api.post<Cart>('/cart/', itemData);
@@ -53,7 +59,9 @@ export async function addItemToCart(itemData: AddItemData): Promise<Cart> {
   }
 }
 
-// Update cart item quantity
+/**
+ * Update the quantity of an existing cart item.
+ */
 export async function updateCartItemQuantity(updateData: UpdateItemData): Promise<Cart> {
   try {
     const response = await api.put<Cart>('/cart/', updateData);
@@ -64,7 +72,9 @@ export async function updateCartItemQuantity(updateData: UpdateItemData): Promis
   }
 }
 
-// Remove item from cart
+/**
+ * Remove a single item from the cart.
+ */
 export async function removeCartItem(removeData: RemoveItemData): Promise<Cart> {
   try {
     const response = await api.delete<Cart>('/cart/', { data: removeData });
@@ -75,12 +85,7 @@ export async function removeCartItem(removeData: RemoveItemData): Promise<Cart> 
   }
 }
 
-// Optional: Clear entire cart (uncomment if backend supports)
+// Optional: clear entire cart (if your backend supports it)
 // export async function clearCart(): Promise<void> {
-//   try {
-//     await api.delete<void>('/cart/');
-//   } catch (error) {
-//     console.error('Error clearing cart:', error);
-//     throw error;
-//   }
+//   await api.delete('/cart/');
 // }
