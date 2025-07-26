@@ -7,7 +7,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from 'next/link';
 import type { Product } from '@/types/product';
-import FallbackImage from '@/components/FallbackImage';
+import FallbackImage from '@/components/FallbackImage';  // <-- NEW
 
 interface ApiResponseProduct {
   _id: string;
@@ -29,16 +29,25 @@ function getPublicImageUrl(path?: string) {
 async function getAllProducts(): Promise<Product[]> {
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
-  const url = `${raw}/products/`;
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-  const json = await res.json();
-  const list: ApiResponseProduct[] = Array.isArray(json)
-    ? json
-    : Array.isArray(json.results)
-      ? json.results
-      : [];
-  return list
+  const base = raw;
+  let url = `${base}/products/?page=1`;
+  const all: ApiResponseProduct[] = [];
+
+  while (url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+    const json = await res.json();
+    all.push(...(json.results as ApiResponseProduct[]));
+    if (json.next) {
+      const next = (json.next as string).replace(/^http:\/\//, 'https://');
+      const u = new URL(next);
+      url = `${base}/products/${u.search}`;
+    } else {
+      url = '';
+    }
+  }
+
+  return all
     .map(p => ({
       _id: String(p._id),
       product_name: p.product_name,
@@ -68,7 +77,7 @@ function getCarouselSettings(count: number) {
 
 export default function ProductsPage() {
   const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string | null>(null);
+  const [error, setError]           = useState<string|null>(null);
   const [byCategory, setByCategory] = useState<Record<string, Product[]>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -79,8 +88,7 @@ export default function ProductsPage() {
         const grouped: Record<string, Product[]> = {};
         CATEGORY_ORDER.forEach(cat => grouped[cat] = []);
         all.forEach(p => {
-          const cat = p.category || '';
-          if (grouped[cat]) grouped[cat].push(p);
+          if (p.category && grouped[p.category]) grouped[p.category].push(p);
         });
         setByCategory(grouped);
       } catch (err: any) {
@@ -92,11 +100,11 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // disable focus in hidden slides for accessibility
+  // Accessibility: disable focus in hidden slides
   useEffect(() => {
-    const root = containerRef.current;
-    if (!root) return;
-    root.querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
+    if (!containerRef.current) return;
+    containerRef.current
+      .querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
       .forEach(slide => {
         slide.querySelectorAll<HTMLElement>(
           'a, button, input, select, textarea, [tabindex]'
@@ -109,21 +117,24 @@ export default function ProductsPage() {
       });
   }, [loading, error, byCategory]);
 
-  if (loading) return <p className="p-4">Loading products…</p>;
-  if (error)   return <p className="p-4 text-red-500">Error: {error}</p>;
-
   return (
     <div className="container mx-auto p-4" ref={containerRef}>
-      {CATEGORY_ORDER.map(cat => {
+      {loading && <p>Loading products…</p>}
+      {error   && <p className="text-red-500">Error: {error}</p>}
+
+      {!loading && !error && CATEGORY_ORDER.map(cat => {
         const items = byCategory[cat] || [];
-        if (!items.length) return null;
+        if (items.length === 0) return null;
         return (
           <section key={cat} className="mb-12">
+            <h2 className="text-xl font-semibold mb-4">{cat}</h2>
             <Slider {...getCarouselSettings(items.length)}>
               {items.map(p => {
-                const src = Array.isArray(p.images) && p.images[0]
-                  ? getPublicImageUrl(p.images[0])
-                  : getPublicImageUrl(p.image);
+                // pick first image or fallback via FallbackImage
+                const src =
+                  Array.isArray(p.images) && p.images[0]
+                    ? getPublicImageUrl(p.images[0])
+                    : getPublicImageUrl(p.image);
 
                 return (
                   <div key={p._id} className="px-2">
@@ -140,10 +151,8 @@ export default function ProductsPage() {
                           </div>
                           <div className="p-4">
                             <div className="flex justify-between items-center">
-                              <span className="text-base font-medium">{p.product_name}</span>
-                              <span className="text-base font-semibold">
-                                ${Number(p.price).toFixed(2)}
-                              </span>
+                              <h3 className="font-medium text-lg">{p.product_name}</h3>
+                              <span className="font-bold">${p.price.toFixed(2)}</span>
                             </div>
                           </div>
                         </a>
