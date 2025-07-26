@@ -17,13 +17,22 @@ interface ProductDetailsClientProps {
 
 const FALLBACK_IMAGE = '/images/products/missing-image.png';
 
-const getPublicImageUrl = (input?: string): string | undefined => {
-  if (!input) return undefined;
-  if (/^https?:\/\//.test(input)) return input;
-  if (input.startsWith('/images/')) return input;
-  if (input.startsWith('images/')) return `/${input}`;
-  return `/images/products/${input}`;
-};
+// Improved function: handles absolute, relative, and duplicate paths
+function getPublicImageUrl(path?: string): string | undefined {
+  if (!path) return undefined;
+  // Already absolute URL
+  if (/^https?:\/\//.test(path)) return path;
+  // Already "/images/..."
+  if (path.startsWith('/images/')) return path;
+  // "images/..." (missing slash)
+  if (path.startsWith('images/')) return '/' + path;
+  // Avoid duplicate if already has 'images/products/'
+  if (path.includes('images/products/')) {
+    return path.startsWith('/') ? path : '/' + path;
+  }
+  // Otherwise, treat as a filename
+  return `/images/products/${path}`;
+}
 
 const IMAGE_WIDTH = 400;
 const IMAGE_HEIGHT = 500;
@@ -87,7 +96,7 @@ export default function ProductDetailsClient({
 
   // Helper for rendering gold stars
   const renderStars = (rating = 0) => {
-    const rounded = Math.round(Number(rating) * 2) / 2; // for future half stars
+    const rounded = Math.round(Number(rating) * 2) / 2; // for half stars later if needed
     return Array.from({ length: 5 }).map((_, i) => (
       <svg
         key={i}
