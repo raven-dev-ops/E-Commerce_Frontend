@@ -1,4 +1,3 @@
-// src/components/ProductDetailsClient.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -27,7 +26,8 @@ const THUMB_SIZE = 80;
 
 export default function ProductDetailsClient({ product }: ProductDetailsClientProps) {
   const { addToCart } = useStore();
-  const productId = typeof product._id === 'string' ? product._id : String(product._id);
+  // Updated to support either id or _id
+  const productId = String(product.id ?? product._id);
 
   const price = Number(product.price);
   const formattedPrice = !isNaN(price) ? price.toFixed(2) : '0.00';
