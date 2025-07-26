@@ -89,7 +89,7 @@ export default function ProductDetailsClient({
     ));
   };
 
-  // Utility for comma-separated lists
+  // Utility for comma-separated lists, regardless if field is array or string
   const formatArray = (val?: string[] | string) =>
     Array.isArray(val)
       ? val.join(', ')
@@ -170,31 +170,34 @@ export default function ProductDetailsClient({
                 {Number(product.average_rating).toFixed(2)} / 5
               </span>
             )}
-            
           </div>
+
+          {/* Product Info Fields */}
           {product.description && (
-            <p className="text-[1.15rem] font-medium mb-4">
-              Description: {product.description}
-            </p>
-          )}
-          {product.ingredients && (
-            <div className="mb-4">
-              <span className="font-semibold text-[1.15rem]">Ingredients: </span>
-              <span className="text-[1.15rem] text-gray-700">{product.ingredients}</span>
+            <div className="text-[1.15rem] mb-4">
+              <span className="font-semibold">Description:</span>
+              <span className="ml-2">{product.description}</span>
             </div>
           )}
-          {product.benefits && (
-            <div className="mb-4">
-              <span className="font-semibold text-[1.15rem]">Benefits: </span>
-              <span className="text-[1.15rem] text-gray-700">{product.benefits}</span>
+          {product.ingredients && formatArray(product.ingredients) && (
+            <div className="mb-4 text-[1.15rem]">
+              <span className="font-semibold">Ingredients:</span>
+              <span className="ml-2 text-gray-700">{formatArray(product.ingredients)}</span>
+            </div>
+          )}
+          {product.benefits && formatArray(product.benefits) && (
+            <div className="mb-4 text-[1.15rem]">
+              <span className="font-semibold">Benefits:</span>
+              <span className="ml-2 text-gray-700">{formatArray(product.benefits)}</span>
             </div>
           )}
           {product.scent_profile && (
-            <div className="mb-4">
-              <span className="font-semibold text-[1.15rem]">Scent Profile: </span>
-              <span className="text-[1.15rem] text-gray-700">{product.scent_profile}</span>
+            <div className="mb-4 text-[1.15rem]">
+              <span className="font-semibold">Scent Profile:</span>
+              <span className="ml-2 text-gray-700">{product.scent_profile}</span>
             </div>
           )}
+
           <div className="flex-1" />
 
           {/* Centered, non-stretched Add to Cart button */}
