@@ -170,30 +170,29 @@ export default function ProductDetailsClient({
                 {Number(product.average_rating).toFixed(2)} / 5
               </span>
             )}
+            
           </div>
-
           {product.description && (
-            <p className="mb-2 text-gray-700">
-              <span className="font-semibold">Description: </span>
-              {product.description}
+            <p className="text-[1.15rem] font-medium mb-4">
+              Description: {product.description}
             </p>
           )}
-          {product.ingredients && formatArray(product.ingredients) && (
-            <div className="mb-2">
-              <span className="font-semibold">Ingredients: </span>
-              <span className="text-gray-700">{formatArray(product.ingredients)}</span>
+          {product.ingredients && (
+            <div className="mb-4">
+              <span className="font-semibold text-[1.15rem]">Ingredients: </span>
+              <span className="text-[1.15rem] text-gray-700">{product.ingredients}</span>
             </div>
           )}
-          {product.benefits && formatArray(product.benefits) && (
-            <div className="mb-2">
-              <span className="font-semibold">Benefits: </span>
-              <span className="text-gray-700">{formatArray(product.benefits)}</span>
+          {product.benefits && (
+            <div className="mb-4">
+              <span className="font-semibold text-[1.15rem]">Benefits: </span>
+              <span className="text-[1.15rem] text-gray-700">{product.benefits}</span>
             </div>
           )}
           {product.scent_profile && (
-            <div className="mb-2">
-              <span className="font-semibold">Scent Profile: </span>
-              <span className="text-gray-700">{product.scent_profile}</span>
+            <div className="mb-4">
+              <span className="font-semibold text-[1.15rem]">Scent Profile: </span>
+              <span className="text-[1.15rem] text-gray-700">{product.scent_profile}</span>
             </div>
           )}
           <div className="flex-1" />

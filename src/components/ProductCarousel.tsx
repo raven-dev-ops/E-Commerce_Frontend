@@ -103,9 +103,9 @@ export default function ProductCarousel({
                     />
                   </div>
                   <div className="p-2">
-                    <div className="flex justify-between items-center"
-                      // Inline style to bump up font-size by 10pt
-                      style={{ fontSize: '1.75rem', lineHeight: '2rem' }} // 1.75rem = 28px = 21pt approx
+                    <div
+                      className="flex justify-between items-center"
+                      style={{ fontSize: '1.2rem', lineHeight: '1.8rem' }} // font size increased by ~5pt
                     >
                       <span className="font-medium truncate">
                         {p.product_name}
