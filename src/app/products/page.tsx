@@ -1,3 +1,4 @@
+// src/app/products/page.tsx
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -134,11 +135,11 @@ export default function ProductsPage() {
                   : getPublicImageUrl(p.image);
                 return (
                   <div key={p._id} className="px-2">
-                    {/* no background layer behind text now */}
-                    <div className="rounded overflow-hidden shadow-sm">
+                    {/* Removed border/shadow */}
+                    <div className="rounded overflow-hidden">
                       <Link href={`/products/${p._id}`}>
                         <a className="block">
-                          <div className="relative w-full h-48 bg-gray-100">
+                          <div className="relative w-full h-48">
                             <Image
                               src={img}
                               alt={p.product_name}
@@ -149,8 +150,12 @@ export default function ProductsPage() {
                           </div>
                           <div className="p-4">
                             <div className="flex justify-between items-center">
-                              <h3 className="font-medium text-lg">{p.product_name}</h3>
-                              <span className="font-bold">${p.price.toFixed(2)}</span>
+                              <h3 className="font-medium text-lg">
+                                {p.product_name}
+                              </h3>
+                              <span className="font-bold">
+                                ${p.price.toFixed(2)}
+                              </span>
                             </div>
                           </div>
                         </a>
