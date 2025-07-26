@@ -168,8 +168,8 @@ export default function ProductDetailsClient({
         {/* Details */}
         <div className="flex-1 flex flex-col min-w-0 max-w-xl">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold">{product.product_name}</h1>
-            <span className="text-xl font-semibold text-blue-700">${formattedPrice}</span>
+            <h1 className="text-4xl font-bold">{product.product_name}</h1>
+            <span className="text-2xl font-semibold text-blue-700">${formattedPrice}</span>
           </div>
           <div className="text-xs text-gray-400 mb-2">Product ID: {productId}</div>
 
