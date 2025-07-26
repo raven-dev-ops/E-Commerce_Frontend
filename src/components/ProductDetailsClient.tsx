@@ -12,6 +12,12 @@ interface ProductDetailsClientProps {
   relatedProducts?: Product[];
 }
 
+// DEV: For local debug, uncomment and use these as fallback related products
+// const MOCK_RELATED = [
+//   { _id: '1', product_name: 'Test Oil', price: 12, images: ['images/products/oils/fresh-air-oil-01.png'] },
+//   { _id: '2', product_name: 'Test Wax', price: 8, images: ['images/products/oils/fresh-air-oil-02.png'] },
+// ];
+
 const FALLBACK_IMAGE = '/images/products/missing-image.png';
 
 const getPublicImageUrl = (input?: string): string | undefined => {
@@ -73,22 +79,19 @@ export default function ProductDetailsClient({
 
   // Helper for rendering gold stars
   const renderStars = (rating = 0) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <svg
-          key={i}
-          aria-hidden="true"
-          className={`w-5 h-5 inline-block ${i <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <title>{i <= rating ? 'Full Star' : 'Empty Star'}</title>
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.357 4.186a1 1 0 00.95.69h4.401c.969 0 1.371 1.24.588 1.81l-3.565 2.59a1 1 0 00-.364 1.118l1.357 4.186c.3.921-.755 1.688-1.54 1.118l-3.565-2.59a1 1 0 00-1.175 0l-3.565 2.59c-.784.57-1.838-.197-1.54-1.118l1.357-4.186a1 1 0 00-.364-1.118l-3.565-2.59c-.784-.57-.38-1.81.588-1.81h4.401a1 1 0 00.95-.69l1.357-4.186z" />
-        </svg>
-      );
-    }
-    return stars;
+    const rounded = Math.round(Number(rating) * 2) / 2; // for half stars in the future
+    return Array.from({ length: 5 }).map((_, i) => (
+      <svg
+        key={i}
+        aria-hidden="true"
+        className={`w-5 h-5 inline-block ${i + 1 <= rounded ? 'text-yellow-400' : 'text-gray-300'}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <title>{i + 1 <= rounded ? 'Full Star' : 'Empty Star'}</title>
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.357 4.186a1 1 0 00.95.69h4.401c.969 0 1.371 1.24.588 1.81l-3.565 2.59a1 1 0 00-.364 1.118l1.357 4.186c.3.921-.755 1.688-1.54 1.118l-3.565-2.59a1 1 0 00-1.175 0l-3.565 2.59c-.784.57-1.838-.197-1.54-1.118l1.357-4.186a1 1 0 00-.364-1.118l-3.565-2.59c-.784-.57-.38-1.81.588-1.81h4.401a1 1 0 00.95-.69l1.357-4.186z" />
+      </svg>
+    ));
   };
 
   return (
@@ -214,17 +217,22 @@ export default function ProductDetailsClient({
           <h2 className="text-2xl font-bold mb-4">More from this category</h2>
           <div className="flex gap-6 overflow-x-auto pb-2">
             {relatedProducts.map((item) => (
-              <div key={item._id} className="min-w-[200px] bg-white rounded shadow p-4 flex flex-col items-center">
+              <div
+                key={item._id}
+                className="min-w-[200px] bg-white rounded shadow p-4 flex flex-col items-center"
+              >
                 <FallbackImage
                   src={getPublicImageUrl(item.images?.[0]) || FALLBACK_IMAGE}
-                  alt={item.product_name}
+                  alt={item.product_name || 'Related product'}
                   width={120}
                   height={150}
                   className="object-contain mb-2"
                   unoptimized
                 />
-                <div className="font-semibold text-center">{item.product_name}</div>
-                <div className="text-gray-500 mb-1">${Number(item.price).toFixed(2)}</div>
+                <div className="font-semibold text-center line-clamp-2">{item.product_name}</div>
+                <div className="text-gray-500 mb-1">
+                  ${Number(item.price ?? 0).toFixed(2)}
+                </div>
                 <a
                   href={`/products/${item._id}`}
                   className="text-blue-500 hover:underline text-sm"
