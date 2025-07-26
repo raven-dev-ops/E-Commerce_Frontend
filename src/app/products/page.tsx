@@ -11,11 +11,26 @@ import FallbackImage from '@/components/FallbackImage';
 
 interface ApiResponseProduct {
   _id: string;
+  id?: string;
   product_name: string;
   price: string | number;
   images?: string[];
   image?: string;
   category?: string;
+  description?: string;
+  ingredients?: string[];
+  benefits?: string[];
+  scent_profile?: string | null;
+  variants?: Record<string, any>[];
+  tags?: string[];
+  availability?: boolean;
+  variations?: Record<string, any>[];
+  weight?: number | null;
+  dimensions?: string | null;
+  inventory?: number;
+  reserved_inventory?: number;
+  average_rating?: number;
+  review_count?: number;
 }
 
 const CATEGORY_ORDER = ['Washes', 'Oils', 'Balms', 'Wax'];
@@ -68,14 +83,30 @@ async function getAllProducts(): Promise<Product[]> {
     }
   }
 
+  // Ensure every field required by Product is present
   return all
     .map(p => ({
-      _id:          String(p._id),
-      product_name: p.product_name,
-      price:        Number(p.price),
-      images:       p.images,
-      image:        p.image,
-      category:     p.category,
+      _id:                String(p._id),
+      id:                 p.id,
+      product_name:       p.product_name ?? "",
+      price:              typeof p.price === "number" ? p.price : Number(p.price) || 0,
+      images:             p.images ?? [],
+      image:              p.image ?? undefined,
+      category:           p.category ?? "",
+      description:        p.description ?? "",
+      ingredients:        p.ingredients ?? [],
+      benefits:           p.benefits ?? [],
+      scent_profile:      p.scent_profile ?? null,
+      variants:           p.variants ?? [],
+      tags:               p.tags ?? [],
+      availability:       typeof p.availability === "boolean" ? p.availability : true,
+      variations:         p.variations ?? [],
+      weight:             typeof p.weight === "number" ? p.weight : null,
+      dimensions:         typeof p.dimensions === "string" ? p.dimensions : null,
+      inventory:          typeof p.inventory === "number" ? p.inventory : 0,
+      reserved_inventory: typeof p.reserved_inventory === "number" ? p.reserved_inventory : 0,
+      average_rating:     typeof p.average_rating === "number" ? p.average_rating : 0,
+      review_count:       typeof p.review_count === "number" ? p.review_count : 0,
     }))
     .filter(p => p._id && p._id !== 'undefined' && p._id !== 'null');
 }
@@ -158,7 +189,11 @@ export default function ProductsPage() {
                 return (
                   <div key={p._id} className="px-2">
                     <div className="rounded overflow-hidden transform transition-transform duration-200 hover:scale-105">
-                      <Link href={`/products/${p._id}`}>
+                      <Link href={`/products/${p.id ?? p._id}`}>
+                        {/* 
+                          next/link now requires <Link> to wrap <a> for legacy,
+                          but in Next.js 13+, you can just use <Link> as a component
+                        */}
                         <a className="block">
                           <div className="relative w-full h-48">
                             <FallbackImage
@@ -174,7 +209,7 @@ export default function ProductsPage() {
                                 {p.product_name}
                               </span>
                               <span className="text-base font-semibold">
-                                ${p.price.toFixed(2)}
+                                ${Number(p.price).toFixed(2)}
                               </span>
                             </div>
                           </div>
