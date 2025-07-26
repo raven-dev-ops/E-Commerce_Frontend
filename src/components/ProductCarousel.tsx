@@ -9,19 +9,26 @@ import type { Product } from '@/types/product';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
-// --- Chevron arrow components ---
-function ArrowLeft(props: any) {
+interface ProductCarouselProps {
+  products: Product[];
+  title?: string;
+  showPrice?: boolean;
+  showRatings?: boolean;
+}
+
+// --- Chevron Arrow Components ---
+function PrevArrow(props: any) {
   const { className, style, onClick } = props;
   return (
     <button
       type="button"
       aria-label="Previous"
-      className={`${className} z-10 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-300 hover:bg-gray-200 transition-all`}
-      style={{ ...style, left: '-30px', width: 40, height: 40 }}
+      className={`${className} slick-arrow left-0 z-10 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-300 hover:bg-gray-200 transition-all`}
+      style={{ ...style, left: '-30px', width: 40, height: 40, display: 'flex' }}
       onClick={onClick}
       tabIndex={0}
     >
-      <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+      <svg width="28" height="28" viewBox="0 0 20 20" fill="none">
         <path
           d="M13 16l-5-5 5-5"
           stroke="black"
@@ -34,18 +41,18 @@ function ArrowLeft(props: any) {
   );
 }
 
-function ArrowRight(props: any) {
+function NextArrow(props: any) {
   const { className, style, onClick } = props;
   return (
     <button
       type="button"
       aria-label="Next"
-      className={`${className} z-10 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-300 hover:bg-gray-200 transition-all`}
-      style={{ ...style, right: '-30px', width: 40, height: 40 }}
+      className={`${className} slick-arrow right-0 z-10 flex items-center justify-center bg-white rounded-full shadow-md border border-gray-300 hover:bg-gray-200 transition-all`}
+      style={{ ...style, right: '-30px', width: 40, height: 40, display: 'flex' }}
       onClick={onClick}
       tabIndex={0}
     >
-      <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+      <svg width="28" height="28" viewBox="0 0 20 20" fill="none">
         <path
           d="M7 4l5 5-5 5"
           stroke="black"
@@ -56,13 +63,6 @@ function ArrowRight(props: any) {
       </svg>
     </button>
   );
-}
-
-interface ProductCarouselProps {
-  products: Product[];
-  title?: string;
-  showPrice?: boolean;
-  showRatings?: boolean;
 }
 
 function getPublicImageUrl(path?: string): string | undefined {
@@ -86,8 +86,8 @@ function getCarouselSettings(count: number) {
     slidesToScroll: 1,
     responsive: [
       { breakpoint: 1024, settings: { slidesToShow: Math.min(3, count), arrows: true } },
-      { breakpoint: 600, settings: { slidesToShow: Math.min(2, count), arrows: true } },
-      { breakpoint: 480, settings: { slidesToShow: 1, arrows: true } },
+      { breakpoint: 600,  settings: { slidesToShow: Math.min(2, count), arrows: true } },
+      { breakpoint: 480,  settings: { slidesToShow: 1, arrows: true } },
     ],
   };
 }
@@ -102,7 +102,6 @@ export default function ProductCarousel({
 }: ProductCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Accessibility: disable focus in hidden slides
   useEffect(() => {
     const root = containerRef.current;
     if (!root) return;
@@ -123,14 +122,16 @@ export default function ProductCarousel({
 
   const settings = {
     ...getCarouselSettings(products.length),
-    prevArrow: <ArrowLeft />,
-    nextArrow: <ArrowRight />,
   };
 
   return (
     <section className="mb-12" ref={containerRef}>
       {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
-      <Slider {...settings}>
+      <Slider
+        {...settings}
+        prevArrow={<PrevArrow />}
+        nextArrow={<NextArrow />}
+      >
         {products.map(p => {
           const src = Array.isArray(p.images) && p.images[0]
             ? getPublicImageUrl(p.images[0])
