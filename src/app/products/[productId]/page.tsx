@@ -5,8 +5,10 @@ import ProductDetailsClient from '@/components/ProductDetailsClient';
 import type { Product } from '@/types/product';
 
 async function getProduct(productId: string): Promise<Product | null> {
-  // 1. Normalize base URL (no trailing slash)
-  const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || '';
+  // Strip any trailing slash from the base URL
+  const rawBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ||
+    '';
   const url = `${rawBase}/products/${productId}/`;
 
   try {
@@ -15,7 +17,7 @@ async function getProduct(productId: string): Promise<Product | null> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    // 2. Robustly pull out the object ID
+    // Normalize whichever ID shape you get back
     let id = '';
     if (typeof data.id === 'string' && data.id) {
       id = data.id;
@@ -40,12 +42,10 @@ async function getProduct(productId: string): Promise<Product | null> {
   }
 }
 
-export default async function ProductDetailPage({
-  params,
-}: {
-  params: { productId: string };
-}) {
-  const product = await getProduct(params.productId);
+export default async function ProductDetailPage(props: any) {
+  // props.params is injected by Next.js App Router
+  const product = await getProduct(props.params.productId);
   if (!product) notFound();
+
   return <ProductDetailsClient product={product} />;
 }
