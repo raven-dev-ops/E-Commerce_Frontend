@@ -207,7 +207,7 @@ export default function ProductDetailsClient({
         <div className="mt-16">
           <ProductCarousel
             products={relatedProducts}
-            title="More from this category"
+            title=""
             showPrice
             showRatings
           />
