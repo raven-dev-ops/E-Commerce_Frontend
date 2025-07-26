@@ -84,10 +84,10 @@ async function getAllProducts(): Promise<Product[]> {
   }
 
   // Ensure every field required by Product is present
-  return all
+  const products = all
     .map(p => ({
       _id:                String(p._id),
-      id:                 p.id,
+      id:                 p.id ? String(p.id) : undefined,
       product_name:       p.product_name ?? "",
       price:              typeof p.price === "number" ? p.price : Number(p.price) || 0,
       images:             p.images ?? [],
@@ -109,6 +109,17 @@ async function getAllProducts(): Promise<Product[]> {
       review_count:       typeof p.review_count === "number" ? p.review_count : 0,
     }))
     .filter(p => p._id && p._id !== 'undefined' && p._id !== 'null');
+
+  // --- DEBUG: log all product IDs ---
+  if (typeof window !== "undefined") {
+    // Only logs on client, not serverless build
+    console.log(
+      "[ProductList] All Product IDs (id, _id):",
+      products.map(p => [p.id, p._id])
+    );
+  }
+
+  return products;
 }
 
 function getCarouselSettings(count: number) {
@@ -186,14 +197,12 @@ export default function ProductsPage() {
                   ? getPublicImageUrl(p.images[0])
                   : getPublicImageUrl(p.image);
 
+                const productId = p.id ?? p._id; // Always use this for your detail page
+
                 return (
                   <div key={p._id} className="px-2">
                     <div className="rounded overflow-hidden transform transition-transform duration-200 hover:scale-105">
-                      <Link href={`/products/${p.id ?? p._id}`}>
-                        {/* 
-                          next/link now requires <Link> to wrap <a> for legacy,
-                          but in Next.js 13+, you can just use <Link> as a component
-                        */}
+                      <Link href={`/products/${productId}`}>
                         <a className="block">
                           <div className="relative w-full h-48">
                             <FallbackImage
@@ -211,6 +220,10 @@ export default function ProductsPage() {
                               <span className="text-base font-semibold">
                                 ${Number(p.price).toFixed(2)}
                               </span>
+                            </div>
+                            {/* Debug: show the product ID visibly (remove in prod) */}
+                            <div className="text-xs text-gray-400 mt-1">
+                              id: {String(productId)}
                             </div>
                           </div>
                         </a>
