@@ -79,7 +79,7 @@ export default function ProductDetailsClient({
       <svg
         key={i}
         aria-hidden="true"
-        className={`w-5 h-5 inline-block ${i + 1 <= rounded ? 'text-yellow-400' : 'text-gray-300'}`}
+        className={`w-7 h-7 inline-block ${i + 1 <= rounded ? 'text-yellow-400' : 'text-gray-300'}`}
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -89,7 +89,7 @@ export default function ProductDetailsClient({
     ));
   };
 
-  // Utility for comma-separated lists, regardless if field is array or string
+  // Utility for comma-separated lists
   const formatArray = (val?: string[] | string) =>
     Array.isArray(val)
       ? val.join(', ')
@@ -163,11 +163,17 @@ export default function ProductDetailsClient({
           <div className="text-xs text-gray-400 mb-2">Product ID: {productId}</div>
 
           {/* Star Rating */}
-          <div className="mb-2 flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-4 mb-4">
             {renderStars(product.average_rating ?? 0)}
             {typeof product.average_rating === 'number' && (
-              <span className="text-gray-500 text-sm ml-1">
-                {Number(product.average_rating).toFixed(2)} / 5
+              <span className="text-gray-700 text-lg ml-2">
+                {Number(product.average_rating).toFixed(2)}
+                {typeof product.review_count === 'number' && (
+                  <span className="text-gray-500 text-base ml-1">
+                    ({product.review_count} Reviews)
+                  </span>
+                )}
+                {' / 5'}
               </span>
             )}
           </div>
