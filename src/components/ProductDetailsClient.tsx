@@ -7,50 +7,9 @@ import FallbackImage from '@/components/FallbackImage';
 import { useStore } from '@/store/useStore';
 import type { Product } from '@/types/product';
 
-// Add this star component
-function StarRating({ rating }: { rating: number }) {
-  const stars = [];
-  for (let i = 1; i <= 5; i++) {
-    stars.push(
-      <svg
-        key={i}
-        className={`inline w-5 h-5 ${i <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        aria-hidden="true"
-      >
-        <title>{i <= rating ? 'Gold star' : 'Empty star'}</title>
-        <polygon points="9.9,1.1 12.3,6.9 18.7,7.6 13.8,11.9 15.2,18.1 9.9,14.6 4.6,18.1 6,11.9 1.1,7.6 7.5,6.9" />
-      </svg>
-    );
-  }
-  return <span>{stars}</span>;
-}
-
-// Carousel placeholder component
-function CategoryCarousel({ products }: { products: Product[] }) {
-  if (!products?.length) return null;
-  return (
-    <div className="mt-12">
-      <h2 className="text-xl font-bold mb-4">More in this Category</h2>
-      <div className="flex overflow-x-auto gap-4 pb-2">
-        {products.map(prod => (
-          <div key={String(prod._id)} className="min-w-[180px] bg-white rounded shadow p-2 flex flex-col items-center">
-            <FallbackImage
-              src={getPublicImageUrl(prod.images?.[0])}
-              alt={prod.product_name}
-              width={120}
-              height={150}
-              className="object-cover rounded mb-2"
-              unoptimized
-            />
-            <span className="font-semibold text-center">{prod.product_name}</span>
-            <span className="text-gray-500 text-sm">${Number(prod.price).toFixed(2)}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+interface ProductDetailsClientProps {
+  product: Product;
+  relatedProducts?: Product[];
 }
 
 const FALLBACK_IMAGE = '/images/products/missing-image.png';
@@ -67,14 +26,12 @@ const IMAGE_WIDTH = 400;
 const IMAGE_HEIGHT = 500;
 const THUMB_SIZE = 80;
 
-// Now include a prop for category products:
-interface ProductDetailsClientProps {
-  product: Product;
-  categoryProducts?: Product[]; // Add this prop for the carousel
-}
-
-export default function ProductDetailsClient({ product, categoryProducts = [] }: ProductDetailsClientProps) {
+export default function ProductDetailsClient({
+  product,
+  relatedProducts = [],
+}: ProductDetailsClientProps) {
   const { addToCart } = useStore();
+
   const productId = String(product._id);
 
   useEffect(() => {
@@ -89,7 +46,7 @@ export default function ProductDetailsClient({ product, categoryProducts = [] }:
   const price = Number(product.price);
   const formattedPrice = !isNaN(price) ? price.toFixed(2) : '0.00';
 
-  // Build images array
+  // Build array of images
   let imagesToShow: string[] = [];
   if (Array.isArray(product.images) && product.images.length > 0) {
     imagesToShow = product.images
@@ -103,7 +60,6 @@ export default function ProductDetailsClient({ product, categoryProducts = [] }:
     imagesToShow = [FALLBACK_IMAGE];
   }
 
-  // State for selected main image
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   const handleAddToCart = () => {
@@ -115,11 +71,25 @@ export default function ProductDetailsClient({ product, categoryProducts = [] }:
     }
   };
 
-  // Assume: ingredients, benefits, scent_profile, average_rating on product
-  const ingredients = Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients;
-  const benefits = Array.isArray(product.benefits) ? product.benefits.join(', ') : product.benefits;
-  const scentProfile = product.scent_profile;
-  const averageRating = typeof product.average_rating === 'number' ? product.average_rating : 0;
+  // Helper for rendering gold stars
+  const renderStars = (rating = 0) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <svg
+          key={i}
+          aria-hidden="true"
+          className={`w-5 h-5 inline-block ${i <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <title>{i <= rating ? 'Full Star' : 'Empty Star'}</title>
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.357 4.186a1 1 0 00.95.69h4.401c.969 0 1.371 1.24.588 1.81l-3.565 2.59a1 1 0 00-.364 1.118l1.357 4.186c.3.921-.755 1.688-1.54 1.118l-3.565-2.59a1 1 0 00-1.175 0l-3.565 2.59c-.784.57-1.838-.197-1.54-1.118l1.357-4.186a1 1 0 00-.364-1.118l-3.565-2.59c-.784-.57-.38-1.81.588-1.81h4.401a1 1 0 00.95-.69l1.357-4.186z" />
+        </svg>
+      );
+    }
+    return stars;
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -134,7 +104,9 @@ export default function ProductDetailsClient({ product, categoryProducts = [] }:
                 aria-label={`Show image ${idx + 1}`}
                 aria-pressed={selectedIdx === idx}
                 onClick={() => setSelectedIdx(idx)}
-                className={`rounded overflow-hidden focus:outline-none transition-all ${selectedIdx === idx ? 'ring-2 ring-blue-500' : 'ring-0'}`}
+                className={`rounded overflow-hidden focus:outline-none transition-all ${
+                  selectedIdx === idx ? 'ring-2 ring-blue-500' : 'ring-0'
+                }`}
                 style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
               >
                 <FallbackImage
@@ -178,41 +150,54 @@ export default function ProductDetailsClient({ product, categoryProducts = [] }:
 
         {/* Details */}
         <div className="flex-1 flex flex-col min-w-0 max-w-xl">
-          {/* Name + Price + Rating */}
-          <div className="flex items-center mb-2">
-            <h1 className="text-3xl font-bold flex-1">{product.product_name}</h1>
-            <span className="text-xl font-semibold ml-4">${formattedPrice}</span>
-          </div>
-          <div className="flex items-center gap-2 mb-2">
-            <StarRating rating={Math.round(averageRating)} />
-            <span className="text-sm text-gray-500">
-              {averageRating ? averageRating.toFixed(2) : 'No ratings yet'}
-            </span>
+          {/* Title and price row */}
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold">{product.product_name}</h1>
+            <span className="text-xl font-semibold text-blue-700">${formattedPrice}</span>
           </div>
           <div className="text-xs text-gray-400 mb-2">Product ID: {productId}</div>
+
+          {/* Star Rating */}
+          <div className="mb-2 flex items-center gap-2">
+            {renderStars(product.average_rating)}
+            {typeof product.average_rating === 'number' && (
+              <span className="text-gray-500 text-sm ml-1">
+                {Number(product.average_rating).toFixed(2)} / 5
+              </span>
+            )}
+          </div>
+
+          {/* Description */}
           {product.description && (
             <p className="mb-2 text-gray-700">{product.description}</p>
           )}
-          {ingredients && (
+
+          {/* Ingredients */}
+          {product.ingredients && (
             <div className="mb-2">
-              <span className="font-semibold">Ingredients:</span>{' '}
-              <span className="text-gray-700">{ingredients}</span>
+              <span className="font-semibold">Ingredients: </span>
+              <span className="text-gray-700">{product.ingredients}</span>
             </div>
           )}
-          {benefits && (
+
+          {/* Benefits */}
+          {product.benefits && (
             <div className="mb-2">
-              <span className="font-semibold">Benefits:</span>{' '}
-              <span className="text-gray-700">{benefits}</span>
+              <span className="font-semibold">Benefits: </span>
+              <span className="text-gray-700">{product.benefits}</span>
             </div>
           )}
-          {scentProfile && (
+
+          {/* Scent Profile */}
+          {product.scent_profile && (
             <div className="mb-2">
-              <span className="font-semibold">Scent Profile:</span>{' '}
-              <span className="text-gray-700">{scentProfile}</span>
+              <span className="font-semibold">Scent Profile: </span>
+              <span className="text-gray-700">{product.scent_profile}</span>
             </div>
           )}
 
           <div className="flex-1" />
+
           <button
             type="button"
             onClick={handleAddToCart}
@@ -222,8 +207,35 @@ export default function ProductDetailsClient({ product, categoryProducts = [] }:
           </button>
         </div>
       </div>
-      {/* Carousel below */}
-      {categoryProducts.length > 0 && <CategoryCarousel products={categoryProducts} />}
+
+      {/* Related Products Carousel */}
+      {relatedProducts && relatedProducts.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold mb-4">More from this category</h2>
+          <div className="flex gap-6 overflow-x-auto pb-2">
+            {relatedProducts.map((item) => (
+              <div key={item._id} className="min-w-[200px] bg-white rounded shadow p-4 flex flex-col items-center">
+                <FallbackImage
+                  src={getPublicImageUrl(item.images?.[0]) || FALLBACK_IMAGE}
+                  alt={item.product_name}
+                  width={120}
+                  height={150}
+                  className="object-contain mb-2"
+                  unoptimized
+                />
+                <div className="font-semibold text-center">{item.product_name}</div>
+                <div className="text-gray-500 mb-1">${Number(item.price).toFixed(2)}</div>
+                <a
+                  href={`/products/${item._id}`}
+                  className="text-blue-500 hover:underline text-sm"
+                >
+                  View Product
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
