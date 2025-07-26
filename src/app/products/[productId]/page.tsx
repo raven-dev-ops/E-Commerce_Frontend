@@ -1,3 +1,5 @@
+// src/app/products/[productId]/page.tsx
+
 import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/ProductDetailsClient';
 import type { Product } from '@/types/product';
@@ -47,7 +49,13 @@ async function getRelatedProducts(category: string, excludeProductId: string): P
   }
   const data = await res.json();
 
-  const productsArr = Array.isArray(data) ? data : (Array.isArray(data.results) ? data.results : []);
+  // Flexible: accepts array or results list from paginated API
+  const productsArr = Array.isArray(data)
+    ? data
+    : Array.isArray(data.results)
+      ? data.results
+      : [];
+
   console.log(`[getRelatedProducts] Success, products: ${productsArr.length}`);
 
   return productsArr
