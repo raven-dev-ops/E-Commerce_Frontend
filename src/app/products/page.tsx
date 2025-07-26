@@ -12,7 +12,6 @@ interface ApiResponseProduct {
   _id: string;
   product_name: string;
   price: string | number;
-  description?: string;
   images?: string[];
   image?: string;
   category?: string;
@@ -52,7 +51,6 @@ async function getAllProducts(): Promise<Product[]> {
       _id: String(p._id),
       product_name: p.product_name,
       price: Number(p.price),
-      description: p.description,
       images: p.images,
       image: p.image,
       category: p.category,
@@ -89,9 +87,7 @@ export default function ProductsPage() {
         const grouped: Record<string, Product[]> = {};
         CATEGORY_ORDER.forEach(cat => grouped[cat] = []);
         all.forEach(p => {
-          if (p.category && grouped[p.category]) {
-            grouped[p.category].push(p);
-          }
+          if (p.category && grouped[p.category]) grouped[p.category].push(p);
         });
         setByCategory(grouped);
       } catch (err: any) {
@@ -103,7 +99,7 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // accessibility: disable focus in hidden slides
+  // Accessibility: disable focus in hidden slides
   useEffect(() => {
     if (!containerRef.current) return;
     containerRef.current
@@ -138,8 +134,8 @@ export default function ProductsPage() {
                   : getPublicImageUrl(p.image);
                 return (
                   <div key={p._id} className="px-2">
-                    {/* Removed `border` to eliminate black outline */}
-                    <div className="rounded overflow-hidden bg-white shadow-sm">
+                    {/* no background layer behind text now */}
+                    <div className="rounded overflow-hidden shadow-sm">
                       <Link href={`/products/${p._id}`}>
                         <a className="block">
                           <div className="relative w-full h-48 bg-gray-100">
@@ -152,20 +148,10 @@ export default function ProductsPage() {
                             />
                           </div>
                           <div className="p-4">
-                            {/* Name and Price on opposite ends */}
-                            <div className="flex justify-between items-center mb-1">
-                              <h3 className="font-medium text-lg">
-                                {p.product_name}
-                              </h3>
-                              <span className="font-bold">
-                                ${p.price.toFixed(2)}
-                              </span>
+                            <div className="flex justify-between items-center">
+                              <h3 className="font-medium text-lg">{p.product_name}</h3>
+                              <span className="font-bold">${p.price.toFixed(2)}</span>
                             </div>
-                            {p.description && (
-                              <p className="text-sm text-gray-600 line-clamp-2">
-                                {p.description}
-                              </p>
-                            )}
                           </div>
                         </a>
                       </Link>
