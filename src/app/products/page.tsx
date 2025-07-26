@@ -1,4 +1,3 @@
-// src/app/products/page.tsx
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -17,7 +16,6 @@ interface ApiResponseProduct {
   images?: string[];
   image?: string;
   category?: string;
-  // …other fields if you have them
 }
 
 const CATEGORY_ORDER = ['Washes', 'Oils', 'Balms', 'Wax'];
@@ -30,10 +28,8 @@ function getPublicImageUrl(path?: string) {
 
 async function getAllProducts(): Promise<Product[]> {
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
-  // force https
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
   const base = raw;
-  // start on page=1
   let url = `${base}/products/?page=1`;
   const all: ApiResponseProduct[] = [];
 
@@ -43,7 +39,6 @@ async function getAllProducts(): Promise<Product[]> {
     const json = await res.json();
     all.push(...(json.results as ApiResponseProduct[]));
     if (json.next) {
-      // ensure HTTPS in next link
       const next = (json.next as string).replace(/^http:\/\//, 'https://');
       const u = new URL(next);
       url = `${base}/products/${u.search}`;
@@ -92,9 +87,7 @@ export default function ProductsPage() {
       try {
         const all = await getAllProducts();
         const grouped: Record<string, Product[]> = {};
-        // initialize only our four
         CATEGORY_ORDER.forEach(cat => grouped[cat] = []);
-        // distribute
         all.forEach(p => {
           if (p.category && grouped[p.category]) {
             grouped[p.category].push(p);
@@ -110,7 +103,7 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // a11y: disable focus in hidden slides
+  // accessibility: disable focus in hidden slides
   useEffect(() => {
     if (!containerRef.current) return;
     containerRef.current
@@ -129,8 +122,6 @@ export default function ProductsPage() {
 
   return (
     <div className="container mx-auto p-4" ref={containerRef}>
-      <h1 className="text-2xl font-bold mb-6">Products</h1>
-
       {loading && <p>Loading products…</p>}
       {error   && <p className="text-red-500">Error: {error}</p>}
 
@@ -142,14 +133,13 @@ export default function ProductsPage() {
             <h2 className="text-xl font-semibold mb-4">{cat}</h2>
             <Slider {...getCarouselSettings(items.length)}>
               {items.map(p => {
-                // pick first image or fallback
-                const img =
-                  Array.isArray(p.images) && p.images[0]
-                    ? getPublicImageUrl(p.images[0])
-                    : getPublicImageUrl(p.image);
+                const img = Array.isArray(p.images) && p.images[0]
+                  ? getPublicImageUrl(p.images[0])
+                  : getPublicImageUrl(p.image);
                 return (
                   <div key={p._id} className="px-2">
-                    <div className="border rounded overflow-hidden">
+                    {/* Removed `border` to eliminate black outline */}
+                    <div className="rounded overflow-hidden bg-white shadow-sm">
                       <Link href={`/products/${p._id}`}>
                         <a className="block">
                           <div className="relative w-full h-48 bg-gray-100">
@@ -162,15 +152,20 @@ export default function ProductsPage() {
                             />
                           </div>
                           <div className="p-4">
-                            <h3 className="font-medium text-lg mb-1">
-                              {p.product_name}
-                            </h3>
+                            {/* Name and Price on opposite ends */}
+                            <div className="flex justify-between items-center mb-1">
+                              <h3 className="font-medium text-lg">
+                                {p.product_name}
+                              </h3>
+                              <span className="font-bold">
+                                ${p.price.toFixed(2)}
+                              </span>
+                            </div>
                             {p.description && (
                               <p className="text-sm text-gray-600 line-clamp-2">
                                 {p.description}
                               </p>
                             )}
-                            <p className="mt-2 font-bold">${p.price.toFixed(2)}</p>
                           </div>
                         </a>
                       </Link>
