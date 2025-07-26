@@ -1,3 +1,4 @@
+// src/app/products/page.tsx
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -17,55 +18,47 @@ interface ApiResponseProduct {
   ingredients?: string[];
   benefits?: string[];
   category?: string;
-  variants?: any[];
-  tags?: string[];
-  availability?: boolean;
-  variations?: any[];
-  weight?: number | null;
-  dimensions?: any | null;
-  inventory?: number;
-  reserved_inventory?: number;
-  average_rating?: number;
-  review_count?: number;
+  // ...other fields if needed
 }
 
-// Fetch all pages of /products/ by following `next` links
-async function getAllProductsRaw(): Promise<ApiResponseProduct[]> {
-  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
-  let url: string | null = `${base}/products/`;
+async function getAllProducts(): Promise<Product[]> {
+  // Build base URL, strip trailing slash, force HTTPS
+  let rawBase = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
+  if (rawBase.startsWith('http://')) {
+    rawBase = rawBase.replace(/^http:\/\//, 'https://');
+  }
+  const base = rawBase;
+
+  // Paginate through /products/?page=…
+  let url = `${base}/products/?page=1`;
   const all: ApiResponseProduct[] = [];
 
   while (url) {
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error('Failed to fetch products');
-    const { results, next } = await res.json() as {
-      results: ApiResponseProduct[];
-      next: string | null;
-    };
-    all.push(...results);
-    url = next;
+    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+    const json = await res.json();
+    all.push(...(json.results as ApiResponseProduct[]));
+
+    if (json.next) {
+      // Force HTTPS on next link
+      const nextUrl = json.next.replace(/^http:\/\//, 'https://');
+      // Extract only the query string (?page=…)
+      const parsed = new URL(nextUrl);
+      url = `${base}/products/${parsed.search}`;
+    } else {
+      url = '';
+    }
   }
 
-  return all;
-}
-
-// Convert raw API items into our `Product` type
-async function getProducts(): Promise<Product[]> {
-  const raw = await getAllProductsRaw();
-  return raw
+  return all
     .map(p => ({
       ...p,
       _id: String(p._id),
       price: Number(p.price),
     }))
-    .filter(p =>
-      p._id &&
-      p._id !== 'undefined' &&
-      p._id !== 'null'
-    ) as Product[];
+    .filter(p => p._id && p._id !== 'undefined' && p._id !== 'null');
 }
 
-// Carousel settings factory
 const getCarouselSettings = (count: number) => ({
   dots: false,
   arrows: true,
@@ -74,46 +67,50 @@ const getCarouselSettings = (count: number) => ({
   slidesToShow: Math.min(4, count),
   slidesToScroll: 1,
   responsive: [
-    { breakpoint: 1024, settings: { slidesToShow: Math.min(3, count), slidesToScroll: 1, infinite: count > 1, arrows: true } },
-    { breakpoint: 600,  settings: { slidesToShow: Math.min(2, count), slidesToScroll: 1, infinite: count > 1, arrows: true } },
-    { breakpoint: 480,  settings: { slidesToShow: 1,                slidesToScroll: 1, infinite: false,       arrows: true } },
+    { breakpoint: 1024, settings: { slidesToShow: Math.min(3, count), arrows: true } },
+    { breakpoint: 600,  settings: { slidesToShow: Math.min(2, count), arrows: true } },
+    { breakpoint: 480,  settings: { slidesToShow: 1, arrows: true } },
   ],
 });
 
 export default function ProductsPage() {
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState<string | null>(null);
-  const [categories, setCategories]     = useState<string[]>([]);
-  const [byCategory, setByCategory]     = useState<Record<string, Product[]>>({});
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [byCategory, setByCategory] = useState<Record<string, Product[]>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch + group on mount
   useEffect(() => {
     (async () => {
       try {
-        const all = await getProducts();
+        const all = await getAllProducts();
+
+        // Unique categories
         const cats = Array.from(new Set(
           all.map(p => p.category).filter((c): c is string => !!c)
         ));
         setCategories(cats);
 
+        // Group by category
         const grouped: Record<string, Product[]> = {};
-        cats.forEach(c => grouped[c] = []);
+        cats.forEach(cat => (grouped[cat] = []));
         all.forEach(p => {
           if (p.category && grouped[p.category]) {
             grouped[p.category].push(p);
           }
         });
         setByCategory(grouped);
-      } catch {
-        setError('Failed to load products');
+
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || 'Failed to load products');
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  // A11y: strip focus from hidden slides
+  // Accessibility: disable focus/interaction in hidden slides
   useEffect(() => {
     if (!containerRef.current) return;
     containerRef.current
@@ -124,7 +121,7 @@ export default function ProductsPage() {
         ).forEach(el => {
           el.setAttribute('tabindex', '-1');
           if (['BUTTON','INPUT','SELECT','TEXTAREA'].includes(el.tagName)) {
-            (el as HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).disabled = true;
+            (el as any).disabled = true;
           }
         });
       });
@@ -142,7 +139,7 @@ export default function ProductsPage() {
           ? <p>No categories available.</p>
           : categories.map(cat => {
               const items = byCategory[cat] || [];
-              if (!items.length) return null;
+              if (items.length === 0) return null;
               return (
                 <section key={cat} className="mb-8">
                   <h2 className="text-xl font-bold mb-3 capitalize">{cat}</h2>
