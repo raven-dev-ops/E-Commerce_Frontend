@@ -128,8 +128,8 @@ export default function ProductDetailsClient({
           </div>
         )}
 
-        {/* Main Image */}
-        <div className="flex justify-center items-start">
+        {/* Main Image and ratings/add to cart */}
+        <div className="flex flex-col items-center">
           <div
             className="relative rounded overflow-hidden bg-gray-100"
             style={{
@@ -137,6 +137,9 @@ export default function ProductDetailsClient({
               height: IMAGE_HEIGHT,
               minWidth: IMAGE_WIDTH,
               maxWidth: IMAGE_WIDTH,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
             tabIndex={0}
           >
@@ -152,6 +155,27 @@ export default function ProductDetailsClient({
               />
             </Zoom>
           </div>
+
+          {/* Rating & Add to Cart Row */}
+          <div className="flex flex-col items-center w-full">
+            <div className="flex justify-center items-center mt-6 mb-2 w-full">
+              <span className="flex items-center justify-center">
+                {renderStars(product.average_rating ?? 0)}
+                <span className="text-gray-700 text-lg ml-2">
+                  ({typeof product.review_count === 'number' ? product.review_count : 0})
+                </span>
+              </span>
+            </div>
+            <div className="flex justify-center w-full">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="bg-blue-500 text-white px-8 py-3 rounded font-bold text-lg hover:bg-blue-600 transition w-auto"
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Details */}
@@ -161,16 +185,6 @@ export default function ProductDetailsClient({
             <span className="text-xl font-semibold text-blue-700">${formattedPrice}</span>
           </div>
           <div className="text-xs text-gray-400 mb-2">Product ID: {productId}</div>
-
-          {/* Star Rating - far right, with spacing */}
-          <div className="flex justify-end items-center mt-8 mb-8 gap-1">
-            <span className="flex items-center">
-              {renderStars(product.average_rating ?? 0)}
-              <span className="text-gray-700 text-lg ml-2">
-                ({typeof product.review_count === 'number' ? product.review_count : 0})
-              </span>
-            </span>
-          </div>
 
           {/* Product Info Fields in desired order */}
           {product.scent_profile && (
@@ -199,17 +213,6 @@ export default function ProductDetailsClient({
           )}
 
           <div className="flex-1" />
-
-          {/* Centered, non-stretched Add to Cart button */}
-          <div className="w-full flex justify-center mt-8">
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              className="bg-blue-500 text-white px-8 py-3 rounded font-bold text-lg hover:bg-blue-600 transition w-auto"
-            >
-              Add to Cart
-            </button>
-          </div>
         </div>
       </div>
 
