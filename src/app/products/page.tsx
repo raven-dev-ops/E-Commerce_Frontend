@@ -44,7 +44,10 @@ function getPublicImageUrl(path?: string): string | undefined {
 async function getAllProducts(): Promise<Product[]> {
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
-  let url = `${raw}/products/?page=1`;
+  // ensure /api prefix
+  const base = raw.endsWith('/api') ? raw : `${raw}/api`;
+
+  let url = `${base}/products/?page=1`;
   const all: ApiResponseProduct[] = [];
 
   while (url) {
@@ -64,7 +67,7 @@ async function getAllProducts(): Promise<Product[]> {
       // force HTTPS, preserve only the querystring
       const next = (json.next as string).replace(/^http:\/\//, 'https://');
       const u = new URL(next);
-      url = `${raw}/products/${u.search}`;
+      url = `${base}/products/${u.search}`;
     } else {
       url = '';
     }
@@ -84,11 +87,11 @@ async function getAllProducts(): Promise<Product[]> {
 
 function getCarouselSettings(count: number) {
   return {
-    dots:         false,
-    arrows:       true,
-    infinite:     count > 1,
-    speed:        500,
-    slidesToShow: Math.min(4, count),
+    dots:           false,
+    arrows:         true,
+    infinite:       count > 1,
+    speed:          500,
+    slidesToShow:   Math.min(4, count),
     slidesToScroll: 1,
     responsive: [
       { breakpoint: 1024, settings: { slidesToShow: Math.min(3, count), arrows: true } },
@@ -104,13 +107,12 @@ export default function ProductsPage() {
   const [byCategory, setByCategory] = useState<Record<string, Product[]>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // fetch + group
   useEffect(() => {
     (async () => {
       try {
         const all = await getAllProducts();
         const grouped: Record<string, Product[]> = {};
-        CATEGORY_ORDER.forEach(cat => grouped[cat] = []);
+        CATEGORY_ORDER.forEach(cat => (grouped[cat] = []));
         all.forEach(p => {
           const cat = p.category || '';
           if (grouped[cat]) grouped[cat].push(p);
@@ -125,7 +127,7 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // a11y: remove focusable elements in hidden slides
+  // Accessibility: disable focus in hidden slides
   useEffect(() => {
     const root = containerRef.current;
     if (!root) return;
@@ -149,7 +151,7 @@ export default function ProductsPage() {
     <div className="container mx-auto p-4" ref={containerRef}>
       {CATEGORY_ORDER.map(cat => {
         const items = byCategory[cat] || [];
-        if (!items.length) return null;
+        if (items.length === 0) return null;
         return (
           <section key={cat} className="mb-12">
             <Slider {...getCarouselSettings(items.length)}>
@@ -161,28 +163,27 @@ export default function ProductsPage() {
                 return (
                   <div key={p._id} className="px-2">
                     <div className="rounded overflow-hidden">
-                      <Link
-                        href={`/products/${p._id}`}
-                        className="block"
-                      >
-                        <div className="relative w-full h-48">
-                          <FallbackImage
-                            src={src}
-                            alt={p.product_name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="p-4">
-                          <div className="flex justify-between items-center">
-                            <span className="text-base font-medium">
-                              {p.product_name}
-                            </span>
-                            <span className="text-base font-semibold">
-                              ${p.price.toFixed(2)}
-                            </span>
+                      <Link href={`/products/${p._id}`}>
+                        <a className="block">
+                          <div className="relative w-full h-48">
+                            <FallbackImage
+                              src={src}
+                              alt={p.product_name}
+                              fill
+                              className="object-cover"
+                            />
                           </div>
-                        </div>
+                          <div className="p-4">
+                            <div className="flex justify-between items-center">
+                              <span className="text-base font-medium">
+                                {p.product_name}
+                              </span>
+                              <span className="text-base font-semibold">
+                                ${p.price.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        </a>
                       </Link>
                     </div>
                   </div>
