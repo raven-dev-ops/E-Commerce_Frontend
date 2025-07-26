@@ -88,11 +88,16 @@ export default function ProductCarousel({
             <div key={p._id} className="px-2">
               <Link href={`/products/${productId}`}>
                 <a
-                  className="block border border-gray-200 rounded-lg overflow-hidden group transition 
-                             hover:border-blue-400 focus-visible:border-blue-500"
+                  className="block border border-gray-200 rounded-lg overflow-hidden group 
+                            transition-transform duration-200 hover:scale-105 focus-visible:border-blue-500"
+                  style={{
+                    willChange: 'transform'
+                  }}
                 >
-                  <div className="relative flex items-center justify-center bg-white"
-                       style={{ width: '100%', height: '200px' }}>
+                  <div
+                    className="relative flex items-center justify-center bg-white"
+                    style={{ width: '100%', height: '200px' }}
+                  >
                     <FallbackImage
                       src={src}
                       alt={p.product_name}
@@ -105,7 +110,7 @@ export default function ProductCarousel({
                   <div className="p-2">
                     <div
                       className="flex justify-between items-center"
-                      style={{ fontSize: '1.2rem', lineHeight: '1.8rem' }} // font size increased by ~5pt
+                      style={{ fontSize: '1.2rem', lineHeight: '1.8rem' }}
                     >
                       <span className="font-medium truncate">
                         {p.product_name}
