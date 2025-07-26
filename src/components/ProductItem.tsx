@@ -1,10 +1,8 @@
-"use client";
+'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
 import Link from 'next/link';
-import { useStore } from '@/store/useStore';
-import { addItemToCart } from '@/lib/cartApi';
+import { useState } from 'react';
 import type { Product } from '@/types/product';
 
 interface ProductItemProps {
@@ -13,75 +11,54 @@ interface ProductItemProps {
 
 const FALLBACK_IMAGE = '/images/products/missing-image.png';
 
-const getPublicImageUrl = (input?: string) => {
+function getPublicImageUrl(input?: string) {
   if (!input) return undefined;
   const fileName = input.split('/').pop();
-  if (!fileName) return undefined;
-  return `/images/products/${fileName}`;
-};
+  return fileName ? `/images/products/${fileName}` : undefined;
+}
 
-const getDisplayImage = (product: Product) => {
+function getDisplayImage(product: Product) {
   if (Array.isArray(product.images) && product.images.length > 0) {
-    const normalized = getPublicImageUrl(product.images[0]);
-    if (normalized) return normalized;
+    return getPublicImageUrl(product.images[0]);
   }
-  if (product.image) {
-    const normalized = getPublicImageUrl(product.image);
-    if (normalized) return normalized;
+  if ((product as any).image) {
+    return getPublicImageUrl((product as any).image);
   }
-  return FALLBACK_IMAGE;
-};
+  return undefined;
+}
 
 export default function ProductItem({ product }: ProductItemProps) {
-  const { addToCart } = useStore();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const productId = typeof product._id === 'string' ? product._id : String(product._id);
-  const imageToShow = getDisplayImage(product);
-
-  const handleAddToCart = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await addItemToCart({ product_id: productId, quantity: 1 });
-      addToCart(productId, 1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const id = String(product._id);
+  const initialImage = getDisplayImage(product) || FALLBACK_IMAGE;
+  const [src, setSrc] = useState(initialImage);
 
   return (
-    <div className="border p-4 rounded flex flex-col">
-      <Link href={`/products/${productId}`}>
-        <div>
+    <div className="p-4 rounded flex flex-col focus:outline-none">
+      <Link href={`/products/${id}`}>
+        {/* wrap in <a> to suppress focus ring */}
+        <a className="block rounded overflow-hidden focus:outline-none">
           <div className="relative w-full h-48 mb-4">
             <Image
-              src={imageToShow}
+              src={src}
               alt={product.product_name}
               fill
               className="rounded object-cover"
               sizes="(max-width: 768px) 100vw, 33vw"
               priority
+              onError={() => setSrc(FALLBACK_IMAGE)}
             />
           </div>
           <h2 className="text-xl font-semibold">{product.product_name}</h2>
-          <p className="text-gray-700 line-clamp-2">{product.description}</p>
-          <p className="text-lg font-bold mt-2">${Number(product.price).toFixed(2)}</p>
-        </div>
+          {product.description && (
+            <p className="text-gray-700 line-clamp-2">
+              {product.description}
+            </p>
+          )}
+          <p className="text-lg font-bold mt-2">
+            ${Number(product.price).toFixed(2)}
+          </p>
+        </a>
       </Link>
-      <button
-        type="button"
-        onClick={handleAddToCart}
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 self-start"
-        disabled={loading}
-        aria-disabled={loading}
-      >
-        {loading ? 'Adding…' : 'Add to Cart'}
-      </button>
-      {error && <p className="text-red-500 mt-2">{error}</p>}
     </div>
   );
 }
