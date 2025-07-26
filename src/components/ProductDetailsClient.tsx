@@ -26,8 +26,7 @@ function getPublicImageUrl(path?: string): string | undefined {
   return `/images/products/${path}`;
 }
 
-const IMAGE_WIDTH = 400;
-const IMAGE_HEIGHT = 500;
+const IMAGE_SIZE = 500;
 const THUMB_SIZE = 80;
 
 export default function ProductDetailsClient({
@@ -72,7 +71,7 @@ export default function ProductDetailsClient({
     }
   };
 
-  // Helper for rendering gold stars
+  // Render gold stars
   const renderStars = (rating = 0) => {
     const rounded = Math.round(Number(rating) * 2) / 2;
     return Array.from({ length: 5 }).map((_, i) => (
@@ -128,18 +127,17 @@ export default function ProductDetailsClient({
           </div>
         )}
 
-        {/* Main Image and ratings/add to cart */}
+        {/* Main Image, stars below */}
         <div className="flex flex-col items-center">
           <div
-            className="relative rounded overflow-hidden bg-gray-100"
+            className="relative rounded overflow-hidden bg-gray-100 flex items-center justify-center"
             style={{
-              width: IMAGE_WIDTH,
-              height: IMAGE_HEIGHT,
-              minWidth: IMAGE_WIDTH,
-              maxWidth: IMAGE_WIDTH,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              width: IMAGE_SIZE,
+              height: IMAGE_SIZE,
+              minWidth: IMAGE_SIZE,
+              maxWidth: IMAGE_SIZE,
+              minHeight: IMAGE_SIZE,
+              maxHeight: IMAGE_SIZE,
             }}
             tabIndex={0}
           >
@@ -147,8 +145,8 @@ export default function ProductDetailsClient({
               <FallbackImage
                 src={imagesToShow[selectedIdx]}
                 alt={`${product.product_name} main image`}
-                width={IMAGE_WIDTH}
-                height={IMAGE_HEIGHT}
+                width={IMAGE_SIZE}
+                height={IMAGE_SIZE}
                 className="object-contain w-full h-full rounded"
                 priority
                 unoptimized
@@ -156,25 +154,14 @@ export default function ProductDetailsClient({
             </Zoom>
           </div>
 
-          {/* Rating & Add to Cart Row */}
-          <div className="flex flex-col items-center w-full">
-            <div className="flex justify-center items-center mt-6 mb-2 w-full">
-              <span className="flex items-center justify-center">
-                {renderStars(product.average_rating ?? 0)}
-                <span className="text-gray-700 text-lg ml-2">
-                  ({typeof product.review_count === 'number' ? product.review_count : 0})
-                </span>
+          {/* Rating stars under image, centered */}
+          <div className="flex justify-center items-center mt-6 mb-2 w-full">
+            <span className="flex items-center justify-center">
+              {renderStars(product.average_rating ?? 0)}
+              <span className="text-gray-700 text-lg ml-2">
+                ({typeof product.review_count === 'number' ? product.review_count : 0})
               </span>
-            </div>
-            <div className="flex justify-center w-full">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                className="bg-blue-500 text-white px-8 py-3 rounded font-bold text-lg hover:bg-blue-600 transition w-auto"
-              >
-                Add to Cart
-              </button>
-            </div>
+            </span>
           </div>
         </div>
 
@@ -213,6 +200,17 @@ export default function ProductDetailsClient({
           )}
 
           <div className="flex-1" />
+
+          {/* Centered, non-stretched Add to Cart button */}
+          <div className="w-full flex justify-center mt-8">
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              className="bg-blue-500 text-white px-8 py-3 rounded font-bold text-lg hover:bg-blue-600 transition w-auto"
+            >
+              Add to Cart
+            </button>
+          </div>
         </div>
       </div>
 
