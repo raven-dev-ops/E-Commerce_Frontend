@@ -17,17 +17,12 @@ const FALLBACK_IMAGE = '/images/products/missing-image.png';
 
 function getPublicImageUrl(path?: string): string | undefined {
   if (!path) return undefined;
-  // Already absolute URL
   if (/^https?:\/\//.test(path)) return path;
-  // Already "/images/..."
   if (path.startsWith('/images/')) return path;
-  // "images/..." (missing slash)
   if (path.startsWith('images/')) return '/' + path;
-  // Avoid duplicate if already has 'images/products/'
   if (path.includes('images/products/')) {
     return path.startsWith('/') ? path : '/' + path;
   }
-  // Otherwise, treat as a filename
   return `/images/products/${path}`;
 }
 
@@ -204,10 +199,10 @@ export default function ProductDetailsClient({
 
       {/* Related Products Carousel */}
       {relatedProducts && relatedProducts.length > 0 && (
-        <div className="mt-16">
+        <div className="mt-16 max-w-6xl mx-auto">
           <ProductCarousel
             products={relatedProducts}
-            title=""
+            title="More Products Like This"
             showPrice
             showRatings
           />
