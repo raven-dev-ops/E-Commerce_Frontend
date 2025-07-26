@@ -28,7 +28,7 @@ interface ApiResponseProduct {
   review_count?: number;
 }
 
-const CATEGORY_ORDER = ['Washes', 'Oils', 'Balms', 'Wax'];
+const CATEGORY_ORDER = ['Balms', 'Washes', 'Oils', 'Waxes'];
 
 // Utilities for converting image paths
 function getPublicImageUrl(path?: string): string | undefined {
