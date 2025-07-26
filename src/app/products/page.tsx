@@ -7,7 +7,7 @@ import "slick-carousel/slick/slick-theme.css";
 import type { Product } from '@/types/product';
 import ProductItem from '@/components/ProductItem';
 
-// Now _id is always a string, so we simplify types:
+// ApiResponseProduct shape for all endpoints
 interface ApiResponseProduct {
   _id: string;
   product_name: string;
@@ -30,49 +30,54 @@ interface ApiResponseProduct {
   review_count?: number;
 }
 
+// Fetch and merge all categories in one go
 async function getProducts(): Promise<Product[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/')
-    ? process.env.NEXT_PUBLIC_API_BASE_URL.slice(0, -1)
-    : process.env.NEXT_PUBLIC_API_BASE_URL;
-  const url = `${baseUrl}/products/`;
-
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to fetch products');
-
-  const data = await res.json();
-
-  // We expect _id to be a string already
-  const products = data.results.map((product: ApiResponseProduct): Product => ({
-    ...product,
-    _id: String(product._id),
-    price: Number(product.price),
-  }));
-
-  // Filter only valid _id values
-  return products.filter(
-    (product: Product) =>
-      typeof product._id === 'string' &&
-      product._id.length > 0 &&
-      product._id !== 'undefined' &&
-      product._id !== 'null'
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
+  const endpoints = ['/products/', '/oils/', '/balms/', '/washes/'];
+  
+  // Fire off all requests in parallel
+  const responses = await Promise.all(
+    endpoints.map(p => fetch(`${base}${p}`, { cache: 'no-store' }))
   );
+  if (!responses.every(r => r.ok)) {
+    throw new Error('Failed to fetch one or more product categories');
+  }
+
+  // Parse JSON for each
+  const jsons = await Promise.all(responses.map(r => r.json()));
+  // Each JSON assumed to have a `.results` array
+  const allRawItems: ApiResponseProduct[] = jsons.flatMap((data: any) => data.results);
+
+  // Normalize ID and price
+  return allRawItems
+    .map(item => ({
+      ...item,
+      _id: String(item._id),
+      price: Number(item.price),
+    }))
+    .filter(p =>
+      typeof p._id === 'string' &&
+      p._id.length > 0 &&
+      p._id !== 'undefined' &&
+      p._id !== 'null'
+    );
 }
 
-// Carousel settings: Show arrows, never dots
-const getCarouselSettings = (itemCount: number) => ({
+// Carousel settings: always arrows, never dots
+const getCarouselSettings = (count: number) => ({
   dots: false,
   arrows: true,
-  infinite: itemCount > 1,
+  infinite: count > 1,
   speed: 500,
-  slidesToShow: Math.min(4, itemCount),
+  slidesToShow: Math.min(4, count),
   slidesToScroll: 1,
   responsive: [
     {
       breakpoint: 1024,
       settings: {
-        slidesToShow: Math.min(3, itemCount),
+        slidesToShow: Math.min(3, count),
         slidesToScroll: 1,
-        infinite: itemCount > 1,
+        infinite: count > 1,
         dots: false,
         arrows: true,
       },
@@ -80,9 +85,9 @@ const getCarouselSettings = (itemCount: number) => ({
     {
       breakpoint: 600,
       settings: {
-        slidesToShow: Math.min(2, itemCount),
+        slidesToShow: Math.min(2, count),
         slidesToScroll: 1,
-        infinite: itemCount > 1,
+        infinite: count > 1,
         dots: false,
         arrows: true,
       },
@@ -105,88 +110,63 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [productsByCategory, setProductsByCategory] = useState<{ [key: string]: Product[] }>({});
-
-  // Ref to the slider container so we can post-process its slides
   const sliderContainerRef = useRef<HTMLDivElement>(null);
 
+  // Fetch & group
   useEffect(() => {
     (async () => {
       try {
-        const fetchedProducts = await getProducts();
+        const allProducts = await getProducts();
 
-        // Dynamic categories from available products
-        const uniqueCategories = Array.from(
-          new Set(
-            fetchedProducts
-              .map(p => p.category)
-              .filter((cat): cat is string => typeof cat === 'string' && cat.length > 0)
+        // extract unique, non-empty category strings
+        const uniqueCats = Array.from(
+          new Set(allProducts
+            .map(p => p.category)
+            .filter((c): c is string => typeof c === 'string' && c.trim() !== '')
           )
         );
 
-        setCategories(uniqueCategories);
+        setCategories(uniqueCats);
 
-        // Group products by category
+        // group by category
         const grouped: { [key: string]: Product[] } = {};
-        uniqueCategories.forEach(category => {
-          grouped[category] = [];
-        });
-
-        fetchedProducts.forEach(product => {
-          if (
-            typeof product.category === 'string' &&
-            product.category &&
-            uniqueCategories.includes(product.category)
-          ) {
-            grouped[product.category].push(product);
+        uniqueCats.forEach(cat => { grouped[cat] = []; });
+        allProducts.forEach(prod => {
+          if (prod.category && grouped[prod.category]) {
+            grouped[prod.category].push(prod);
           }
         });
-
         setProductsByCategory(grouped);
       } catch {
-        setError('Failed to fetch products');
+        setError('Failed to fetch products across all categories');
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  // Accessibility fix: disable focus on slides marked aria-hidden="true"
+  // Accessibility: strip focus/interaction from hidden slides
   useEffect(() => {
     if (!sliderContainerRef.current) return;
-
-    const disableFocusInHiddenSlides = () => {
-      const hiddenSlides = sliderContainerRef.current!.querySelectorAll<HTMLElement>(
-        '.slick-slide[aria-hidden="true"]'
-      );
-      hiddenSlides.forEach(slide => {
-        // All normally focusable selectors
-        const focusable = slide.querySelectorAll<HTMLElement>(
-          'a[href], button, input, textarea, select, [tabindex]'
-        );
-        focusable.forEach(el => {
-          el.setAttribute('tabindex', '-1');
-          // disable interactive elements too
-          if (['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) {
-            (el as HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).disabled = true;
-          }
+    const disableHidden = () => {
+      sliderContainerRef.current!
+        .querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
+        .forEach(slide => {
+          slide.querySelectorAll<HTMLElement>(
+            'a, button, input, select, textarea, [tabindex]'
+          ).forEach(el => {
+            el.setAttribute('tabindex', '-1');
+            if (['BUTTON','INPUT','SELECT','TEXTAREA'].includes(el.tagName)) {
+              (el as HTMLButtonElement).disabled = true;
+            }
+          });
         });
-      });
     };
-
-    // initial run
-    disableFocusInHiddenSlides();
-
-    // if you want to re-run on slider change, uncomment this:
-    // sliderContainerRef.current
-    //   ?.querySelector('.slick-slider')
-    //   ?.addEventListener('afterChange', disableFocusInHiddenSlides);
-
-    // cleanup if you added an event listener
-    // return () => {
-    //   sliderContainerRef.current
-    //     ?.querySelector('.slick-slider')
-    //     ?.removeEventListener('afterChange', disableFocusInHiddenSlides);
-    // };
+    disableHidden();
+    // If you want to re‐run on slide change:
+    // const slick = sliderContainerRef.current.querySelector('.slick-slider');
+    // slick?.addEventListener('afterChange', disableHidden);
+    // return () => slick?.removeEventListener('afterChange', disableHidden);
   }, [loading, error, productsByCategory]);
 
   return (
@@ -197,20 +177,15 @@ export default function ProductsPage() {
       {error && <p className="text-red-500">Error: {error}</p>}
 
       {!loading && !error && (
-        categories.length === 0 ? (
-          <p>No categories found.</p>
-        ) : (
-          <div>
-            {categories.map(category => {
-              const items = productsByCategory[category] || [];
-              if (items.length === 0) return null;
-
-              const carouselSettings = getCarouselSettings(items.length);
-
+        categories.length === 0
+          ? <p>No categories found.</p>
+          : categories.map(cat => {
+              const items = productsByCategory[cat] || [];
+              if (!items.length) return null;
               return (
-                <div key={category} className="mb-8">
-                  <h2 className="text-xl font-bold mb-3 capitalize">{category}</h2>
-                  <Slider {...carouselSettings}>
+                <div key={cat} className="mb-8">
+                  <h2 className="text-xl font-bold mb-3 capitalize">{cat}</h2>
+                  <Slider {...getCarouselSettings(items.length)}>
                     {items.map(p => (
                       <div key={p._id} className="px-2">
                         <ProductItem product={p} />
@@ -219,9 +194,7 @@ export default function ProductsPage() {
                   </Slider>
                 </div>
               );
-            })}
-          </div>
-        )
+            })
       )}
     </div>
   );
