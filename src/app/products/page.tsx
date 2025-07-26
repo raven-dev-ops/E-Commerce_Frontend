@@ -6,8 +6,8 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from 'next/link';
-import Image from 'next/image';
 import type { Product } from '@/types/product';
+import FallbackImage from '@/components/FallbackImage';  // <-- NEW
 
 interface ApiResponseProduct {
   _id: string;
@@ -21,9 +21,9 @@ interface ApiResponseProduct {
 const CATEGORY_ORDER = ['Washes', 'Oils', 'Balms', 'Wax'];
 
 function getPublicImageUrl(path?: string) {
-  if (!path) return '/images/products/missing-image.png';
+  if (!path) return undefined;
   const fname = path.split('/').pop();
-  return fname ? `/images/products/${fname}` : '/images/products/missing-image.png';
+  return fname ? `/images/products/${fname}` : undefined;
 }
 
 async function getAllProducts(): Promise<Product[]> {
@@ -130,32 +130,29 @@ export default function ProductsPage() {
             <h2 className="text-xl font-semibold mb-4">{cat}</h2>
             <Slider {...getCarouselSettings(items.length)}>
               {items.map(p => {
-                const img = Array.isArray(p.images) && p.images[0]
-                  ? getPublicImageUrl(p.images[0])
-                  : getPublicImageUrl(p.image);
+                // pick first image or fallback via FallbackImage
+                const src =
+                  Array.isArray(p.images) && p.images[0]
+                    ? getPublicImageUrl(p.images[0])
+                    : getPublicImageUrl(p.image);
+
                 return (
                   <div key={p._id} className="px-2">
-                    {/* Removed border/shadow */}
                     <div className="rounded overflow-hidden">
                       <Link href={`/products/${p._id}`}>
                         <a className="block">
-                          <div className="relative w-full h-48">
-                            <Image
-                              src={img}
+                          <div className="relative w-full h-48 bg-gray-100">
+                            <FallbackImage
+                              src={src}
                               alt={p.product_name}
                               fill
                               className="object-cover"
-                              priority
                             />
                           </div>
                           <div className="p-4">
                             <div className="flex justify-between items-center">
-                              <h3 className="font-medium text-lg">
-                                {p.product_name}
-                              </h3>
-                              <span className="font-bold">
-                                ${p.price.toFixed(2)}
-                              </span>
+                              <h3 className="font-medium text-lg">{p.product_name}</h3>
+                              <span className="font-bold">${p.price.toFixed(2)}</span>
                             </div>
                           </div>
                         </a>
