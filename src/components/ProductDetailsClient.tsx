@@ -162,8 +162,8 @@ export default function ProductDetailsClient({
           </div>
           <div className="text-xs text-gray-400 mb-2">Product ID: {productId}</div>
 
-          {/* Star Rating - right-aligned */}
-          <div className="flex justify-end items-center mt-4 mb-4 gap-1">
+          {/* Star Rating - far right, with spacing */}
+          <div className="flex justify-end items-center mt-8 mb-8 gap-1">
             <span className="flex items-center">
               {renderStars(product.average_rating ?? 0)}
               <span className="text-gray-700 text-lg ml-2">
@@ -172,17 +172,11 @@ export default function ProductDetailsClient({
             </span>
           </div>
 
-          {/* Product Info Fields */}
-          {product.description && (
-            <div className="text-[1.15rem] mb-4">
-              <span className="font-semibold block mb-0.5">Description</span>
-              <div className="ml-0">{product.description}</div>
-            </div>
-          )}
-          {product.ingredients && formatArray(product.ingredients) && (
+          {/* Product Info Fields in desired order */}
+          {product.scent_profile && (
             <div className="mb-4 text-[1.15rem]">
-              <span className="font-semibold block mb-0.5">Ingredients</span>
-              <div className="ml-0 text-gray-700">{formatArray(product.ingredients)}</div>
+              <span className="font-semibold block mb-0.5">Scent Profile</span>
+              <div className="ml-0 text-gray-700">{product.scent_profile}</div>
             </div>
           )}
           {product.benefits && formatArray(product.benefits) && (
@@ -191,10 +185,16 @@ export default function ProductDetailsClient({
               <div className="ml-0 text-gray-700">{formatArray(product.benefits)}</div>
             </div>
           )}
-          {product.scent_profile && (
+          {product.description && (
             <div className="mb-4 text-[1.15rem]">
-              <span className="font-semibold block mb-0.5">Scent Profile</span>
-              <div className="ml-0 text-gray-700">{product.scent_profile}</div>
+              <span className="font-semibold block mb-0.5">Description</span>
+              <div className="ml-0">{product.description}</div>
+            </div>
+          )}
+          {product.ingredients && formatArray(product.ingredients) && (
+            <div className="mb-4 text-[1.15rem]">
+              <span className="font-semibold block mb-0.5">Ingredients</span>
+              <div className="ml-0 text-gray-700">{formatArray(product.ingredients)}</div>
             </div>
           )}
 
