@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -106,6 +106,9 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [productsByCategory, setProductsByCategory] = useState<{ [key: string]: Product[] }>({});
 
+  // Ref to the slider container so we can post-process its slides
+  const sliderContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     (async () => {
       try {
@@ -147,8 +150,47 @@ export default function ProductsPage() {
     })();
   }, []);
 
+  // Accessibility fix: disable focus on slides marked aria-hidden="true"
+  useEffect(() => {
+    if (!sliderContainerRef.current) return;
+
+    const disableFocusInHiddenSlides = () => {
+      const hiddenSlides = sliderContainerRef.current!.querySelectorAll<HTMLElement>(
+        '.slick-slide[aria-hidden="true"]'
+      );
+      hiddenSlides.forEach(slide => {
+        // All normally focusable selectors
+        const focusable = slide.querySelectorAll<HTMLElement>(
+          'a[href], button, input, textarea, select, [tabindex]'
+        );
+        focusable.forEach(el => {
+          el.setAttribute('tabindex', '-1');
+          // disable interactive elements too
+          if (['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) {
+            (el as HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).disabled = true;
+          }
+        });
+      });
+    };
+
+    // initial run
+    disableFocusInHiddenSlides();
+
+    // if you want to re-run on slider change, uncomment this:
+    // sliderContainerRef.current
+    //   ?.querySelector('.slick-slider')
+    //   ?.addEventListener('afterChange', disableFocusInHiddenSlides);
+
+    // cleanup if you added an event listener
+    // return () => {
+    //   sliderContainerRef.current
+    //     ?.querySelector('.slick-slider')
+    //     ?.removeEventListener('afterChange', disableFocusInHiddenSlides);
+    // };
+  }, [loading, error, productsByCategory]);
+
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4" ref={sliderContainerRef}>
       <h1 className="text-2xl font-bold mb-4">Products</h1>
 
       {loading && <p>Loading products…</p>}
