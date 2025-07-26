@@ -6,8 +6,8 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from 'next/link';
-import Image from 'next/image';
 import type { Product } from '@/types/product';
+import FallbackImage from '@/components/FallbackImage';
 
 interface ApiResponseProduct {
   _id: string;
@@ -21,28 +21,23 @@ interface ApiResponseProduct {
 const CATEGORY_ORDER = ['Washes', 'Oils', 'Balms', 'Wax'];
 
 function getPublicImageUrl(path?: string) {
-  if (!path) return '/images/products/missing-image.png';
+  if (!path) return undefined;
   const fname = path.split('/').pop();
-  return fname ? `/images/products/${fname}` : '/images/products/missing-image.png';
+  return fname ? `/images/products/${fname}` : undefined;
 }
 
 async function getAllProducts(): Promise<Product[]> {
-  // build base URL
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
   const url = `${raw}/products/`;
-
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to fetch ${url}`);
   const json = await res.json();
-
-  // support both raw-array and paginated { results, next, ... }
   const list: ApiResponseProduct[] = Array.isArray(json)
     ? json
     : Array.isArray(json.results)
       ? json.results
       : [];
-
   return list
     .map(p => ({
       _id: String(p._id),
@@ -73,7 +68,7 @@ function getCarouselSettings(count: number) {
 
 export default function ProductsPage() {
   const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string|null>(null);
+  const [error, setError]           = useState<string | null>(null);
   const [byCategory, setByCategory] = useState<Record<string, Product[]>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -81,17 +76,13 @@ export default function ProductsPage() {
     (async () => {
       try {
         const all = await getAllProducts();
-
-        // group into our four categories in fixed order
         const grouped: Record<string, Product[]> = {};
         CATEGORY_ORDER.forEach(cat => grouped[cat] = []);
         all.forEach(p => {
-          if (p.category && grouped[p.category]) {
-            grouped[p.category].push(p);
-          }
+          const cat = p.category || '';
+          if (grouped[cat]) grouped[cat].push(p);
         });
         setByCategory(grouped);
-
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Failed to load products');
@@ -101,11 +92,11 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // a11y: disable focus in hidden slides
+  // disable focus in hidden slides for accessibility
   useEffect(() => {
-    if (!containerRef.current) return;
-    containerRef.current
-      .querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
+    const root = containerRef.current;
+    if (!root) return;
+    root.querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
       .forEach(slide => {
         slide.querySelectorAll<HTMLElement>(
           'a, button, input, select, textarea, [tabindex]'
@@ -125,33 +116,34 @@ export default function ProductsPage() {
     <div className="container mx-auto p-4" ref={containerRef}>
       {CATEGORY_ORDER.map(cat => {
         const items = byCategory[cat] || [];
-        if (items.length === 0) return null;
+        if (!items.length) return null;
         return (
           <section key={cat} className="mb-12">
-            <h2 className="text-xl font-semibold mb-4">{cat}</h2>
             <Slider {...getCarouselSettings(items.length)}>
               {items.map(p => {
-                const img = Array.isArray(p.images) && p.images[0]
+                const src = Array.isArray(p.images) && p.images[0]
                   ? getPublicImageUrl(p.images[0])
                   : getPublicImageUrl(p.image);
+
                 return (
                   <div key={p._id} className="px-2">
                     <div className="rounded overflow-hidden">
                       <Link href={`/products/${p._id}`}>
                         <a className="block">
                           <div className="relative w-full h-48 bg-gray-100">
-                            <Image
-                              src={img}
+                            <FallbackImage
+                              src={src}
                               alt={p.product_name}
                               fill
                               className="object-cover"
-                              priority
                             />
                           </div>
-                          <div className="p-2">
+                          <div className="p-4">
                             <div className="flex justify-between items-center">
-                              <h3 className="font-medium text-lg">{p.product_name}</h3>
-                              <span className="font-bold">${p.price.toFixed(2)}</span>
+                              <span className="text-base font-medium">{p.product_name}</span>
+                              <span className="text-base font-semibold">
+                                ${Number(p.price).toFixed(2)}
+                              </span>
                             </div>
                           </div>
                         </a>
