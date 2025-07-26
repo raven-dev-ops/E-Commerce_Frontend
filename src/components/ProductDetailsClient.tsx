@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Zoom from 'react-medium-image-zoom';
 import 'react-medium-image-zoom/dist/styles.css';
 import FallbackImage from '@/components/FallbackImage';
@@ -27,7 +27,19 @@ const THUMB_SIZE = 80;
 
 export default function ProductDetailsClient({ product }: ProductDetailsClientProps) {
   const { addToCart } = useStore();
-  const productId = String(product.id ?? product._id);
+
+  // Always use _id for MongoEngine (it is a string)
+  const productId = String(product._id);
+
+  useEffect(() => {
+    // Log for debugging
+    console.log(`[ProductDetailsClient] Rendering product`, {
+      _id: product._id,
+      id: product.id,
+      product_name: product.product_name,
+      price: product.price,
+    });
+  }, [product._id, product.product_name, product.price]);
 
   const price = Number(product.price);
   const formattedPrice = !isNaN(price) ? price.toFixed(2) : '0.00';
@@ -52,6 +64,8 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
   const handleAddToCart = () => {
     try {
       addToCart(productId, 1);
+      // Also log to console
+      console.log(`[ProductDetailsClient] Added to cart: productId=${productId}`);
     } catch (err) {
       console.error('Failed to add to cart:', err);
     }
@@ -71,9 +85,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
                 aria-pressed={selectedIdx === idx}
                 onClick={() => setSelectedIdx(idx)}
                 className={`rounded overflow-hidden focus:outline-none transition-all ${
-                  selectedIdx === idx
-                    ? 'ring-2 ring-blue-500'
-                    : 'ring-0'
+                  selectedIdx === idx ? 'ring-2 ring-blue-500' : 'ring-0'
                 }`}
                 style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
               >
@@ -120,6 +132,7 @@ export default function ProductDetailsClient({ product }: ProductDetailsClientPr
         <div className="flex-1 flex flex-col min-w-0 max-w-xl">
           <h1 className="text-3xl font-bold mb-2">{product.product_name}</h1>
           <p className="text-lg font-semibold mb-2">${formattedPrice}</p>
+          <div className="text-xs text-gray-400 mb-2">Product ID: {productId}</div>
           {product.description && (
             <p className="mb-2 text-gray-700">{product.description}</p>
           )}
