@@ -3,10 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Zoom from 'react-medium-image-zoom';
 import 'react-medium-image-zoom/dist/styles.css';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
 import FallbackImage from '@/components/FallbackImage';
+import ProductCarousel from '@/components/ProductCarousel';
 import { useStore } from '@/store/useStore';
 import type { Product } from '@/types/product';
 
@@ -17,7 +15,6 @@ interface ProductDetailsClientProps {
 
 const FALLBACK_IMAGE = '/images/products/missing-image.png';
 
-// Improved function: handles absolute, relative, and duplicate paths
 function getPublicImageUrl(path?: string): string | undefined {
   if (!path) return undefined;
   // Already absolute URL
@@ -37,20 +34,6 @@ function getPublicImageUrl(path?: string): string | undefined {
 const IMAGE_WIDTH = 400;
 const IMAGE_HEIGHT = 500;
 const THUMB_SIZE = 80;
-
-const carouselSettings = (count: number) => ({
-  dots: false,
-  arrows: true,
-  infinite: count > 4,
-  speed: 500,
-  slidesToShow: Math.min(4, count),
-  slidesToScroll: 1,
-  responsive: [
-    { breakpoint: 1024, settings: { slidesToShow: Math.min(3, count) } },
-    { breakpoint: 600, settings: { slidesToShow: Math.min(2, count) } },
-    { breakpoint: 480, settings: { slidesToShow: 1 } },
-  ],
-});
 
 export default function ProductDetailsClient({
   product,
@@ -96,7 +79,7 @@ export default function ProductDetailsClient({
 
   // Helper for rendering gold stars
   const renderStars = (rating = 0) => {
-    const rounded = Math.round(Number(rating) * 2) / 2; // for half stars later if needed
+    const rounded = Math.round(Number(rating) * 2) / 2;
     return Array.from({ length: 5 }).map((_, i) => (
       <svg
         key={i}
@@ -178,7 +161,7 @@ export default function ProductDetailsClient({
 
           {/* Star Rating */}
           <div className="mb-2 flex items-center gap-2">
-            {renderStars(product.average_rating)}
+            {renderStars(product.average_rating ?? 0)}
             {typeof product.average_rating === 'number' && (
               <span className="text-gray-500 text-sm ml-1">
                 {Number(product.average_rating).toFixed(2)} / 5
@@ -219,39 +202,15 @@ export default function ProductDetailsClient({
         </div>
       </div>
 
-      {/* Related Products Slick Carousel */}
+      {/* Related Products Carousel */}
       {relatedProducts && relatedProducts.length > 0 && (
         <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-4">More from this category</h2>
-          <Slider {...carouselSettings(relatedProducts.length)}>
-            {relatedProducts.map((item) => {
-              const src =
-                Array.isArray(item.images) && item.images[0]
-                  ? getPublicImageUrl(item.images[0])
-                  : getPublicImageUrl(item.image) || FALLBACK_IMAGE;
-
-              return (
-                <div key={item._id} className="px-2">
-                  <div className="min-w-[200px] bg-white rounded shadow p-4 flex flex-col items-center hover:shadow-lg transition">
-                    <a href={`/products/${item._id}`} className="block w-full">
-                      <FallbackImage
-                        src={src}
-                        alt={item.product_name || 'Related product'}
-                        width={120}
-                        height={150}
-                        className="object-contain mb-2 mx-auto"
-                        unoptimized
-                      />
-                      <div className="font-semibold text-center line-clamp-2">{item.product_name}</div>
-                      <div className="text-gray-500 mb-1">
-                        ${Number(item.price ?? 0).toFixed(2)}
-                      </div>
-                    </a>
-                  </div>
-                </div>
-              );
-            })}
-          </Slider>
+          <ProductCarousel
+            products={relatedProducts}
+            title="More from this category"
+            showPrice
+            showRatings
+          />
         </div>
       )}
     </div>
