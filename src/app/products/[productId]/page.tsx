@@ -2,24 +2,22 @@
 
 import { notFound } from 'next/navigation'
 import ProductDetailsClient from '@/components/ProductDetailsClient'
-import type { Product } from '@/types/product' // your shared Product type
+import type { Product } from '@/types/product'  // your shared Product type
 
 async function getProduct(productId: string): Promise<Product | null> {
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '')
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://')
 
-  // if your backend sits under /api, include that here:
+  // add `/api` if your backend lives under that
   const apiBase = raw.endsWith('/api') ? raw : `${raw}/api`
-  const res = await fetch(`${apiBase}/products/${productId}/`, {
-    cache: 'no-store',
-  })
+  const res = await fetch(`${apiBase}/products/${productId}/`, { cache: 'no-store' })
 
   if (res.status === 404) return null
   if (!res.ok) throw new Error(`Failed to fetch product: HTTP ${res.status}`)
 
   const data = await res.json()
 
-  // Normalize whatever form of ID came back into a simple string
+  // normalize whatever _id or id shape came back
   let id = ''
   if (typeof data.id === 'string' && data.id) {
     id = data.id
@@ -40,14 +38,12 @@ async function getProduct(productId: string): Promise<Product | null> {
   } as Product
 }
 
-export default async function ProductDetailPage({
-  params,
-  searchParams,           // <— include this, even if you don’t use it
-}: {
-  params: { productId: string }
-  searchParams: Record<string, string | string[] | undefined>
-}) {
-  const product = await getProduct(params.productId)
+export default async function ProductDetailPage(props: any) {
+  const {
+    params: { productId },
+  } = props
+
+  const product = await getProduct(productId)
   if (!product) notFound()
 
   return <ProductDetailsClient product={product} />
