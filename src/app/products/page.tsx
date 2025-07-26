@@ -7,7 +7,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from 'next/link';
 import type { Product } from '@/types/product';
-import FallbackImage from '@/components/FallbackImage';  // <-- NEW
+import FallbackImage from '@/components/FallbackImage';
 
 interface ApiResponseProduct {
   _id: string;
@@ -20,28 +20,51 @@ interface ApiResponseProduct {
 
 const CATEGORY_ORDER = ['Washes', 'Oils', 'Balms', 'Wax'];
 
-function getPublicImageUrl(path?: string) {
+/**
+ * Given whatever the API returns (absolute URL, absolute path, or bare filename),
+ * return the correct `/images/...` path, preserving any sub‑folders.
+ */
+function getPublicImageUrl(path?: string): string | undefined {
   if (!path) return undefined;
-  const fname = path.split('/').pop();
-  return fname ? `/images/products/${fname}` : undefined;
+  try {
+    // if it's a full URL, grab its pathname
+    const url = new URL(path);
+    return url.pathname;
+  } catch {
+    // not an absolute URL
+  }
+  // already an absolute path?
+  if (path.startsWith('/')) {
+    return path;
+  }
+  // otherwise assume it's a filename under /images/products/
+  return `/images/products/${path}`;
 }
 
 async function getAllProducts(): Promise<Product[]> {
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
-  const base = raw;
-  let url = `${base}/products/?page=1`;
+  let url = `${raw}/products/?page=1`;
   const all: ApiResponseProduct[] = [];
 
   while (url) {
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Failed to fetch ${url}`);
     const json = await res.json();
-    all.push(...(json.results as ApiResponseProduct[]));
+    // support both paginated { results: [...] } and plain array
+    const batch: ApiResponseProduct[] = Array.isArray(json.results)
+      ? json.results
+      : Array.isArray(json)
+        ? json
+        : [];
+    all.push(...batch);
+
+    // advance to next page, if provided
     if (json.next) {
+      // force HTTPS, preserve only the querystring
       const next = (json.next as string).replace(/^http:\/\//, 'https://');
       const u = new URL(next);
-      url = `${base}/products/${u.search}`;
+      url = `${raw}/products/${u.search}`;
     } else {
       url = '';
     }
@@ -49,22 +72,22 @@ async function getAllProducts(): Promise<Product[]> {
 
   return all
     .map(p => ({
-      _id: String(p._id),
+      _id:          String(p._id),
       product_name: p.product_name,
-      price: Number(p.price),
-      images: p.images,
-      image: p.image,
-      category: p.category,
+      price:        Number(p.price),
+      images:       p.images,
+      image:        p.image,
+      category:     p.category,
     }))
     .filter(p => p._id && p._id !== 'undefined' && p._id !== 'null');
 }
 
 function getCarouselSettings(count: number) {
   return {
-    dots: false,
-    arrows: true,
-    infinite: count > 1,
-    speed: 500,
+    dots:         false,
+    arrows:       true,
+    infinite:     count > 1,
+    speed:        500,
     slidesToShow: Math.min(4, count),
     slidesToScroll: 1,
     responsive: [
@@ -77,10 +100,11 @@ function getCarouselSettings(count: number) {
 
 export default function ProductsPage() {
   const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string|null>(null);
+  const [error, setError]           = useState<string | null>(null);
   const [byCategory, setByCategory] = useState<Record<string, Product[]>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // fetch + group
   useEffect(() => {
     (async () => {
       try {
@@ -88,7 +112,8 @@ export default function ProductsPage() {
         const grouped: Record<string, Product[]> = {};
         CATEGORY_ORDER.forEach(cat => grouped[cat] = []);
         all.forEach(p => {
-          if (p.category && grouped[p.category]) grouped[p.category].push(p);
+          const cat = p.category || '';
+          if (grouped[cat]) grouped[cat].push(p);
         });
         setByCategory(grouped);
       } catch (err: any) {
@@ -100,11 +125,11 @@ export default function ProductsPage() {
     })();
   }, []);
 
-  // Accessibility: disable focus in hidden slides
+  // a11y: remove focusable elements in hidden slides
   useEffect(() => {
-    if (!containerRef.current) return;
-    containerRef.current
-      .querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
+    const root = containerRef.current;
+    if (!root) return;
+    root.querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
       .forEach(slide => {
         slide.querySelectorAll<HTMLElement>(
           'a, button, input, select, textarea, [tabindex]'
@@ -117,45 +142,47 @@ export default function ProductsPage() {
       });
   }, [loading, error, byCategory]);
 
+  if (loading) return <p className="p-4">Loading products…</p>;
+  if (error)   return <p className="p-4 text-red-500">Error: {error}</p>;
+
   return (
     <div className="container mx-auto p-4" ref={containerRef}>
-      {loading && <p>Loading products…</p>}
-      {error   && <p className="text-red-500">Error: {error}</p>}
-
-      {!loading && !error && CATEGORY_ORDER.map(cat => {
+      {CATEGORY_ORDER.map(cat => {
         const items = byCategory[cat] || [];
-        if (items.length === 0) return null;
+        if (!items.length) return null;
         return (
           <section key={cat} className="mb-12">
-            <h2 className="text-xl font-semibold mb-4">{cat}</h2>
             <Slider {...getCarouselSettings(items.length)}>
               {items.map(p => {
-                // pick first image or fallback via FallbackImage
-                const src =
-                  Array.isArray(p.images) && p.images[0]
-                    ? getPublicImageUrl(p.images[0])
-                    : getPublicImageUrl(p.image);
+                const src = Array.isArray(p.images) && p.images[0]
+                  ? getPublicImageUrl(p.images[0])
+                  : getPublicImageUrl(p.image);
 
                 return (
                   <div key={p._id} className="px-2">
                     <div className="rounded overflow-hidden">
-                      <Link href={`/products/${p._id}`}>
-                        <a className="block">
-                          <div className="relative w-full h-48 bg-gray-100">
-                            <FallbackImage
-                              src={src}
-                              alt={p.product_name}
-                              fill
-                              className="object-cover"
-                            />
+                      <Link
+                        href={`/products/${p._id}`}
+                        className="block"
+                      >
+                        <div className="relative w-full h-48">
+                          <FallbackImage
+                            src={src}
+                            alt={p.product_name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="p-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-base font-medium">
+                              {p.product_name}
+                            </span>
+                            <span className="text-base font-semibold">
+                              ${p.price.toFixed(2)}
+                            </span>
                           </div>
-                          <div className="p-4">
-                            <div className="flex justify-between items-center">
-                              <h3 className="font-medium text-lg">{p.product_name}</h3>
-                              <span className="font-bold">${p.price.toFixed(2)}</span>
-                            </div>
-                          </div>
-                        </a>
+                        </div>
                       </Link>
                     </div>
                   </div>
