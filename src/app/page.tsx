@@ -15,17 +15,15 @@ const Page: React.FC = () => (
         <div className="mb-4">
           <h2 className="text-2xl text-yellow-300 font-semibold mb-2">Currently</h2>
           <ul className="list-disc list-inside text-white pl-4 space-y-1">
-            <li>Updating Products Page</li>
-            <li>Adding Product Images, Finalizing UIX</li>
           </ul>
+            <li>Updating Admin Dashboard</li>
+            <li>Updating Cart Page</li>
         </div>
         <div className="mb-4">
           <h2 className="text-2xl text-green-300 font-semibold mb-2">To Do</h2>
           <ul className="list-disc list-inside text-white pl-4 space-y-1">
             <li>Update Merch Page</li>
             <li>Update Profile Page</li>
-            <li>Update Cart Page</li>
-            <li>Update Admin Dashboard</li>
           </ul>
         </div>
         <div>
@@ -45,10 +43,6 @@ const Page: React.FC = () => (
             <li>Domain Purchase</li>
             <li>Stripe Account</li>
             <li>Fourthwall Account</li>
-            <li>Privacy Policy</li>
-            <li>Terms of Service</li>
-            <li>Refund Policy</li>
-            <li>Contact Us</li>
           </ul>
         </div>
       </section>
