@@ -15,9 +15,9 @@ const Page: React.FC = () => (
         <div className="mb-4">
           <h2 className="text-2xl text-yellow-300 font-semibold mb-2">Currently</h2>
           <ul className="list-disc list-inside text-white pl-4 space-y-1">
-          </ul>
             <li>Updating Admin Dashboard</li>
             <li>Updating Cart Page</li>
+          </ul>
         </div>
         <div className="mb-4">
           <h2 className="text-2xl text-green-300 font-semibold mb-2">To Do</h2>
