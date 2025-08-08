@@ -2,23 +2,26 @@
 
 import { api } from '@/lib/api';
 
-export interface LoginResponse {
-  token: string;
-  user: Record<string, any>;
-  // …extend with whatever your backend actually returns
+export interface JwtLoginResponse {
+  access?: string;
+  refresh?: string;
+  access_token?: string;
+  refresh_token?: string;
+  user?: Record<string, any>;
 }
 
-/**
- * Logs in with email + password.
- * Uses our normalized `api` (so HTTPS is enforced, `/api` is appended, etc).
- */
-export async function loginWithEmailPassword(
-  email: string,
-  password: string
-): Promise<LoginResponse> {
-  const { data } = await api.post<LoginResponse>('/authentication/login/', {
-    email,
-    password,
-  });
+export interface DrfTokenLoginResponse {
+  key?: string;
+  token?: string;
+  user?: Record<string, any>;
+}
+
+export async function loginWithJwt(email: string, password: string): Promise<JwtLoginResponse> {
+  const { data } = await api.post<JwtLoginResponse>('/auth/login/', { email, password });
+  return data;
+}
+
+export async function loginWithDrfToken(email: string, password: string): Promise<DrfTokenLoginResponse> {
+  const { data } = await api.post<DrfTokenLoginResponse>('/authentication/login/', { email, password });
   return data;
 }

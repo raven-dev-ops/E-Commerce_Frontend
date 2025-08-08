@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || '';
+const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '') + '/api/v1';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -13,6 +13,7 @@ export default function Register() {
     password2: '',
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { isAuthenticated } = useStore();
@@ -31,6 +32,7 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg(null);
+    setInfoMsg(null);
 
     if (form.password1 !== form.password2) {
       setErrorMsg('Passwords do not match');
@@ -39,19 +41,33 @@ export default function Register() {
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/authentication/register/`, {
+      // 1) Try dj-rest-auth registration
+      const res = await fetch(`${BASE_URL}/auth/registration/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, password1: form.password1, password2: form.password2 }),
+      });
+
+      if (res.ok) {
+        setInfoMsg('Registration successful. Please check your email to verify your account.');
+        setTimeout(() => router.push('/auth/login'), 2000);
+        return;
+      }
+
+      // 2) Fallback to custom auth register
+      const res2 = await fetch(`${BASE_URL}/authentication/register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.email, password: form.password1 }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
+      if (!res2.ok) {
+        const errorData = await res2.json().catch(() => ({}));
         throw new Error(errorData.detail || 'Registration failed');
       }
 
-      // Registration success, redirect to login
-      router.push('/auth/login');
+      setInfoMsg('Registration successful. Please check your email to verify your account.');
+      setTimeout(() => router.push('/auth/login'), 1500);
     } catch (error: any) {
       setErrorMsg(error.message || 'Registration failed');
     } finally {
@@ -100,6 +116,7 @@ export default function Register() {
           />
         </label>
         {errorMsg && <div className="text-red-600 mb-2">{errorMsg}</div>}
+        {infoMsg && <div className="text-green-600 mb-2">{infoMsg}</div>}
         <button
           type="submit"
           disabled={loading}

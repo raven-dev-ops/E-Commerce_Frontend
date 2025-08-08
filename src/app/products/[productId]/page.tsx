@@ -8,6 +8,7 @@ import type { Product } from '@/types/product';
 async function getProduct(productId: string): Promise<Product | null> {
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
+  if (!raw.endsWith('/api/v1')) raw = raw.endsWith('/api') ? `${raw}/v1` : `${raw}/api/v1`;
   const url = `${raw}/products/${productId}/`;
   // Server-side log
   console.log('[getProduct] Fetching:', url);
@@ -38,6 +39,7 @@ async function getProduct(productId: string): Promise<Product | null> {
 async function getRelatedProducts(category: string, excludeProductId: string): Promise<Product[]> {
   let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
   if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
+  if (!raw.endsWith('/api/v1')) raw = raw.endsWith('/api') ? `${raw}/v1` : `${raw}/api/v1`;
   const url = `${raw}/products/?category=${encodeURIComponent(category)}`;
   console.log('[getRelatedProducts] Fetching:', url);
 

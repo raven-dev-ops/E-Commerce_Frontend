@@ -37,8 +37,8 @@ export default function CheckoutForm() {
       card,
     });
 
-    if (error) {
-      setErrorMsg(error.message || 'Payment error');
+    if (error || !paymentMethod) {
+      setErrorMsg(error?.message || 'Payment error');
       setLoading(false);
       return;
     }
@@ -52,9 +52,9 @@ export default function CheckoutForm() {
       setSuccessMsg('Payment successful! Redirecting...');
       setTimeout(() => {
         window.location.href = '/';
-      }, 2000);
-    } catch {
-      setErrorMsg('Payment failed, please try again.');
+      }, 1500);
+    } catch (e: any) {
+      setErrorMsg(e?.response?.data?.detail || 'Payment failed, please try again.');
       setLoading(false);
     }
   };

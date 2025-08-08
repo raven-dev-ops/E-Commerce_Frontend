@@ -1,0 +1,32 @@
+[
+  {
+    "_id": "p001",
+    "product_name": "Classic Beard Balm",
+    "category": "balms",
+    "description": "A light, non-greasy balm for daily conditioning.",
+    "price": 14.99,
+    "ingredients": ["Shea Butter", "Beeswax", "Jojoba Oil"],
+    "benefits": ["Softens", "Conditions", "Light Hold"],
+    "availability": true,
+    "inventory": 120,
+    "reserved_inventory": 0,
+    "images": ["/images/products/balm_classic.png"],
+    "average_rating": 4.5,
+    "review_count": 28
+  },
+  {
+    "_id": "p002",
+    "product_name": "Citrus Beard Oil",
+    "category": "oils",
+    "description": "Bright citrus scent with nourishing oils.",
+    "price": 12.5,
+    "ingredients": ["Argan Oil", "Jojoba Oil", "Vitamin E"],
+    "benefits": ["Shine", "Scent", "Moisture"],
+    "availability": true,
+    "inventory": 80,
+    "reserved_inventory": 0,
+    "images": ["/images/products/oil_citrus.png"],
+    "average_rating": 4.2,
+    "review_count": 13
+  }
+]
