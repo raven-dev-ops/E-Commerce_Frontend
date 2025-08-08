@@ -1,3 +1,81 @@
+### Conventions
+
+- **Priority**: P0 (must-have), P1 (high), P2 (medium), P3 (nice-to-have)
+- **Milestone**: [MVP], [Beta], [GA]
+- **Status**: [Todo], [In Progress], [Blocked], [Done]
+- Notes: Acceptance criteria are defined for MVP items only. Numbers in parentheses reference the full backlog items below.
+
+### MVP (Phase 1) — must-haves
+
+1) Unified credentials login with fallback (1) [MVP][P0][In Progress]
+- Calls `POST /auth/login/` first; on non-success, falls back to `POST /authentication/login/`
+- Surfaces backend error messages verbatim for 400/401; blocked/rate-limited states show helpful UI
+- On success, saves JWT as `Bearer` or DRF token as `Token` and future requests carry `Authorization` via interceptor
+- Preserves return-to path pre-login; closes header modal on success
+- Files: `src/components/Header.tsx`, `src/lib/auth.ts`, `src/lib/api.ts`
+
+2) Token storage, hydration, and auto-logout (2,3,10) [MVP][P0][In Progress]
+- Tokens persisted to storage and in-memory; `useStore` hydrates auth state on app load without SSR breakage
+- 401 from API triggers token clear + re-login prompt without losing current route
+- Logout clears all tokens via a single call and resets store state
+- Files: `src/store/useStore.ts`, `src/lib/api.ts`, `src/components/Header.tsx`
+
+3) Google OAuth login button (4) [MVP][P1][In Progress]
+- Renders Google button; sends auth code to `POST /auth/google/login/`
+- Handles non-JSON or variant token field names; stores JWT or DRF token and authenticates user
+- Clear error messages and retry affordance
+- Files: `src/components/GoogleAuthButton.tsx`, `src/components/Header.tsx`
+
+4) Products index with search + category (25,37) [MVP][P0][In Progress]
+- Fetches from `/products/` supporting `?search` and `?category` params; state reflectable via URL
+- Renders empty state when no results
+- Reasonable formatting of price and images; basic pagination ready (URL param passthrough)
+- Files: `src/app/products/page.tsx`, `src/components/ProductItem.tsx`
+
+5) Product detail page with related products (26,27,28,29) [MVP][P0][In Progress]
+- Loads product from `/products/{id}/`; displays images gallery with fallback and zoom
+- Renders key product attributes (price, description, ratings) with safe defaults
+- Related rail by category excludes current product
+- Files: `src/app/products/[productId]/page.tsx`, `src/components/ProductDetailsClient.tsx`, `src/components/ProductCarousel.tsx`
+
+6) Cart connected to server endpoints (45,46) [MVP][P0][Todo]
+- Reads current cart via `GET /cart/` and displays item names, quantities, and totals
+- Quantity updates are optimistic, rollback on error; add/remove calls use POST/PUT/DELETE `/cart/`
+- Guest cart merges on login when supported, else shows non-destructive message
+- Files: `src/lib/cartApi.ts`, `src/components/CartClient.tsx`, `src/app/cart/page.tsx`, `src/store/useStore.ts`
+
+7) Checkout order creation with Stripe card (59,60,62) [MVP][P0][In Progress]
+- Submits `payment_method_id` to `POST /orders/` and handles error states without double-submitting
+- Success clears cart and routes to confirmation; failures show inline error and allow retry
+- Prepare for 3DS handling where backend returns `requires_action` (copy + retry path)
+- Files: `src/components/CheckoutForm.tsx`, `src/app/checkout/page.tsx`
+
+8) Order detail with live status updates (63,64,70) [MVP][P1][In Progress]
+- Loads order via `GET /orders/{id}/`; subscribes to `ws(s)://…/ws/orders/{id}/` with reconnect on close
+- UI timeline reflects status changes as messages arrive; polling fallback when WS fails
+- Files: `src/app/orders/[orderId]/page.tsx`, `src/lib/baseUrl.ts`
+
+9) Basic addresses management UI (18,19,22) [MVP][P1][Todo]
+- List, create, update, delete via `/addresses/` with `is_default_shipping` and `is_default_billing`
+- Toggle default via PATCH; inline validation and error surfacing
+- Files: `src/app/addresses/page.tsx`
+
+10) A11y fundamentals for auth modal and forms (77,78,81) [MVP][P1][Todo]
+- Auth modal traps focus, ESC closes, labeled inputs, and roles announced for errors
+- Forms have `aria-describedby` for inline errors; tab order is logical
+- Files: `src/components/Header.tsx`, `src/components/CheckoutForm.tsx`
+
+11) Image and bundle performance essentials (84,85,86,88) [MVP][P2][Todo]
+- Code-split heavy client components and lazy-load below-the-fold content
+- Use next/image where feasible with appropriate sizes; prefetch critical routes
+- Prefer server components for data fetching where possible to reduce client JS
+- Files: `src/components/ProductDetailsClient.tsx`, `src/app/products/*`
+
+12) Developer flow: E2E smoke for happy path (100) [MVP][P2][Todo]
+- Playwright covers: login, view products, add-to-cart, checkout success, order status page loads
+- Test data and environment docs included
+- Files: `tests/e2e/*` (to be added)
+
 ## Engineering Backlog (Frontend)
 
 This backlog lists 100 frontend improvements aligned with available APIs and features (auth JWT/Token + Google, products, cart, addresses, orders, Stripe, WebSockets). Numbering is global across sections.
