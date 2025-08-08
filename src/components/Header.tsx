@@ -8,6 +8,8 @@ import { ShoppingCart, ShoppingBag, User, X, Shirt } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import GoogleAuthButton from '@/components/GoogleAuthButton';
 
+const BASE_URL = ((process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '')) + '/api/v1';
+
 const Header: React.FC = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -27,8 +29,9 @@ const Header: React.FC = () => {
     ) || 0;
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
+    const jwt = localStorage.getItem('accessToken');
+    const drf = localStorage.getItem('drfToken');
+    if (jwt || drf) {
       setIsAuthenticated(true);
       setUserEmail(user?.email || null);
     } else {
@@ -40,6 +43,8 @@ const Header: React.FC = () => {
   const handleLogout = () => {
     logout();
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('drfToken');
     setIsAuthenticated(false);
     setUserEmail(null);
     setShowLogin(false);
@@ -62,7 +67,7 @@ const Header: React.FC = () => {
     setFormSuccess(null);
   };
 
-  // Handle registration
+  // Handle registration (dj-rest-auth preferred)
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError(null);
@@ -73,18 +78,29 @@ const Header: React.FC = () => {
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
 
     try {
-      const res = await fetch('/auth/register/', {
+      const res = await fetch(`${BASE_URL}/auth/registration/`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password1: password, password2: password }),
       });
-      const data = await res.json();
       if (res.ok) {
-        setFormSuccess('Account created! You may now sign in.');
+        setFormSuccess('Account created! Check your email to verify, then sign in.');
         setFormError(null);
         setIsSignUp(false);
       } else {
-        setFormError(data?.message || 'Sign up failed.');
+        // fallback to custom registration
+        const r2 = await fetch(`${BASE_URL}/authentication/register/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const d2 = await r2.json();
+        if (r2.ok) {
+          setFormSuccess('Account created! Check your email to verify, then sign in.');
+          setIsSignUp(false);
+        } else {
+          setFormError(d2?.detail || d2?.message || 'Sign up failed.');
+        }
       }
     } catch (err) {
       setFormError('Sign up failed.');
@@ -92,7 +108,7 @@ const Header: React.FC = () => {
     setLoading(false);
   };
 
-  // Handle credentials login
+  // Handle credentials login (dj-rest-auth preferred)
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError(null);
@@ -103,23 +119,39 @@ const Header: React.FC = () => {
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
 
     try {
-      const res = await fetch('/auth/login/', {
+      // Try JWT login
+      const res = await fetch(`${BASE_URL}/auth/login/`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
-      const data = await res.json();
-
-      if (res.ok && data.accessToken) {
-        localStorage.setItem('accessToken', data.accessToken);
-        login(data.user);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && (data.access || data.access_token)) {
+        localStorage.setItem('accessToken', data.access ?? data.access_token);
+        if (data.refresh ?? data.refresh_token) localStorage.setItem('refreshToken', data.refresh ?? data.refresh_token);
+        login(data.user || {});
         setIsAuthenticated(true);
-        setUserEmail(data.user.email);
+        setUserEmail((data.user && data.user.email) || email);
         setShowLogin(false);
         setFormError(null);
       } else {
-        setFormError(data?.message || 'Invalid credentials.');
+        // fallback to DRF token
+        const r2 = await fetch(`${BASE_URL}/authentication/login/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const d2 = await r2.json();
+        if (r2.ok && (d2.key || d2.token)) {
+          localStorage.setItem('drfToken', d2.key ?? d2.token);
+          login(d2.user || {});
+          setIsAuthenticated(true);
+          setUserEmail((d2.user && d2.user.email) || email);
+          setShowLogin(false);
+          setFormError(null);
+        } else {
+          setFormError(data?.detail || data?.message || d2?.detail || d2?.message || 'Invalid credentials.');
+        }
       }
     } catch (err) {
       setFormError('Login failed.');
@@ -132,22 +164,27 @@ const Header: React.FC = () => {
     setLoading(true);
     setFormError(null);
     try {
-      const response = await fetch('https://twiinz-beard-backend-11dfd7158830.herokuapp.com/users/auth/google/', {
+      const response = await fetch(`${BASE_URL}/auth/google/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ access_token: credential }),
+        body: JSON.stringify({ code: credential, access_token: credential }),
       });
 
-      if (!response.ok) throw new Error('Google login failed');
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.detail || 'Google login failed');
 
-      const data = await response.json();
-      localStorage.setItem('accessToken', data.access_token ?? '');
+      const token = data.access ?? data.access_token ?? data.key ?? data.token ?? '';
+      if (token) {
+        // Prefer JWT storage
+        if (data.access || data.access_token) localStorage.setItem('accessToken', token);
+        else localStorage.setItem('drfToken', token);
+      }
       login(data.user || {});
       setIsAuthenticated(true);
       setUserEmail(data.user?.email ?? null);
       setShowLogin(false);
     } catch (error: any) {
-      setFormError('Google login failed.');
+      setFormError(error?.message || 'Google login failed.');
     } finally {
       setLoading(false);
     }
@@ -236,8 +273,11 @@ const Header: React.FC = () => {
               <div className="flex flex-col items-center">
                 <User className="w-16 h-16 mb-4 text-gray-700" />
                 <div className="text-xl font-semibold mb-2">{userEmail}</div>
+                <a className="text-blue-600 underline mb-4" href="/orders">My Orders</a>
+                <a className="text-blue-600 underline mb-4" href="/addresses">My Addresses</a>
+                <a className="text-blue-600 underline mb-4" href="/profile">Profile</a>
                 <button
-                  className="mt-4 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  className="mt-2 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                   onClick={handleLogout}
                 >
                   Logout

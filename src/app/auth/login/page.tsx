@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || '';
+const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '') + '/api/v1';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -26,24 +26,41 @@ export default function Login() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch(`${BASE_URL}/authentication/login/`, {
+      // 1) Try dj-rest-auth JWT login
+      const jwtRes = await fetch(`${BASE_URL}/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
+      if (jwtRes.ok) {
+        const data = await jwtRes.json();
+        localStorage.setItem('accessToken', data.access ?? data.access_token ?? '');
+        if (data.refresh ?? data.refresh_token) {
+          localStorage.setItem('refreshToken', data.refresh ?? data.refresh_token);
+        }
+        login(data.user || {});
+        router.push('/');
+        return;
+      }
+
+      // 2) Fallback to custom Token auth
+      const tokenRes = await fetch(`${BASE_URL}/authentication/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!tokenRes.ok) {
+        const errorData = await tokenRes.json().catch(() => ({}));
         throw new Error(errorData.detail || 'Login failed');
       }
 
-      const data = await res.json();
-
-      // Assuming backend returns JWT tokens and user info:
-      localStorage.setItem('accessToken', data.access ?? '');
-      localStorage.setItem('refreshToken', data.refresh ?? '');
-
-      login(data.user || {});
+      const tokenData = await tokenRes.json();
+      // Expect token in { key } or { token }
+      const token = tokenData.key ?? tokenData.token ?? '';
+      localStorage.setItem('drfToken', token);
+      login(tokenData.user || {});
       router.push('/');
     } catch (error: any) {
       setErrorMsg(error.message || 'Login failed');

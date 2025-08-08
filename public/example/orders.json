@@ -1,0 +1,11 @@
+[
+  {
+    "id": 101,
+    "status": "processing",
+    "total": 27.49,
+    "items": [
+      { "id": 1, "product_name": "Classic Beard Balm", "quantity": 1, "price": 14.99 },
+      { "id": 2, "product_name": "Citrus Beard Oil", "quantity": 1, "price": 12.5 }
+    ]
+  }
+]

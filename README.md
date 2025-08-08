@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TwiinZ Beard Frontend
 
-## Getting Started
+This is a Next.js 15 app aligned to the Django e‑commerce backend. It supports JWT and DRF Token auth flows, Stripe checkout, Mongo-backed products, and user profile/addresses/orders.
 
-First, run the development server:
+## Environment
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Set the API and Stripe keys in your environment (e.g. `.env.local`).
+
+```
+NEXT_PUBLIC_API_BASE_URL=https://your-backend-domain
+NEXT_PUBLIC_STRIPE_PUBLIC_KEY=pk_test_...
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Notes:
+- The frontend appends `/api/v1` automatically to `NEXT_PUBLIC_API_BASE_URL`.
+- JWT endpoints are used when available; it falls back to DRF Token endpoints.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` start dev server
+- `npm run build` build
+- `npm start` serve production
 
-## Learn More
+## Key Routes
 
-To learn more about Next.js, take a look at the following resources:
+- `/products` product listing with search and category filter
+- `/products/[productId]` product details
+- `/cart` local cart with server-backed product details
+- `/checkout` Stripe card element + order creation (`POST /orders/`)
+- `/auth/login`, `/auth/register` credential forms (also accessible via header modal)
+- `/profile` view/update profile (`/users/profile/`)
+- `/addresses` manage addresses (`/addresses/`)
+- `/orders`, `/orders/[orderId]` list/detail with live status over WebSocket
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Example Data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See `public/example/*.json` for products, categories, orders, and addresses used for offline demos.

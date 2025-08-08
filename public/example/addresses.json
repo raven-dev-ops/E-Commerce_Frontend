@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "line1": "123 Main St",
+    "city": "Kansas City",
+    "state": "MO",
+    "postal_code": "64106",
+    "country": "US",
+    "is_default_shipping": true,
+    "is_default_billing": false
+  },
+  {
+    "id": 2,
+    "line1": "456 Market Ave",
+    "city": "Kansas City",
+    "state": "MO",
+    "postal_code": "64108",
+    "country": "US",
+    "is_default_shipping": false,
+    "is_default_billing": true
+  }
+]

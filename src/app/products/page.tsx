@@ -1,149 +1,67 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+// src/app/products/page.tsx
+import ProductItem from '@/components/ProductItem';
 import type { Product } from '@/types/product';
-import ProductCarousel from '@/components/ProductCarousel';
 
-interface ApiResponseProduct {
-  _id: string;
-  id?: string;
-  product_name: string;
-  price: string | number;
-  images?: string[];
-  image?: string;
-  category?: string;
-  description?: string;
-  ingredients?: string[];
-  benefits?: string[];
-  scent_profile?: string | null;
-  variants?: Record<string, any>[];
-  tags?: string[];
-  availability?: boolean;
-  variations?: Record<string, any>[];
-  weight?: number | null;
-  dimensions?: string | null;
-  inventory?: number;
-  reserved_inventory?: number;
-  average_rating?: number;
-  review_count?: number;
-}
+async function fetchProducts(search: string, category: string): Promise<Product[]> {
+  let base = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
+  if (base.startsWith('http://')) base = base.replace(/^http:\/\//, 'https://');
+  if (!base.endsWith('/api/v1')) base = base.endsWith('/api') ? `${base}/v1` : `${base}/api/v1`;
 
-const CATEGORY_ORDER = ['Balms', 'Washes', 'Oils', 'Wax'];
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (category) params.set('category', category);
 
-// Utilities for converting image paths
-function getPublicImageUrl(path?: string): string | undefined {
-  if (!path) return undefined;
-  try {
-    const url = new URL(path);
-    return url.pathname;
-  } catch {
-    // not a full URL
+  const url = `${base}/products/${params.toString() ? `?${params.toString()}` : ''}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) {
+    // Return empty list on failure to allow page render
+    return [];
   }
-  if (path.startsWith('/')) return path;
-  return `/images/products/${path}`;
+  const data = await res.json();
+  const items: any[] = Array.isArray(data) ? data : Array.isArray(data.results) ? data.results : [];
+  return items.map((p) => ({
+    ...p,
+    price: Number(p.price),
+    images: Array.isArray(p.images) ? p.images : [],
+    category: typeof p.category === 'string' ? p.category : '',
+  }));
 }
 
-async function getAllProducts(): Promise<Product[]> {
-  let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
-  if (raw.startsWith('http://')) raw = raw.replace(/^http:\/\//, 'https://');
-  const base = raw;
-
-  let url = `${base}/products/?page=1`;
-  const all: ApiResponseProduct[] = [];
-
-  while (url) {
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-    const json = await res.json();
-    const batch: ApiResponseProduct[] = Array.isArray(json.results)
-      ? json.results
-      : Array.isArray(json)
-        ? json
-        : [];
-    all.push(...batch);
-
-    if (json.next) {
-      const next = (json.next as string).replace(/^http:\/\//, 'https://');
-      const u = new URL(next);
-      url = `${base}/products/${u.search}`;
-    } else {
-      url = '';
-    }
-  }
-
-  // Map to your Product type
-  return all
-    .map(p => ({
-      _id: String(p._id),
-      id: p.id ? String(p.id) : undefined,
-      product_name: p.product_name ?? "",
-      price: typeof p.price === "number" ? p.price : Number(p.price) || 0,
-      images: p.images ?? [],
-      image: p.image ?? undefined,
-      category: p.category ?? "",
-      description: p.description ?? "",
-      ingredients: p.ingredients ?? [],
-      benefits: p.benefits ?? [],
-      scent_profile: p.scent_profile ?? null,
-      variants: p.variants ?? [],
-      tags: p.tags ?? [],
-      availability: typeof p.availability === "boolean" ? p.availability : true,
-      variations: p.variations ?? [],
-      weight: typeof p.weight === "number" ? p.weight : null,
-      dimensions: typeof p.dimensions === "string" ? p.dimensions : null,
-      inventory: typeof p.inventory === "number" ? p.inventory : 0,
-      reserved_inventory: typeof p.reserved_inventory === "number" ? p.reserved_inventory : 0,
-      average_rating: typeof p.average_rating === "number" ? p.average_rating : 0,
-      review_count: typeof p.review_count === "number" ? p.review_count : 0,
-    }))
-    .filter(p => p._id && p._id !== 'undefined' && p._id !== 'null');
-}
-
-export default function ProductsPage() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
-  const [byCategory, setByCategory] = useState<Record<string, Product[]>>({});
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const all = await getAllProducts();
-        const grouped: Record<string, Product[]> = {};
-        CATEGORY_ORDER.forEach(cat => grouped[cat] = []);
-        all.forEach(p => {
-          const cat = p.category || '';
-          if (grouped[cat]) grouped[cat].push(p);
-        });
-        setByCategory(grouped);
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message || 'Failed to load products');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) return <p className="p-4">Loading products…</p>;
-  if (error)   return <p className="p-4 text-red-500">Error: {error}</p>;
+export default async function ProductsPage(props: any) {
+  const search = props?.searchParams?.q || '';
+  const category = props?.searchParams?.category || '';
+  const products = await fetchProducts(search, category);
 
   return (
     <div className="container mx-auto p-4">
-      {CATEGORY_ORDER.map(cat => {
-        const items = byCategory[cat] || [];
-        if (items.length === 0) return null;
-        return (
-          <section key={cat} className="mb-12">
-            <div className="max-w-6xl mx-auto">
-              <ProductCarousel
-                products={items}
-                showPrice
-                showRatings
-              />
-            </div>
-          </section>
-        );
-      })}
+      <h1 className="text-3xl font-bold mb-4">Products</h1>
+      <form className="mb-6 flex gap-2" action="/products" method="get">
+        <input
+          type="text"
+          name="q"
+          placeholder="Search products..."
+          defaultValue={search}
+          className="border rounded p-2 flex-1"
+        />
+        <input
+          type="text"
+          name="category"
+          placeholder="Category"
+          defaultValue={category}
+          className="border rounded p-2 w-48"
+        />
+        <button className="px-4 py-2 bg-blue-600 text-white rounded" type="submit">Filter</button>
+      </form>
+
+      {products.length === 0 ? (
+        <p>No products found.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((p) => (
+            <ProductItem key={String(p._id)} product={p} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
