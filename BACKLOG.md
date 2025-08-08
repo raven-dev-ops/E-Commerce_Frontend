@@ -1,135 +1,133 @@
-## Engineering Backlog (Backend)
+## Engineering Backlog (Frontend)
 
-This backlog lists 100 improvements aligned with the current Django + DRF + MongoEngine + Channels + Celery + Stripe/Twilio architecture. Items are grouped by area; numbering is global.
+This backlog lists 100 frontend improvements aligned with available APIs and features (auth JWT/Token + Google, products, cart, addresses, orders, Stripe, WebSockets). Numbering is global across sections.
 
-### Authentication
-1. Unify token and JWT flows by adding an exchange endpoint to convert `Authorization: Token <key>` to JWT (SimpleJWT), simplifying mixed-auth modules.
-2. Enable refresh token rotation with reuse detection (SimpleJWT blacklist) and add admin controls for forced rotation.
-3. Add optional TOTP-based MFA (e.g., django-otp) gated by a `waffle` flag and backup codes.
-4. Introduce Redis-backed login throttles per user, per IP, and per client fingerprint in addition to DRF throttling classes.
-5. Enforce OAuth2 PKCE and state/nonce validation for Google login; add short-lived `one-time code` exchange endpoint for SPA flows.
-6. Implement session/device management endpoints: list, revoke device sessions, “logout all” (JWT blacklist + session kill) with audit.
-7. Add passwordless magic-link login (email) behind a feature flag with rate limits.
-8. Track login locations/devices and send email notifications on new device sign-in (with opt-out).
-9. Harden password policies: HaveIBeenPwned check, minimum length/entropy, and breach monitoring.
+### Authentication & Account
+1. Implement unified login flow that first calls `/auth/login/` (JWT) and falls back to `/authentication/login/` (Token), preserving precise error messaging per backend response.
+2. Persist tokens in memory and secure storage (localStorage as today) with a consistent accessor, and route all API calls via `api` interceptor for `Authorization` header.
+3. Add auto-logout and refresh handling when 401 occurs; prompt re-login and preserve return-to path.
+4. Build Google OAuth button using auth-code flow calling `/auth/google/login/`, with robust non-JSON response handling and explicit user feedback.
+5. Provide password visibility toggle and client-side validation for email/password fields with inline error states.
+6. Add “Remember me” and session length copy to set user expectations; respect backend token expiry.
+7. Create blocked/rate-limited state UI for auth endpoints (e.g., show backoff, contact support) using backend error codes.
+8. Implement “Logout everywhere” UI stub that clears local tokens now and prepares for future device-session API.
+9. Add post-auth onboarding step that confirms email verification and guides to addresses/profile setup.
+10. Centralize auth state in `useStore` with hydration from storage on app load and SSR-safe checks.
 
-### Users & Profile
-10. Extend user profile with verified phone number and SMS opt-in flags (Twilio), including OTP verification flow.
-11. Provide GDPR export endpoint aggregating SQL (users/orders) and Mongo (products/reviews/cart) data into a downloadable archive.
-12. Implement account deletion: anonymize orders and reviews, scrub PII, and schedule irreversible purge tasks.
-13. Add avatar upload via pre-signed URLs (S3/GCS) with Celery-based image validation/transforms.
-14. Add marketing and notifications preferences (email categories, SMS, push) with consent timestamps.
-15. Track `last_seen_at` and client metadata; expose read-only to the user and staff.
+### Profile & Settings
+11. Profile page to render user object fields returned from login responses and future `/profile/` endpoint when available.
+12. Avatar upload UI using pre-signed URLs (ready to connect to future backend media endpoints).
+13. Notifications preferences UI (email/SMS/push toggles) mapped to future preferences endpoints.
+14. GDPR data export download UI (polling status + download link) aligned with backend export job endpoint.
+15. Account deletion flow with confirmation, grace-period messaging, and success/undo banners (wire later to backend).
+16. Security activity section: recent logins list UI ready for future device/session endpoint.
+17. Phone verification entry and OTP code UI to integrate with Twilio verification endpoints later.
 
 ### Addresses
-16. Integrate address validation (USPS/Loqate) with async verification and status field on address records.
-17. Normalize addresses (formatting, casing) and deduplicate across a user’s saved addresses.
-18. Support soft delete/restore for addresses; hide from defaults automatically when deleted.
-19. Internationalization of addresses (province/region schemas, postal code validation) with per-country rules.
-20. Emit audit events on default shipping/billing changes with previous/new values.
+18. Address book page consuming `/addresses/` for list, create, update, delete; reflect `is_default_shipping` and `is_default_billing`.
+19. Address create form with per-country fields and client validation; set defaults via PATCH to `/addresses/{id}/` when toggled.
+20. Inline edit for addresses with optimistic UI and rollback on API error.
+21. Soft delete/restore UI patterns (archive list) for when backend supports soft delete semantics.
+22. Auto-select default shipping/billing addresses during checkout; allow override.
+23. Integrate third-party postal validation UX (pending backend); show suggestions and normalized formats.
+24. Deduplication hints when entering similar addresses (visual feedback, confirm merge).
 
-### Products & Catalog (MongoDB)
-21. Support per-variation inventory (size/color SKUs) with availability rules and backorder flags.
-22. Add image pipeline: thumbnailing, WebP/AVIF, aspect-safe crops, and CDN cache invalidation hooks.
-23. Implement product versioning/history collection for admin diff/audit and rollback.
-24. Create slug change tracker with 301 redirect mapping and lookup by old slugs.
-25. Add tag/facet fields and ensure compound indexes for common filters (category, tags, price range, rating).
-26. Scheduled publish/unpublish windows; admin preview endpoints respect future state.
-27. Product recommendations service: content-based (similar tags/categories) with fallback if sparse data.
-28. Bundles/kits: virtual products composed of SKUs with bundle pricing and inventory allocation policy.
-29. Backorder and preorder support with ETA, messaging, and fulfillment constraints.
-30. Restock notifications: waitlist per product/variation; Celery job to notify upon inventory increase.
-31. Soft-delete products with `archived` flag and admin restore; exclude from search by default.
-32. Admin draft autosave for products with validation hints and safe publish.
+### Products & Catalog
+25. Products index page consumes `/products/` with `search` and `category` query params; preserve state in URL for shareability.
+26. Product detail page consumes `/products/{id}/`; normalize fields (images array, numeric price) and display badges for inventory/backorder when provided.
+27. Related products rail using `/products/?category=…` excluding current product id.
+28. Variant selection UI (size/color) prepared for per-variation SKUs and inventory from backend.
+29. Image gallery with thumbnails, zoom, swipe, and graceful fallback to `FallbackImage`.
+30. Price formatting and currency handling via Intl API with locale awareness.
+31. Pagination controls and infinite-scroll option using `next`/`previous` style pagination when backend provides it.
+32. Skeleton loaders for grid and detail pages; shimmer placeholders for images.
+33. Breadcrumbs using category hierarchy (ready for category tree endpoint).
+34. Recently viewed products stored client-side; show on product and home pages.
+35. Product badges: “New”, “Preorder”, “Backorder”, “Low stock” based on backend flags.
+36. Compare products feature (client-side) with sticky mini-compare drawer.
 
 ### Search & Filters
-33. Add full-text search: evaluate Postgres trigram/tsvector for SQL-backed fields and OpenSearch/Meilisearch bridge for Mongo.
-34. Autocomplete endpoint with top queries and trending products cache in Redis.
-35. Facet aggregation endpoint returning counts for categories/tags/price ranges, cached per query.
-36. Sorting options: newest, price asc/desc, popularity, rating, with stable pagination.
+37. Debounced search input that updates query params and fetches `/products/?search=…` via `fetch`.
+38. Filter sidebar with facets (category, price range, tags) mapped to backend filter params.
+39. Sort dropdown (newest, price asc/desc, popularity) reflecting backend sort params.
+40. Autocomplete dropdown calling an `/autocomplete/` endpoint when available; fallback to client-side suggestions.
+41. “Chips” for active filters with quick clear; persist state on navigation using URL.
+42. Empty-state improvements (creative copy, quick links) when no results.
+43. Keyboard-accessible search: focus trap, arrow navigation in suggestions, Enter to submit.
+44. Save search (client-side) with recent queries list and quick re-run.
 
-### Cart (MongoDB)
-37. Guest carts using signed cart token; merge with user cart on login with conflict resolution rules.
-38. Idempotent cart mutations using client-supplied idempotency keys stored with TTL in Redis.
-39. Optimistic concurrency on cart items using a `version` field to prevent lost updates.
-40. Save-for-later list separated from the active cart; convert between lists.
-41. Per-item notes/gift options stored with cart items; validated during checkout.
-42. Cart pricing breakdown endpoint including items, discounts, taxes, shipping estimates.
+### Cart
+45. Connect cart UI to server cart endpoints: GET/POST/PUT/DELETE `/cart/` using types in `cartApi.ts`, reconciling with local cart for guest users.
+46. Optimistic updates for quantity changes with rollback if PUT fails.
+47. Merge guest cart with user cart on login; visual conflict resolution if products changed/unavailable.
+48. Mini-cart dropdown from header with subtotal and quick actions.
+49. Save-for-later list UI separate from cart; move items between lists.
+50. Per-item notes/gift options component with validation; display during checkout and order review.
+51. Pricing breakdown (items, discounts, taxes, shipping estimate) consumption once backend exposes calculation endpoint.
+52. Idempotency key support on cart mutations (client-generated keys attached to requests) for resilience.
+53. Accessible quantity steppers with min/max and async validation hints.
 
-### Discounts & Categories
-43. Discount stacking rules engine with precedence and conflict detection; expose reasons when rejected.
-44. Usage tracking by user and campaign; Mongo TTL shards for period resets (daily/weekly/monthly caps).
-45. Discount preview endpoint to calculate effects without persisting changes.
-46. Category tree with nested sets or materialized paths; breadcrumbs and full-path slugs.
-47. Category merchandising fields (featured products, hero banners) with cache invalidation.
-48. Voucher import/export with validation report; dry-run mode and partial acceptance with error CSV.
-49. Free-gift promotion type that automatically inserts a cart item when eligible.
+### Checkout & Payments
+54. Multi-step checkout: address selection, shipping method (placeholder until backend), payment, review.
+55. Stripe integration improvements: move to Payment Element when enabled; CardElement remains fallback.
+56. 3DS challenge UX with clear messaging and retry; surface Stripe `requires_action` statuses gracefully.
+57. Coupon/promo code input with optimistic preview; call discount preview endpoint when available.
+58. Shipping methods UI (rates, ETAs) consuming backend shipping quotes when provided.
+59. Order review step showing items, totals, taxes; confirm before POST to `/orders/`.
+60. Error boundary and retry for payment submission; avoid duplicate charges using disable + idempotency.
+61. Post-payment success screen with order id, summary, and CTA to view order status.
+62. Handle payment retries for `requires_payment_method` by re-rendering payment step with inline error.
 
-### Orders & Checkout
-50. Idempotent checkout: Stripe idempotency keys, request hash deduplication, and safe retries.
-51. Tax calculation integration (TaxJar/Avalara) with country/state fallbacks and caching.
-52. Shipping rates via Shippo/EasyPost; support label purchase webhooks and tracking sync.
-53. Split shipments and partial fulfillment; line-item level fulfillment statuses.
-54. Post-checkout edits: address changes and item adjustments before fulfillment with strict audit trail.
-55. Reliable inventory reservation with retry/backoff and dead-letter queue; compensating release on failure.
-56. Order timeline with structured events (status change, payment, shipment, customer actions) for UI.
-57. Gift receipts and gift messages stored per shipment; exclude prices when flagged.
-58. PDF invoices/receipts generation using templating (WeasyPrint/WKHTML) and storage links.
-59. Returns/RMA workflow with statuses, reasons, approvals, and refund coupling.
-60. Fraud signals collection: velocity checks, device fingerprint, Stripe Radar/Sift hooks.
-61. “Buy again” endpoint to rebuild cart from previous order with substitutions for unavailable items.
+### Orders & Realtime
+63. Order status page consumes `/orders/{id}/` and subscribes to `ws://…/ws/orders/{id}/` for live status updates; reconnect with backoff.
+64. Visual timeline of status changes (Placed, Paid, Fulfilled, Shipped, Delivered) using backend events as they arrive.
+65. Allow cancel/modify order pre-fulfillment if backend permits; disable otherwise with helpful copy.
+66. Tracking section rendering carrier/tracking once available.
+67. Download invoice/receipt button; wired to PDF link when backend provides it.
+68. “Buy again” action to rebuild cart from order items, with substitution prompts for unavailable products.
+69. Toast notifications for realtime status changes while user is browsing elsewhere.
+70. Graceful fallback when WebSocket fails: poll `/orders/{id}/` at intervals.
 
-### Payments (Stripe)
-62. Support additional payment methods (SEPA, iDEAL, Klarna, Apple Pay/Google Pay via PaymentRequest).
-63. 3DS challenge handling with clear status transitions and webhook resilience.
-64. Refunds API (full/partial) with Stripe integration, permission checks, and audit logs.
-65. Payment retries for `requires_payment_method` statuses with reminders and limit policies.
-66. Enhanced webhook verification: rotate secrets, strict timestamp tolerance, and signature validation logs.
-67. Settlement reconciliation: scheduled job comparing orders to Stripe balances/payouts and opening discrepancies.
-68. Delayed capture (authorize/capture) support for preorders and high-risk orders.
+### Reviews & Q&A
+71. Review list and submission UI: star rating, text, photo upload (staged), pending moderation indicator.
+72. Helpfulness voting with immediate visual feedback; debounce to avoid rapid repeats.
+73. Report review flow with confirmation and thank-you messaging.
+74. Verified purchase badge display based on order linkage from backend.
+75. Q&A component with question submission and answers; sort by recent/helpful.
+76. Empty states encouraging first reviews with guidelines.
 
-### Reviews & Ratings (MongoDB)
-69. Helpfulness votes with per-user constraints and abuse detection heuristics.
-70. Review photos upload with moderation queue and safe media scanning.
-71. NLP-based sentiment tagging to aid moderation prioritization.
-72. Verified purchase badge derived from Orders; deny if return/refund invalidates verification.
-73. Report review flow with admin escalation and action outcomes.
-74. Draft autosave for reviews to prevent loss before submission.
-75. Product Q&A separate from reviews with moderation and voting.
-
-### WebSockets & Realtime (Channels)
-76. JWT auth on WS connect; mid-connection token refresh handling.
-77. Add presence channels and typing indicators for support interactions (feature-flagged).
-78. Apply per-connection and per-topic rate limiting with backpressure handling.
-79. Use Redis Pub/Sub fan-out for horizontal scaling and message ordering guarantees.
-80. Implement reconnect/resume with missed-event replay window using cursor/offset.
-
-### GraphQL
-81. Expand schema to include products, categories, reviews, and filters with pagination.
-82. Persisted queries/APQ with Redis caching and validation layer.
-83. Schema directives for auth and feature flags; hide experimental fields behind flags.
-84. Automated schema docs and changelog generation with version pins.
-
-### Audit & Logging
-85. Enhance audit middleware to include field-level diffs for staff writes with PII redaction.
-86. Immutable audit sink (S3/Cloud storage) with periodic integrity verification.
-87. Correlation IDs across HTTP, Celery, Stripe/Twilio calls; propagate via headers and logging.
-88. Admin UI for audit search with filters by user, model, action, and date range.
-
-### Security & Compliance
-89. Strengthen security headers: CSP, HSTS, Referrer-Policy, Permissions-Policy; add automated tests.
-90. Field-level encryption for sensitive PII (e.g., phone) using key rotation strategy.
-91. Secrets management via vault (e.g., AWS/GCP/HashiCorp) and dynamic config reload.
-92. Per-endpoint rate limits and API keys for partner integrations with analytics.
-93. CSRF double-submit strategy for non-cookie clients alongside existing CSRF protections.
-94. Data retention policies and GDPR/CCPA compliance jobs with admin review reports.
+### Accessibility & Internationalization
+77. Full a11y audit: landmarks, headings, labels, color contrast, focus outlines, skip links.
+78. Ensure all modals (e.g., login) trap focus and are keyboard dismissible; ARIA roles set.
+79. Localize copy and currency/date formatting with i18n scaffold; support multiple locales.
+80. RTL layout support and mirrored icons where appropriate.
+81. Accessible forms with inline errors using `aria-describedby` and role=alert announcements.
+82. High-contrast mode and reduced motion preferences respected.
 
 ### Performance & Caching
-95. Redis cache namespace versioning and stampede protection (single-flight locks) for hot keys.
-96. Systematic ORM query audits with `select_related/prefetch_related` and django-silk profiling gates in CI.
-97. MongoDB index coverage for high-cardinality filters; offline index build commands and analyzers.
-98. Read-through/write-through caching for product detail and category lists with cache invalidation hooks.
+83. Adopt SWR for client fetching of detail resources (e.g., product details in cart) with stable cache keys.
+84. Code-split heavy components (`ProductDetailsClient`, gallery, carousel) and lazy-load below-the-fold.
+85. Optimize images (next/image) with proper sizes, priority and responsive breakpoints.
+86. Add skeletons and prefetch critical routes (products, cart) using Next.js prefetch.
+87. Avoid blocking work on main thread; defer non-critical analytics and experiment beacons.
+88. Review hydration and ensure server components fetch where possible to reduce client JS.
 
-### Background Jobs & Scheduling
-99. Celery task reliability: retries, exponential backoff, idempotency keys, and deduplication.
-100. Periodic jobs dashboard: health checks, late task detection, and alerting integration (Sentry/Prometheus).
+### Security
+89. Strictly scope tokens: clear on logout, clear on auth errors; never expose in logs.
+90. CSP review for external scripts (Stripe, Google Auth); document required directives.
+91. Defensive CSRF strategy for any cookie-backed endpoints (if used); confirm with backend.
+92. Input sanitization on user-generated content (reviews, notes) before display.
+
+### Offline & Resilience
+93. Offline cart persistence with eventual sync on reconnect; conflict resolution UI.
+94. Retries with exponential backoff for flaky network calls (cart, orders, addresses) and friendly banners.
+95. Network status indicator with actionable tips when offline.
+
+### Analytics & Experimentation
+96. Instrument key funnels (auth, add-to-cart, checkout, payment) with events; ensure PII-safe payloads.
+97. Feature flags for experimental UI (e.g., infinite scroll vs pagination) with kill switches.
+98. A/B test hooks around product card layout, checkout steps, and promo code entry.
+
+### Developer Experience & Testing
+99. Storybook stories for core components (ProductItem, ProductDetailsClient, Header auth modal, CheckoutForm) with realistic mocks.
+100. E2E tests (Playwright) covering auth, add-to-cart, checkout happy path, and order status realtime updates.
