@@ -217,14 +217,14 @@ const Header: React.FC = () => {
               <User className="w-8 h-8" />
             </button>
             {/* Merch */}
-            <Link href="/merch" aria-label="Merch">
+            <Link href="/merch" aria-label="Merch" prefetch={false}>
               <Shirt
                 className="w-8 h-8 hover:scale-110 transition-transform"
                 style={{ color: 'var(--foreground)' }}
               />
             </Link>
             {/* Logo */}
-            <Link href="/" aria-label="Home" className="flex items-center">
+            <Link href="/" aria-label="Home" className="flex items-center" prefetch={false}>
               <Image
                 src="/images/logos/Twiin_Logo_v3.png"
                 alt="Home"
@@ -235,7 +235,7 @@ const Header: React.FC = () => {
               />
             </Link>
             {/* Products */}
-            <Link href="/products" aria-label="Products">
+            <Link href="/products" aria-label="Products" prefetch={false}>
               <ShoppingBag
                 className="w-8 h-8 hover:scale-110 transition-transform"
                 style={{ color: 'var(--foreground)' }}

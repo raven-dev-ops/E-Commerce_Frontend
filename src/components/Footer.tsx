@@ -13,19 +13,19 @@ const Footer: React.FC = () => (
     }}
   >
     <div className="w-full flex flex-col md:flex-row items-center justify-center gap-4 text-base font-normal">
-      <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 transition" style={{ color: 'var(--foreground)' }}>
+      <Link prefetch={false} href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 transition" style={{ color: 'var(--foreground)' }}>
         Privacy Policy
       </Link>
       <span className="hidden md:inline text-gray-400">|</span>
-      <Link href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 transition" style={{ color: 'var(--foreground)' }}>
+      <Link prefetch={false} href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 transition" style={{ color: 'var(--foreground)' }}>
         Terms of Service
       </Link>
       <span className="hidden md:inline text-gray-400">|</span>
-      <Link href="/refund-policy" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 transition" style={{ color: 'var(--foreground)' }}>
+      <Link prefetch={false} href="/refund-policy" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 transition" style={{ color: 'var(--foreground)' }}>
         Refund Policy
       </Link>
       <span className="hidden md:inline text-gray-400">|</span>
-      <Link href="/contact" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 transition" style={{ color: 'var(--foreground)' }}>
+      <Link prefetch={false} href="/contact" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-blue-600 transition" style={{ color: 'var(--foreground)' }}>
         Contact Us
       </Link>
     </div>
