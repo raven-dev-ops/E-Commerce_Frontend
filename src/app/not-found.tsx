@@ -1,7 +1,6 @@
 // src/app/not-found.tsx
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -52,12 +51,6 @@ export default function NotFound() {
         )}
       </div>
 
-      <Link
-        href="/"
-        className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-      >
-        Go Home
-      </Link>
     </div>
   );
 }
