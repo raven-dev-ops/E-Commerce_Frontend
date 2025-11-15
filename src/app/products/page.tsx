@@ -1,12 +1,14 @@
 // src/app/products/page.tsx
 import ProductItem from '@/components/ProductItem';
 import type { Product } from '@/types/product';
+import { getExampleProducts } from '@/lib/exampleProducts';
 
 type ProductsResult = {
   products: Product[];
   error?: string;
-  url: string;
+  url?: string;
   status?: number;
+  usingFallback?: boolean;
 };
 
 async function fetchProducts(search: string, category: string): Promise<ProductsResult> {
@@ -27,10 +29,11 @@ async function fetchProducts(search: string, category: string): Promise<Products
         statusText: res.statusText,
       });
       return {
-        products: [],
-        error: `Backend responded with ${res.status} ${res.statusText} for ${url}`,
+        products: getExampleProducts(),
+        error: `Backend responded with ${res.status} ${res.statusText} for ${url}. Falling back to static example products.`,
         url,
         status: res.status,
+        usingFallback: true,
       };
     }
     const data = await res.json();
@@ -41,13 +44,14 @@ async function fetchProducts(search: string, category: string): Promise<Products
       images: Array.isArray(p.images) ? p.images : [],
       category: typeof p.category === 'string' ? p.category : '',
     }));
-    return { products, url };
+    return { products, url, usingFallback: false };
   } catch (error: any) {
     console.error('[products] failed to fetch from backend', { url, error });
     return {
-      products: [],
-      error: `Failed to reach backend at ${url}. Check that the server is running and CORS is configured.`,
+      products: getExampleProducts(),
+      error: `Failed to reach backend at ${url}. Using static example products instead.`,
       url,
+      usingFallback: true,
     };
   }
 }
@@ -55,7 +59,7 @@ async function fetchProducts(search: string, category: string): Promise<Products
 export default async function ProductsPage(props: any) {
   const search = props?.searchParams?.q || '';
   const category = props?.searchParams?.category || '';
-  const { products, error, url, status } = await fetchProducts(search, category);
+  const { products, error, url, status, usingFallback } = await fetchProducts(search, category);
 
   return (
     <div className="container mx-auto p-4">
@@ -63,7 +67,9 @@ export default async function ProductsPage(props: any) {
 
       {error && (
         <div className="mb-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-          <p className="font-semibold">Backend issue detected</p>
+          <p className="font-semibold">
+            Backend issue detected{usingFallback ? ' – showing static example products' : ''}
+          </p>
           <p>{error}</p>
           <p className="mt-1 text-xs text-red-700">
             Hint: verify that <span className="font-mono break-all">{url}</span>{' '}
