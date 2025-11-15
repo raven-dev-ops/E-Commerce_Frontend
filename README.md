@@ -1,10 +1,10 @@
 # Art Bay Frontend
 
-This is a Next.js 15 storefront for the Art Bay marketplace API (`https://art-bay-e7451b528caa.herokuapp.com/`). It supports JWT and DRF Token auth flows, Stripe checkout, Mongo-backed products, and user profile/addresses/orders.
+This is a Next.js 15 storefront for the Art Bay marketplace API (`https://art-bay-e7451b528caa.herokuapp.com/`). It supports JWT and DRF Token auth flows, Stripe checkout, products loaded from the Art Bay API or static example data, and user profile/addresses/orders.
 
 ## Environment
 
-- Copy `.env.example` to `.env` (or `.env.local`) and fill in the values you receive from Stripe, MongoDB Atlas, Google, etc.
+- Copy `.env.example` to `.env` (or `.env.local`) and fill in the values you receive from Stripe, your database provider, Google, etc.
 - Keep `.env` untracked—real credentials must come from your local developer machine or from Netlify environment variables.
 - Keys starting with `NEXT_PUBLIC_` are expected to be published to the browser; other keys must remain server-only.
 
@@ -41,9 +41,9 @@ See `public/example/*.json` for products, categories, orders, and addresses used
 
 ## Public Repo & Security
 
-This repository is public so others can view the code and contribute via issues and pull requests. Do not commit real secrets (e.g. Stripe keys, MongoDB URIs, JWT secrets) to the repo—only use placeholder values in example configuration files and keep real credentials in local, untracked `.env` files.
+This repository is public so others can view the code and contribute via issues and pull requests. Do not commit real secrets (e.g. Stripe keys, database URIs, JWT secrets) to the repo—only use placeholder values in example configuration files and keep real credentials in local, untracked `.env` files.
 
-If you have previously pushed real secrets to a public repository, you should rotate those keys (e.g. in Stripe and MongoDB Atlas) and remove the secrets from the git history.
+If you have previously pushed real secrets to a public repository, you should rotate those keys (e.g. in Stripe and your database provider) and remove the secrets from the git history.
 
 ## License
 

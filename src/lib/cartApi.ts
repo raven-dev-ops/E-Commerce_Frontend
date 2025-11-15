@@ -2,10 +2,9 @@
 
 import { api } from '@/lib/api';
 
-// All MongoDB IDs are strings
 export interface CartItem {
-  id: string;             // Cart item ID (MongoDB ObjectId as string)
-  product_id: string;     // Product ID (MongoDB ObjectId as string)
+  id: string;             // Cart item ID (string from backend)
+  product_id: string;     // Product ID (string from backend)
   product_name: string;
   quantity: number;
   price: number;
@@ -13,7 +12,7 @@ export interface CartItem {
 }
 
 export interface Cart {
-  id: string;             // Cart ID (MongoDB ObjectId as string)
+  id: string;             // Cart ID (string from backend)
   items: CartItem[];
   total_price: string;    // Or number, depending on your backend
   // Add other relevant cart properties if needed

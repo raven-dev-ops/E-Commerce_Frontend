@@ -3,7 +3,7 @@
 export interface Product {
   // ID fields
   _id: string;
-  id?: string; // For DRF/MongoEngine REST API compatibility
+  id?: string; // For DRF-based REST API compatibility
 
   // Core fields
   product_name: string;
