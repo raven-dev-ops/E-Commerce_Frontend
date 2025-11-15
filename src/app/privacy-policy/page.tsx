@@ -14,8 +14,8 @@ export default function PrivacyPolicyPage() {
         payment confirmation from our processors (Stripe and PayPal). We never sell your information.
       </p>
       <p>
-        Data is stored using encrypted providers (Stripe, MongoDB Atlas, and Netlify). You can request a
-        copy or deletion of your personal data by emailing{' '}
+        Data is stored using encrypted providers (Stripe, our database provider, and Netlify). You can
+        request a copy or deletion of your personal data by emailing{' '}
         <a className="text-blue-500 underline" href="mailto:support@art-bay.com">
           support@art-bay.com
         </a>
