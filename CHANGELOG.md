@@ -7,6 +7,10 @@ Semantic Versioning.
 
 ## [Unreleased]
 
+- Add entries here for changes that will ship in the next release.
+
+## [0.1.2] - 2025-12-31
+
 ### Added
 
 - Added changelog and release checklist to standardize release notes.
