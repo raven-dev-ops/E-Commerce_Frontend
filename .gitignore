@@ -15,6 +15,10 @@ venv/
 .next/
 out/
 
+# Test artifacts
+test-results/
+tsconfig.tsbuildinfo
+
 # IDE and OS files
 .vscode/
 .idea/
