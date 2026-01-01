@@ -63,6 +63,10 @@ This repo ships a `.editorconfig` that standardizes UTF-8, LF line endings, and 
 - Push a tag like `v1.2.3` to publish a release.
 - Tags with a hyphen (e.g. `v1.2.3-rc.1`) are published as prereleases.
 
+## Security
+
+- Report vulnerabilities privately via `SECURITY.md`: https://github.com/raven-dev-ops/E-Commerce_Frontend/blob/main/.github/SECURITY.md
+
 ## Key Routes
 
 - `/products` product listing with search and category filter

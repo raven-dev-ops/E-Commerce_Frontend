@@ -54,3 +54,9 @@
 
 - Unit/component tests with Vitest (`src/test`, `src/components/__tests__`).
 - E2E tests with Playwright (`tests/e2e`).
+
+## Releases
+
+- Release notes live in `CHANGELOG.md`.
+- Releases are published from tags (e.g. `v1.2.3`).
+- See https://github.com/raven-dev-ops/E-Commerce_Frontend/releases for history.
