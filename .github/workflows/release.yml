@@ -51,7 +51,8 @@ jobs:
           }
 
           const rest = changelog.slice(start);
-          const next = rest.search(/^## \\[/m);
+          const nextHeader = new RegExp('^## \\[', 'm');
+          const next = rest.search(nextHeader);
           const notes = (next === -1 ? rest : rest.slice(0, next)).trim() || 'No changelog entries.';
           const body = `${prefix}${notes}`.trim();
 
