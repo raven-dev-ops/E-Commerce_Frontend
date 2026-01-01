@@ -7,7 +7,10 @@ Semantic Versioning.
 
 ## [Unreleased]
 
-- Add entries here for changes that will ship in the next release.
+### Added
+
+- Added changelog and release checklist to standardize release notes.
+- Added GitHub Actions release automation that publishes from `CHANGELOG.md`.
 
 ## [0.1.1] - 2025-12-31
 

@@ -32,18 +32,31 @@ jobs:
           const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const header = new RegExp(`^## \\[${escaped}\\] - .*?$`, 'm');
           const match = changelog.match(header);
-          if (!match || match.index === undefined) {
+          let start = -1;
+          let prefix = '';
+
+          if (match && match.index !== undefined) {
+            start = match.index + match[0].length;
+          } else if (version.includes('-')) {
+            const unreleased = changelog.match(/^## \\[Unreleased\\]\\s*$/m);
+            if (!unreleased || unreleased.index === undefined) {
+              console.error('No CHANGELOG.md entry for Unreleased.');
+              process.exit(1);
+            }
+            start = unreleased.index + unreleased[0].length;
+            prefix = `Release candidate for ${tag}.\\n\\n`;
+          } else {
             console.error(`No CHANGELOG.md entry for ${version}.`);
             process.exit(1);
           }
 
-          const start = match.index + match[0].length;
           const rest = changelog.slice(start);
           const next = rest.search(/^## \\[/m);
           const notes = (next === -1 ? rest : rest.slice(0, next)).trim() || 'No changelog entries.';
+          const body = `${prefix}${notes}`.trim();
 
           const output = process.env.GITHUB_OUTPUT;
-          fs.appendFileSync(output, `notes<<'EOF'\\n${notes}\\nEOF\\n`);
+          fs.appendFileSync(output, `notes<<'EOF'\\n${body}\\nEOF\\n`);
           NODE
 
       - name: Publish release
