@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract changelog notes
+        id: changelog
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+
+          const tag = process.env.GITHUB_REF_NAME || '';
+          const version = tag.replace(/^v/, '');
+          if (!version) {
+            console.error('Missing version tag.');
+            process.exit(1);
+          }
+
+          const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+          const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const header = new RegExp(`^## \\[${escaped}\\] - .*?$`, 'm');
+          const match = changelog.match(header);
+          if (!match || match.index === undefined) {
+            console.error(`No CHANGELOG.md entry for ${version}.`);
+            process.exit(1);
+          }
+
+          const start = match.index + match[0].length;
+          const rest = changelog.slice(start);
+          const next = rest.search(/^## \\[/m);
+          const notes = (next === -1 ? rest : rest.slice(0, next)).trim() || 'No changelog entries.';
+
+          const output = process.env.GITHUB_OUTPUT;
+          fs.appendFileSync(output, `notes<<'EOF'\\n${notes}\\nEOF\\n`);
+          NODE
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.notes }}

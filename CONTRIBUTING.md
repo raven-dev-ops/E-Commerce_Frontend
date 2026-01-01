@@ -41,9 +41,9 @@ Thanks for considering a contribution. Please follow these guidelines to keep ch
    - `npm run test:e2e`
 4) Commit, tag, and push:
    - `git tag -a vX.Y.Z -m "vX.Y.Z"`
-   - `git push && git push --tags`
-5) Create a GitHub release:
-   - `gh release create vX.Y.Z --title "vX.Y.Z" --notes "See CHANGELOG.md for details."`
+   - `git push`
+   - `git push --tags`
+5) GitHub Actions will publish the release automatically from `CHANGELOG.md`.
 
 ## Reporting Issues
 
