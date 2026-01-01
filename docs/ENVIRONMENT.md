@@ -35,3 +35,8 @@ This frontend relies on a small set of public environment variables. Copy `.env.
 - Keep secrets out of the repo; only `NEXT_PUBLIC_*` vars are exposed to the browser.
 - If you point the API to a non-standard base, confirm the backend serves `/api/v1`.
 - If `NEXT_PUBLIC_SITE_URL` is unset, metadata defaults to `http://localhost:3000`.
+
+## Releases
+
+- Release notes live in `CHANGELOG.md`.
+- See https://github.com/raven-dev-ops/E-Commerce_Frontend/releases for history.
