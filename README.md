@@ -49,6 +49,7 @@ This repo ships a `.editorconfig` that standardizes UTF-8, LF line endings, and 
 - `docs/ENVIRONMENT.md` environment variables and third-party setup.
 - `docs/ARCHITECTURE.md` application architecture and data flow overview.
 - `CONTRIBUTING.md` contribution guidelines and PR checklist.
+- `CHANGELOG.md` release notes.
 - GitHub wiki: https://github.com/raven-dev-ops/E-Commerce_Frontend/wiki
 
 ## Key Routes
