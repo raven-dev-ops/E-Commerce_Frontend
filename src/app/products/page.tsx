@@ -19,9 +19,17 @@ function filterProducts(all: Product[], search: string, category: string): Produ
   });
 }
 
-export default async function ProductsPage(props: any) {
-  const search = props?.searchParams?.q || '';
-  const category = props?.searchParams?.category || '';
+type ProductsPageProps = {
+  searchParams?: Promise<{
+    q?: string;
+    category?: string;
+  }>;
+};
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const resolved = (await Promise.resolve(searchParams)) ?? {};
+  const search = resolved.q || '';
+  const category = resolved.category || '';
 
   const allProducts = getExampleProducts();
   const products = filterProducts(allProducts, search, category);

@@ -6,15 +6,19 @@ import { useState } from 'react';
 
 const FALLBACK = '/images/products/missing-image.png';
 
-export default function FallbackImage(props: Omit<ImageProps, 'src'> & { src?: string }) {
-  const [src, setSrc] = useState(props.src || FALLBACK);
+export default function FallbackImage(
+  props: Omit<ImageProps, 'src'> & { src?: string }
+) {
+  const { unoptimized, alt, ...rest } = props;
+  const resolvedAlt = alt ?? '';
+  const [src, setSrc] = useState(rest.src || FALLBACK);
   return (
     <Image
-      {...props}
+      {...rest}
       src={src}
+      alt={resolvedAlt}
       onError={() => setSrc(FALLBACK)}
-      // if you really want the raw fallback behavior, you can disable optimization:
-      unoptimized
+      unoptimized={unoptimized}
     />
   );
 }

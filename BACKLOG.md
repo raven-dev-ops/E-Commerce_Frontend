@@ -5,7 +5,7 @@
 - **Status**: [Todo], [In Progress], [Blocked], [Done]
 - Notes: Acceptance criteria are defined for MVP items only. Numbers in parentheses reference the full backlog items below.
 
-### MVP (Phase 1) — must-haves
+### MVP (Phase 1) - must-haves
 
 1) Unified credentials login with fallback (1) [MVP][P0][In Progress]
 - Calls `POST /auth/login/` first; on non-success, falls back to `POST /authentication/login/`
@@ -51,7 +51,7 @@
 - Files: `src/components/CheckoutForm.tsx`, `src/app/checkout/page.tsx`
 
 8) Order detail with live status updates (63,64,70) [MVP][P1][In Progress]
-- Loads order via `GET /orders/{id}/`; subscribes to `ws(s)://…/ws/orders/{id}/` with reconnect on close
+- Loads order via `GET /orders/{id}/`; subscribes to `ws(s)://.../ws/orders/{id}/` with reconnect on close
 - UI timeline reflects status changes as messages arrive; polling fallback when WS fails
 - Files: `src/app/orders/[orderId]/page.tsx`, `src/lib/baseUrl.ts`
 
@@ -86,9 +86,9 @@ This backlog lists 100 frontend improvements aligned with available APIs and fea
 3. Add auto-logout and refresh handling when 401 occurs; prompt re-login and preserve return-to path.
 4. Build Google OAuth button using auth-code flow calling `/auth/google/login/`, with robust non-JSON response handling and explicit user feedback.
 5. Provide password visibility toggle and client-side validation for email/password fields with inline error states.
-6. Add “Remember me” and session length copy to set user expectations; respect backend token expiry.
+6. Add "Remember me" and session length copy to set user expectations; respect backend token expiry.
 7. Create blocked/rate-limited state UI for auth endpoints (e.g., show backoff, contact support) using backend error codes.
-8. Implement “Logout everywhere” UI stub that clears local tokens now and prepares for future device-session API.
+8. Implement "Logout everywhere" UI stub that clears local tokens now and prepares for future device-session API.
 9. Add post-auth onboarding step that confirms email verification and guides to addresses/profile setup.
 10. Centralize auth state in `useStore` with hydration from storage on app load and SSR-safe checks.
 
@@ -113,7 +113,7 @@ This backlog lists 100 frontend improvements aligned with available APIs and fea
 ### Products & Catalog
 25. Products index page consumes `/products/` with `search` and `category` query params; preserve state in URL for shareability.
 26. Product detail page consumes `/products/{id}/`; normalize fields (images array, numeric price) and display badges for inventory/backorder when provided.
-27. Related products rail using `/products/?category=…` excluding current product id.
+27. Related products rail using `/products/?category=...` excluding current product id.
 28. Variant selection UI (size/color) prepared for per-variation SKUs and inventory from backend.
 29. Image gallery with thumbnails, zoom, swipe, and graceful fallback to `FallbackImage`.
 30. Price formatting and currency handling via Intl API with locale awareness.
@@ -121,15 +121,15 @@ This backlog lists 100 frontend improvements aligned with available APIs and fea
 32. Skeleton loaders for grid and detail pages; shimmer placeholders for images.
 33. Breadcrumbs using category hierarchy (ready for category tree endpoint).
 34. Recently viewed products stored client-side; show on product and home pages.
-35. Product badges: “New”, “Preorder”, “Backorder”, “Low stock” based on backend flags.
+35. Product badges: "New", "Preorder", "Backorder", "Low stock" based on backend flags.
 36. Compare products feature (client-side) with sticky mini-compare drawer.
 
 ### Search & Filters
-37. Debounced search input that updates query params and fetches `/products/?search=…` via `fetch`.
+37. Debounced search input that updates query params and fetches `/products/?search=...` via `fetch`.
 38. Filter sidebar with facets (category, price range, tags) mapped to backend filter params.
 39. Sort dropdown (newest, price asc/desc, popularity) reflecting backend sort params.
 40. Autocomplete dropdown calling an `/autocomplete/` endpoint when available; fallback to client-side suggestions.
-41. “Chips” for active filters with quick clear; persist state on navigation using URL.
+41. "Chips" for active filters with quick clear; persist state on navigation using URL.
 42. Empty-state improvements (creative copy, quick links) when no results.
 43. Keyboard-accessible search: focus trap, arrow navigation in suggestions, Enter to submit.
 44. Save search (client-side) with recent queries list and quick re-run.
@@ -157,12 +157,12 @@ This backlog lists 100 frontend improvements aligned with available APIs and fea
 62. Handle payment retries for `requires_payment_method` by re-rendering payment step with inline error.
 
 ### Orders & Realtime
-63. Order status page consumes `/orders/{id}/` and subscribes to `ws://…/ws/orders/{id}/` for live status updates; reconnect with backoff.
+63. Order status page consumes `/orders/{id}/` and subscribes to `ws://.../ws/orders/{id}/` for live status updates; reconnect with backoff.
 64. Visual timeline of status changes (Placed, Paid, Fulfilled, Shipped, Delivered) using backend events as they arrive.
 65. Allow cancel/modify order pre-fulfillment if backend permits; disable otherwise with helpful copy.
 66. Tracking section rendering carrier/tracking once available.
 67. Download invoice/receipt button; wired to PDF link when backend provides it.
-68. “Buy again” action to rebuild cart from order items, with substitution prompts for unavailable products.
+68. "Buy again" action to rebuild cart from order items, with substitution prompts for unavailable products.
 69. Toast notifications for realtime status changes while user is browsing elsewhere.
 70. Graceful fallback when WebSocket fails: poll `/orders/{id}/` at intervals.
 

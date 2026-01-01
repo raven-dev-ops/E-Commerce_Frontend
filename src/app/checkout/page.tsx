@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { useStore } from '@/store/useStore'; // Keep useStore for cart and product details logic
-import axios from 'axios';
-import { getBaseUrl } from '@/lib/baseUrl';
+import { getApiErrorMessage } from '@/lib/api';
+import { getOptionalPublicEnv } from '@/lib/env';
+import { fetchProductSummary } from '@/lib/productCache';
 
 interface ProductDetails {
   id: string | number;
@@ -15,8 +16,7 @@ interface ProductDetails {
 import { loadStripe } from '@stripe/stripe-js';
 import CheckoutForm from '@/components/CheckoutForm'; // Import the new component
 
-const stripePublicKey = process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY;
-const API_BASE = getBaseUrl();
+const stripePublicKey = getOptionalPublicEnv('NEXT_PUBLIC_STRIPE_PUBLIC_KEY');
 
 export default function Checkout() {
 
@@ -31,13 +31,12 @@ export default function Checkout() {
 
   useEffect(() => {
     const fetchProductDetails = async (productId: string | number) => {
-      try {
-        const response = await axios.get(`${API_BASE}/products/${productId}/`);
-        return response.data as ProductDetails;
-      } catch (err) {
-        console.error(`Error fetching product ${productId}:`, err);
-        return null;
-      }
+      const summary = await fetchProductSummary(productId);
+      return {
+        id: summary.id,
+        product_name: summary.product_name,
+        price: summary.price,
+      } as ProductDetails;
     };
 
     const fetchAllDetails = async () => {
@@ -49,7 +48,12 @@ export default function Checkout() {
 
       await Promise.all(
         ids.map(async id => {
-          results[id] = await fetchProductDetails(id);
+          try {
+            results[id] = await fetchProductDetails(id);
+          } catch (err) {
+            setErrorFetchingDetails(getApiErrorMessage(err, 'Failed to load product details.'));
+            results[id] = null;
+          }
         })
       );
 

@@ -6,7 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
@@ -24,20 +32,32 @@
     "slick-carousel": "^1.8.1",
     "swr": "^2.3.3",
     "undici": "^7.10.0",
+    "zod": "^4.3.4",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@netlify/next-runtime": "^5.0.0-alpha.25",
+    "@playwright/test": "^1.52.0",
     "@tailwindcss/postcss": "^4",
     "@types/axios": "^0.9.36",
     "@types/node": "^20.17.57",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "@types/react-slick": "^0.23.13",
+    "eslint": "^9.28.0",
+    "eslint-config-next": "^15.3.3",
+    "eslint-config-prettier": "^9.1.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-react": "^4.5.2",
+    "jsdom": "^26.1.0",
     "patch-package": "^8.0.1",
+    "prettier": "^3.5.3",
     "tailwindcss": "^4",
     "typescript": "5.8.3",
     "typescript-plugin-css-modules": "*",
+    "vitest": "^2.1.9",
     "undici-types": "^7.10.0"
   }
 }

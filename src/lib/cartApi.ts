@@ -1,6 +1,7 @@
 // src/lib/cartApi.ts
 
-import { api } from '@/lib/api';
+import { api, getApiErrorMessage } from '@/lib/api';
+import { cartSchema, parseWithSchema } from '@/lib/schemas';
 
 export interface CartItem {
   id: string;             // Cart item ID (string from backend)
@@ -37,11 +38,10 @@ export interface RemoveItemData {
  */
 export async function fetchCartContents(): Promise<Cart> {
   try {
-    const response = await api.get<Cart>('/cart/');
-    return response.data;
+    const response = await api.get('/cart/');
+    return parseWithSchema(cartSchema, response.data, 'cart');
   } catch (error) {
-    console.error('Error fetching cart contents:', error);
-    throw error;
+    throw new Error(getApiErrorMessage(error, 'Failed to fetch cart contents.'));
   }
 }
 
@@ -50,11 +50,10 @@ export async function fetchCartContents(): Promise<Cart> {
  */
 export async function addItemToCart(itemData: AddItemData): Promise<Cart> {
   try {
-    const response = await api.post<Cart>('/cart/', itemData);
-    return response.data;
+    const response = await api.post('/cart/', itemData);
+    return parseWithSchema(cartSchema, response.data, 'cart');
   } catch (error) {
-    console.error('Error adding item to cart:', error);
-    throw error;
+    throw new Error(getApiErrorMessage(error, 'Failed to add item to cart.'));
   }
 }
 
@@ -63,11 +62,10 @@ export async function addItemToCart(itemData: AddItemData): Promise<Cart> {
  */
 export async function updateCartItemQuantity(updateData: UpdateItemData): Promise<Cart> {
   try {
-    const response = await api.put<Cart>('/cart/', updateData);
-    return response.data;
+    const response = await api.put('/cart/', updateData);
+    return parseWithSchema(cartSchema, response.data, 'cart');
   } catch (error) {
-    console.error('Error updating cart item quantity:', error);
-    throw error;
+    throw new Error(getApiErrorMessage(error, 'Failed to update cart item quantity.'));
   }
 }
 
@@ -76,11 +74,10 @@ export async function updateCartItemQuantity(updateData: UpdateItemData): Promis
  */
 export async function removeCartItem(removeData: RemoveItemData): Promise<Cart> {
   try {
-    const response = await api.delete<Cart>('/cart/', { data: removeData });
-    return response.data;
+    const response = await api.delete('/cart/', { data: removeData });
+    return parseWithSchema(cartSchema, response.data, 'cart');
   } catch (error) {
-    console.error('Error removing item from cart:', error);
-    throw error;
+    throw new Error(getApiErrorMessage(error, 'Failed to remove cart item.'));
   }
 }
 

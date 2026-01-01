@@ -3,7 +3,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 
 interface GoogleAuthButtonProps {
   text?: string;
-  onSuccess?: (token: string) => void;
+  onSuccess?: (code: string) => void;
   onError?: (error: string) => void;
   className?: string;
 }
@@ -17,49 +17,7 @@ export default function GoogleAuthButton({
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
       if ('code' in tokenResponse && tokenResponse.code) {
-        import('@/lib/baseUrl').then(({ getBaseUrl }) => {
-          const base = getBaseUrl();
-          return fetch(`${base}/auth/google/login/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: tokenResponse.code }),
-            credentials: 'include',
-          });
-        })
-          .then(async (res) => {
-            const contentType = res.headers.get('Content-Type');
-            const isJSON = contentType?.includes('application/json') ?? false;
-            const rawText = await res.text();
-
-            if (!isJSON) {
-              console.error('❌ Unexpected response type:', rawText);
-              onError?.(`Unexpected non-JSON response: ${rawText}`);
-              return;
-            }
-
-            try {
-              const data = JSON.parse(rawText);
-              if (!res.ok) {
-                console.error('❌ Backend error:', data);
-                onError?.(`Backend error: ${JSON.stringify(data)}`);
-              } else {
-                const token = data.key ?? data.access ?? data.token ?? '';
-                if (token) {
-                  console.log('✅ Logged in successfully!', token);
-                  onSuccess?.(token);
-                } else {
-                  onError?.('Login succeeded but no token returned.');
-                }
-              }
-            } catch (e) {
-              console.error('❌ Invalid JSON response:', rawText);
-              onError?.(`Invalid JSON from backend: ${rawText}`);
-            }
-          })
-          .catch((e) => {
-            console.error('❌ Network error:', e);
-            onError?.(`Network error: ${e.message}`);
-          });
+        onSuccess?.(tokenResponse.code);
       } else {
         onError?.('No authorization code received from Google');
       }

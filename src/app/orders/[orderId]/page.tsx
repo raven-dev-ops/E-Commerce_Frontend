@@ -1,70 +1,167 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { api } from '@/lib/api';
-import { getBaseUrl } from '@/lib/baseUrl';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { fetchOrder, type Order } from '@/lib/apiClient';
+import { orderSchema, parseWithSchema } from '@/lib/schemas';
+import { buildOrdersWsUrl } from '@/lib/ws';
 
-interface OrderItem { id: number | string; product_name: string; quantity: number; price: number; }
-interface Order { id: number | string; status: string; total: number; created_at?: string; items: OrderItem[]; }
+type OrderDetailPageProps = {
+  params: {
+    orderId: string;
+  };
+};
 
-function getWsBase(): string {
-  let raw = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
-  // Determine ws/wss from http/https
-  if (raw.startsWith('https://')) {
-    raw = raw.replace(/^https:\/\//, 'wss://');
-  } else if (raw.startsWith('http://')) {
-    raw = raw.replace(/^http:\/\//, 'ws://');
-  }
-  // Strip trailing /api or /api/v1
-  raw = raw.replace(/\/api(\/v1)?$/, '');
-  return raw;
-}
-
-export default function OrderDetailPage(props: any) {
-  const { params: { orderId } } = props;
+export default function OrderDetailPage({ params }: OrderDetailPageProps) {
+  const { orderId } = params;
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const reconnectAttemptRef = useRef(0);
+
+  const refreshOrder = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!options?.silent) setLoading(true);
+      try {
+        const data = await fetchOrder(orderId);
+        setOrder(data);
+        if (!options?.silent) setError(null);
+      } catch (e) {
+        if (!options?.silent) {
+          setError((e as Error).message);
+        }
+      } finally {
+        if (!options?.silent) setLoading(false);
+      }
+    },
+    [orderId]
+  );
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const { data } = await api.get<Order>(`/orders/${orderId}/`);
-        setOrder(data);
-      } catch (e: any) {
-        setError(e?.response?.data?.detail || 'Failed to load order');
-      } finally {
-        setLoading(false);
+    void refreshOrder();
+  }, [refreshOrder]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const stopPolling = () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
       }
     };
-    load();
-  }, [orderId]);
 
-  useEffect(() => {
-    const base = getWsBase();
-    const wsUrl = `${base}/ws/orders/${orderId}/`;
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onmessage = (evt) => {
-      try {
-        const data = JSON.parse(evt.data);
-        if (data?.status) {
-          setOrder(prev => (prev ? { ...prev, status: data.status } : prev));
-        }
-      } catch {}
+    const startPolling = () => {
+      if (pollTimerRef.current) return;
+      pollTimerRef.current = setInterval(() => {
+        void refreshOrder({ silent: true });
+      }, 10000);
     };
-    ws.onerror = () => {};
-    ws.onclose = () => {};
 
-    return () => ws.close();
-  }, [orderId]);
+    const stopHeartbeat = () => {
+      if (heartbeatTimerRef.current) {
+        clearInterval(heartbeatTimerRef.current);
+        heartbeatTimerRef.current = null;
+      }
+    };
+
+    const startHeartbeat = () => {
+      if (heartbeatTimerRef.current) return;
+      heartbeatTimerRef.current = setInterval(() => {
+        const ws = wsRef.current;
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        try {
+          ws.send(JSON.stringify({ type: 'ping' }));
+        } catch {
+          // Ignore heartbeat errors, connection close will trigger fallback.
+        }
+      }, 25000);
+    };
+
+    const scheduleReconnect = () => {
+      if (cancelled) return;
+      if (reconnectTimerRef.current) return;
+      reconnectAttemptRef.current += 1;
+      const attempt = reconnectAttemptRef.current;
+      const baseDelay = Math.min(30000, 1000 * 2 ** Math.min(attempt, 5));
+      const jitter = Math.floor(Math.random() * 500);
+      reconnectTimerRef.current = setTimeout(() => {
+        reconnectTimerRef.current = null;
+        connect();
+      }, baseDelay + jitter);
+    };
+
+    const connect = () => {
+      if (cancelled) return;
+      const wsUrl = buildOrdersWsUrl(orderId);
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        if (cancelled) return;
+        reconnectAttemptRef.current = 0;
+        stopPolling();
+        startHeartbeat();
+        void refreshOrder({ silent: true });
+      };
+
+      ws.onmessage = (evt) => {
+        try {
+          const data: unknown = JSON.parse(evt.data);
+          if (data && typeof data === 'object') {
+            const payload = data as { order?: unknown; status?: unknown };
+            if (payload.order) {
+              try {
+                const parsed = parseWithSchema(orderSchema, payload.order, 'order');
+                setOrder(parsed);
+                return;
+              } catch {
+                // Ignore invalid order payloads.
+              }
+            }
+            const status = payload.status;
+            if (typeof status === 'string') {
+              setOrder((prev) => (prev ? { ...prev, status } : prev));
+            }
+          }
+        } catch {
+          // Ignore malformed messages.
+        }
+      };
+
+      ws.onerror = () => {
+        if (cancelled) return;
+        ws.close();
+      };
+
+      ws.onclose = () => {
+        if (cancelled) return;
+        stopHeartbeat();
+        startPolling();
+        scheduleReconnect();
+      };
+    };
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      stopHeartbeat();
+      stopPolling();
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      wsRef.current?.close();
+    };
+  }, [orderId, refreshOrder]);
 
   const total = useMemo(() => Number(order?.total || 0).toFixed(2), [order]);
 
-  if (loading) return <div className="p-4">Loading…</div>;
+  if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-600">{error}</div>;
   if (!order) return <div className="p-4">Not found</div>;
 
@@ -75,7 +172,7 @@ export default function OrderDetailPage(props: any) {
       <ul className="space-y-2 mb-4">
         {order.items.map((it) => (
           <li key={String(it.id)} className="flex justify-between border rounded p-2">
-            <span>{it.product_name} × {it.quantity}</span>
+            <span>{it.product_name} x {it.quantity}</span>
             <span>${Number(it.price * it.quantity).toFixed(2)}</span>
           </li>
         ))}

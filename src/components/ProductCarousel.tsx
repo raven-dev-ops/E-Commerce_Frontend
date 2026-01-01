@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
-import Slider from 'react-slick';
+import React, { useCallback, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import FallbackImage from '@/components/FallbackImage';
 import type { Product } from '@/types/product';
 
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+
+const Slider = dynamic(() => import('react-slick'), { ssr: false });
 
 interface ProductCarouselProps {
   products: Product[];
@@ -76,7 +78,7 @@ function getPublicImageUrl(path?: string): string | undefined {
   return `/images/products/${path}`;
 }
 
-function getCarouselSettings(count: number) {
+function getCarouselSettings(count: number, afterChange: () => void) {
   return {
     dots: false,
     arrows: true,
@@ -86,6 +88,7 @@ function getCarouselSettings(count: number) {
     slidesToScroll: 1,
     prevArrow: <ArrowButton left />,
     nextArrow: <ArrowButton />,
+    afterChange,
     responsive: [
       { breakpoint: 1024, settings: { slidesToShow: Math.min(3, count), arrows: true } },
       { breakpoint: 600,  settings: { slidesToShow: Math.min(2, count), arrows: true } },
@@ -95,6 +98,8 @@ function getCarouselSettings(count: number) {
 }
 
 const FALLBACK_IMAGE = '/images/products/missing-image.png';
+const FOCUSABLE_SELECTOR =
+  'a[href], button, input, select, textarea, [tabindex]';
 
 export default function ProductCarousel({
   products,
@@ -104,22 +109,37 @@ export default function ProductCarousel({
 }: ProductCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Accessibility: disable focus in hidden slides
-  useEffect(() => {
+  const updateSlideFocus = useCallback(() => {
     const root = containerRef.current;
     if (!root) return;
-    root.querySelectorAll<HTMLElement>('.slick-slide[aria-hidden="true"]')
+    root.querySelectorAll<HTMLElement>('.slick-slide')
       .forEach(slide => {
-        slide.querySelectorAll<HTMLElement>(
-          'a, button, input, select, textarea, [tabindex]'
-        ).forEach(el => {
-          el.setAttribute('tabindex', '-1');
-          if (['BUTTON','INPUT','SELECT','TEXTAREA'].includes(el.tagName)) {
-            (el as any).disabled = true;
+        const isHidden = slide.getAttribute('aria-hidden') === 'true';
+        slide.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR).forEach(el => {
+          if (isHidden) {
+            if (!el.hasAttribute('data-orig-tabindex')) {
+              const orig = el.getAttribute('tabindex');
+              el.setAttribute('data-orig-tabindex', orig ?? '');
+            }
+            el.setAttribute('tabindex', '-1');
+          } else if (el.hasAttribute('data-orig-tabindex')) {
+            const orig = el.getAttribute('data-orig-tabindex') ?? '';
+            if (orig === '') {
+              el.removeAttribute('tabindex');
+            } else {
+              el.setAttribute('tabindex', orig);
+            }
+            el.removeAttribute('data-orig-tabindex');
           }
         });
       });
-  }, [products]);
+  }, []);
+
+  // Accessibility: disable focus in hidden slides
+  useEffect(() => {
+    const timer = setTimeout(updateSlideFocus, 0);
+    return () => clearTimeout(timer);
+  }, [products, updateSlideFocus]);
 
   if (!products || products.length === 0) return null;
 
@@ -127,7 +147,7 @@ export default function ProductCarousel({
     <section className="mb-12" ref={containerRef}>
       {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
       <div className="relative px-2 max-w-6xl mx-auto">
-        <Slider {...getCarouselSettings(products.length)}>
+        <Slider {...getCarouselSettings(products.length, updateSlideFocus)}>
           {products.map(p => {
             const src = Array.isArray(p.images) && p.images[0]
               ? getPublicImageUrl(p.images[0])
@@ -153,7 +173,6 @@ export default function ProductCarousel({
                       width={160}
                       height={180}
                       className="object-contain max-h-48 mx-auto"
-                      unoptimized
                     />
                   </div>
                   <div className="p-2">

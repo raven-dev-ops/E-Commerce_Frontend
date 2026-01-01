@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Zoom from 'react-medium-image-zoom';
+import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import 'react-medium-image-zoom/dist/styles.css';
 import FallbackImage from '@/components/FallbackImage';
 import ProductCarousel from '@/components/ProductCarousel';
@@ -29,21 +29,14 @@ function getPublicImageUrl(path?: string): string | undefined {
 const IMAGE_SIZE = 500;
 const THUMB_SIZE = 80;
 
+const Zoom = dynamic(() => import('react-medium-image-zoom'), { ssr: false });
+
 export default function ProductDetailsClient({
   product,
   relatedProducts = [],
 }: ProductDetailsClientProps) {
   const { addToCart } = useStore();
   const productId = String(product._id);
-
-  useEffect(() => {
-    console.log(`[ProductDetailsClient] Rendering product`, {
-      _id: product._id,
-      id: product.id,
-      product_name: product.product_name,
-      price: product.price,
-    });
-  }, [product._id, product.product_name, product.price]);
 
   const price = Number(product.price);
   const formattedPrice = !isNaN(price) ? price.toFixed(2) : '0.00';
@@ -52,8 +45,8 @@ export default function ProductDetailsClient({
   let imagesToShow: string[] = [];
   if (Array.isArray(product.images) && product.images.length > 0) {
     imagesToShow = product.images.map(getPublicImageUrl).filter((src): src is string => Boolean(src));
-  } else if ((product as any).image) {
-    const single = getPublicImageUrl((product as any).image);
+  } else if (product.image) {
+    const single = getPublicImageUrl(product.image);
     if (single) imagesToShow = [single];
   }
   if (imagesToShow.length === 0) {
@@ -63,12 +56,7 @@ export default function ProductDetailsClient({
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   const handleAddToCart = () => {
-    try {
-      addToCart(productId, 1);
-      console.log(`[ProductDetailsClient] Added to cart: productId=${productId}`);
-    } catch (err) {
-      console.error('Failed to add to cart:', err);
-    }
+    addToCart(productId, 1);
   };
 
   // Render gold stars
@@ -120,7 +108,6 @@ export default function ProductDetailsClient({
                   width={THUMB_SIZE}
                   height={THUMB_SIZE}
                   className="object-cover"
-                  unoptimized
                 />
               </button>
             ))}
@@ -149,7 +136,6 @@ export default function ProductDetailsClient({
                 height={IMAGE_SIZE}
                 className="object-contain w-full h-full rounded"
                 priority
-                unoptimized
               />
             </Zoom>
           </div>

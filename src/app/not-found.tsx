@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 export default function NotFound() {
   const pathname = usePathname();
   const [queryString, setQueryString] = useState("");
+  const isDev = process.env.NODE_ENV !== "production";
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -15,6 +16,7 @@ export default function NotFound() {
   }, []);
 
   useEffect(() => {
+    if (!isDev) return;
     // Surface additional context in the browser console to debug unexpected 404s.
     console.warn("[404] Route was not found by Next.js runtime", {
       pathname,
@@ -25,7 +27,7 @@ export default function NotFound() {
         "If this page depends on API data, verify the backend returns 200 for the requested resource.",
       ],
     });
-  }, [pathname, queryString]);
+  }, [isDev, pathname, queryString]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center py-10 px-6 space-y-6">

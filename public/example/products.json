@@ -10,7 +10,7 @@
     "availability": true,
     "inventory": 120,
     "reserved_inventory": 0,
-    "images": ["/images/products/balm_classic.png"],
+    "images": ["/images/products/balms/el-rey-balm-01.png"],
     "average_rating": 4.5,
     "review_count": 28
   },
@@ -25,7 +25,7 @@
     "availability": true,
     "inventory": 80,
     "reserved_inventory": 0,
-    "images": ["/images/products/oil_citrus.png"],
+    "images": ["/images/products/oils/el-rey-oil-01.png"],
     "average_rating": 4.2,
     "review_count": 13
   }

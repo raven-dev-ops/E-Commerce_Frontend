@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, ShoppingBag, User, X, Shirt } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import GoogleAuthButton from '@/components/GoogleAuthButton';
 
-import { getBaseUrl } from '@/lib/baseUrl';
-const BASE_URL = getBaseUrl();
+import { loginWithEmailPassword, loginWithGoogle, registerWithEmailPassword } from '@/lib/auth';
 
 const Header: React.FC = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -17,10 +16,10 @@ const Header: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
-  const { cart, login, logout, user } = useStore();
+  const { cart, login, logout, user, isAuthenticated } = useStore();
   const router = useRouter();
 
   const totalItems =
@@ -29,25 +28,10 @@ const Header: React.FC = () => {
       0
     ) || 0;
 
-  useEffect(() => {
-    const jwt = localStorage.getItem('accessToken');
-    const drf = localStorage.getItem('drfToken');
-    if (jwt || drf) {
-      setIsAuthenticated(true);
-      setUserEmail(user?.email || null);
-    } else {
-      setIsAuthenticated(false);
-      setUserEmail(null);
-    }
-  }, [user]);
+  const userEmail = user?.email ?? user?.username ?? null;
 
   const handleLogout = () => {
     logout();
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('drfToken');
-    setIsAuthenticated(false);
-    setUserEmail(null);
     setShowLogin(false);
     router.push('/');
   };
@@ -68,6 +52,69 @@ const Header: React.FC = () => {
     setFormSuccess(null);
   };
 
+  useEffect(() => {
+    if (!showLogin) return;
+
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+
+    const getFocusable = () => {
+      const modal = modalRef.current;
+      if (!modal) return [];
+      return Array.from(
+        modal.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute('aria-hidden'));
+    };
+
+    const focusFirst = () => {
+      const focusable = getFocusable();
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      } else {
+        modalRef.current?.focus();
+      }
+    };
+
+    focusFirst();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setShowLogin(false);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey) {
+        if (!active || active === first || !modalRef.current?.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocusedRef.current?.focus();
+      previouslyFocusedRef.current = null;
+    };
+  }, [showLogin]);
+
   // Handle registration (dj-rest-auth preferred)
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,32 +126,13 @@ const Header: React.FC = () => {
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
 
     try {
-      const res = await fetch(`${BASE_URL}/auth/registration/`, {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password1: password, password2: password }),
-      });
-      if (res.ok) {
-        setFormSuccess('Account created! Check your email to verify, then sign in.');
-        setFormError(null);
-        setIsSignUp(false);
-      } else {
-        // fallback to custom registration
-        const r2 = await fetch(`${BASE_URL}/authentication/register/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        const d2 = await r2.json();
-        if (r2.ok) {
-          setFormSuccess('Account created! Check your email to verify, then sign in.');
-          setIsSignUp(false);
-        } else {
-          setFormError(d2?.detail || d2?.message || 'Sign up failed.');
-        }
-      }
+      await registerWithEmailPassword(email, password);
+      setFormSuccess('Account created! Check your email to verify, then sign in.');
+      setFormError(null);
+      setIsSignUp(false);
     } catch (err) {
-      setFormError('Sign up failed.');
+      const message = err instanceof Error ? err.message : 'Sign up failed.';
+      setFormError(message);
     }
     setLoading(false);
   };
@@ -120,72 +148,28 @@ const Header: React.FC = () => {
     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
 
     try {
-      // Try JWT login
-      const res = await fetch(`${BASE_URL}/auth/login/`, {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && (data.access || data.access_token)) {
-        localStorage.setItem('accessToken', data.access ?? data.access_token);
-        if (data.refresh ?? data.refresh_token) localStorage.setItem('refreshToken', data.refresh ?? data.refresh_token);
-        login(data.user || {});
-        setIsAuthenticated(true);
-        setUserEmail((data.user && data.user.email) || email);
-        setShowLogin(false);
-        setFormError(null);
-      } else {
-        // fallback to DRF token
-        const r2 = await fetch(`${BASE_URL}/authentication/login/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        const d2 = await r2.json();
-        if (r2.ok && (d2.key || d2.token)) {
-          localStorage.setItem('drfToken', d2.key ?? d2.token);
-          login(d2.user || {});
-          setIsAuthenticated(true);
-          setUserEmail((d2.user && d2.user.email) || email);
-          setShowLogin(false);
-          setFormError(null);
-        } else {
-          setFormError(data?.detail || data?.message || d2?.detail || d2?.message || 'Invalid credentials.');
-        }
-      }
+      const session = await loginWithEmailPassword(email, password);
+      login(session);
+      setShowLogin(false);
+      setFormError(null);
     } catch (err) {
-      setFormError('Login failed.');
+      const message = err instanceof Error ? err.message : 'Login failed.';
+      setFormError(message);
     }
     setLoading(false);
   };
 
   // GOOGLE HANDLER for SPA login flow
-  const handleGoogleSuccess = async (credential: string) => {
+  const handleGoogleSuccess = async (code: string) => {
     setLoading(true);
     setFormError(null);
     try {
-      const response = await fetch(`${BASE_URL}/auth/google/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: credential, access_token: credential }),
-      });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data?.detail || 'Google login failed');
-
-      const token = data.access ?? data.access_token ?? data.key ?? data.token ?? '';
-      if (token) {
-        // Prefer JWT storage
-        if (data.access || data.access_token) localStorage.setItem('accessToken', token);
-        else localStorage.setItem('drfToken', token);
-      }
-      login(data.user || {});
-      setIsAuthenticated(true);
-      setUserEmail(data.user?.email ?? null);
+      const session = await loginWithGoogle(code);
+      login(session);
       setShowLogin(false);
-    } catch (error: any) {
-      setFormError(error?.message || 'Google login failed.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Google login failed.';
+      setFormError(message);
     } finally {
       setLoading(false);
     }
@@ -194,6 +178,10 @@ const Header: React.FC = () => {
   const handleGoogleError = (error: string) => {
     setFormError(error || 'Google login failed.');
   };
+
+  const describedBy = [formError ? 'auth-form-error' : null, formSuccess ? 'auth-form-success' : null]
+    .filter(Boolean)
+    .join(' ') || undefined;
 
   return (
     <>
@@ -262,7 +250,14 @@ const Header: React.FC = () => {
       {/* Modal for Login/Profile/Sign Up */}
       {showLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto p-8">
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
+            tabIndex={-1}
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto p-8"
+          >
             <button
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-900"
               onClick={() => setShowLogin(false)}
@@ -274,9 +269,9 @@ const Header: React.FC = () => {
               <div className="flex flex-col items-center">
                 <User className="w-16 h-16 mb-4 text-gray-700" />
                 <div className="text-xl font-semibold mb-2">{userEmail}</div>
-                <a className="text-blue-600 underline mb-4" href="/orders">My Orders</a>
-                <a className="text-blue-600 underline mb-4" href="/addresses">My Addresses</a>
-                <a className="text-blue-600 underline mb-4" href="/profile">Profile</a>
+                <Link className="text-blue-600 underline mb-4" href="/orders">My Orders</Link>
+                <Link className="text-blue-600 underline mb-4" href="/addresses">My Addresses</Link>
+                <Link className="text-blue-600 underline mb-4" href="/profile">Profile</Link>
                 <button
                   className="mt-2 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                   onClick={handleLogout}
@@ -286,17 +281,35 @@ const Header: React.FC = () => {
               </div>
             ) : (
               <div>
-                <h2 className="text-2xl font-bold mb-4 text-center">
+                <h2 id="auth-modal-title" className="text-2xl font-bold mb-4 text-center">
                   {isSignUp ? 'Sign Up' : 'Sign In'}
                 </h2>
                 {formError && (
-                  <div className="mb-3 text-center text-red-600 font-semibold">{formError}</div>
+                  <div
+                    id="auth-form-error"
+                    role="alert"
+                    aria-live="assertive"
+                    className="mb-3 text-center text-red-600 font-semibold"
+                  >
+                    {formError}
+                  </div>
                 )}
                 {formSuccess && (
-                  <div className="mb-3 text-center text-green-600 font-semibold">{formSuccess}</div>
+                  <div
+                    id="auth-form-success"
+                    role="status"
+                    aria-live="polite"
+                    className="mb-3 text-center text-green-600 font-semibold"
+                  >
+                    {formSuccess}
+                  </div>
                 )}
                 {isSignUp ? (
-                  <form onSubmit={handleSignUp} className="flex flex-col space-y-4">
+                  <form
+                    onSubmit={handleSignUp}
+                    className="flex flex-col space-y-4"
+                    aria-describedby={describedBy}
+                  >
                     <input
                       name="email"
                       type="email"
@@ -331,7 +344,11 @@ const Header: React.FC = () => {
                   </form>
                 ) : (
                   <>
-                    <form onSubmit={handleSignIn} className="flex flex-col space-y-4">
+                    <form
+                      onSubmit={handleSignIn}
+                      className="flex flex-col space-y-4"
+                      aria-describedby={describedBy}
+                    >
                       <input
                         name="email"
                         type="email"

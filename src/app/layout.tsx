@@ -3,14 +3,17 @@
 import './globals.css';
 import { Geist, Geist_Mono } from 'next/font/google';
 import ClientLayout from '@/components/ClientLayout';
+import { getOptionalPublicEnv } from '@/lib/env';
 import type { Metadata } from 'next';
 
-/* –– fonts –– */
+/* -- fonts -- */
 const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
+const siteUrl = getOptionalPublicEnv('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000');
 
-/* –– page & social metadata –– */
+/* -- page & social metadata -- */
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: 'Art Bay',
     template: '%s | Art Bay',

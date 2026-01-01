@@ -1,24 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useStore } from '@/store/useStore'
 
 export default function CartClient() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [userName, setUserName] = useState<string | null>(null)
   const router = useRouter()
+  const { isAuthenticated, user, authHydrated } = useStore()
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (token) {
-      setIsLoggedIn(true)
-      // Optionally, fetch user name from API or global store here
-      setUserName('User') 
-    } else {
-      setIsLoggedIn(false)
-      setUserName(null)
-    }
-  }, [])
+  const userName = user?.email || user?.username || 'User'
 
   const redirectToLogin = () => {
     router.push('/auth/login')
@@ -27,8 +16,10 @@ export default function CartClient() {
   return (
     <div>
       <h1>Your Cart</h1>
-      {isLoggedIn ? (
-        <p>Welcome, {userName || 'User'}!</p>
+      {!authHydrated ? (
+        <p>Loading...</p>
+      ) : isAuthenticated ? (
+        <p>Welcome, {userName}!</p>
       ) : (
         <>
           <p>Please log in to view your cart.</p>

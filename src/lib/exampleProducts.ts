@@ -2,12 +2,20 @@
 import type { Product } from '@/types/product';
 import raw from '../../public/example/products.json';
 
-const baseProducts: Product[] = (raw as any[]).map((p: any) => ({
-  ...p,
-  price: Number(p.price),
-  images: Array.isArray(p.images) ? p.images : [],
-  category: typeof p.category === 'string' ? p.category : '',
-}));
+const rawProducts: unknown = raw;
+const baseProducts: Product[] = Array.isArray(rawProducts)
+  ? rawProducts.reduce<Product[]>((acc, item) => {
+      if (!item || typeof item !== 'object') return acc;
+      const product = item as Product;
+      acc.push({
+        ...product,
+        price: Number(product.price ?? 0),
+        images: Array.isArray(product.images) ? product.images : undefined,
+        category: typeof product.category === 'string' ? product.category : '',
+      });
+      return acc;
+    }, [])
+  : [];
 
 export function getExampleProducts(): Product[] {
   return baseProducts;

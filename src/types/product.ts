@@ -30,8 +30,8 @@ export interface Product {
   image?: string;    // Sometimes a single image is used
 
   // Product variations/variants (can be empty arrays or omitted)
-  variations?: Record<string, any>[];
-  variants?: Record<string, any>[];
+  variations?: Record<string, unknown>[];
+  variants?: Record<string, unknown>[];
 
   // Optional tags
   tags?: string[];

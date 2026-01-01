@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useStore } from "@/store/useStore";
-import axios from "axios";
-import { getBaseUrl } from '@/lib/baseUrl';
+import { getApiErrorMessage } from '@/lib/api';
+import { fetchProductSummary } from '@/lib/productCache';
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
-const API_BASE = getBaseUrl();
 
 type ProductDetail = {
   _id?: string | number;
@@ -22,18 +20,31 @@ const fetchProductDetails = async (
   productId: string | number
 ): Promise<ProductDetail> => {
   try {
-    const { data } = await axios.get(`${API_BASE}/products/${productId}/`);
-    return data;
+    const parsed = await fetchProductSummary(productId);
+    return {
+      _id: parsed.id,
+      product_name: parsed.product_name,
+      price: parsed.price,
+      image: parsed.image,
+    };
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    console.error(`Error fetching product ${productId}:`, message);
+    const message = getApiErrorMessage(error, "An unknown error occurred");
     return { error: true, message };
   }
 };
 
 export default function CartPage() {
-  const { cart, updateCartItemQuantity, removeFromCart } = useStore();
+  const {
+    cart,
+    updateCartItemQuantity,
+    removeFromCart,
+    isAuthenticated,
+    authHydrated,
+    cartSyncStatus,
+    syncCartFromServer,
+    cartMergeNotice,
+    clearCartMergeNotice,
+  } = useStore();
   const [productDetails, setProductDetails] = useState<
     Record<string | number, ProductDetail | null>
   >({});
@@ -43,11 +54,13 @@ export default function CartPage() {
 
   // Authentication check effect
   useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken") || localStorage.getItem('drfToken');
-    if (!accessToken) {
+    if (authHydrated && !isAuthenticated) {
       router.push("/auth/login");
-      return;
     }
+  }, [authHydrated, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!authHydrated || !isAuthenticated) return;
 
     const fetchAllDetails = async () => {
       setLoading(true);
@@ -77,7 +90,7 @@ export default function CartPage() {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart]);
+  }, [cart, authHydrated, isAuthenticated]);
 
   const total = useMemo(() => {
     return cart.reduce((sum, item) => {
@@ -88,13 +101,45 @@ export default function CartPage() {
     }, 0);
   }, [cart, productDetails]);
 
-  if (cart.length === 0) {
+  if (authHydrated && !isAuthenticated) {
+    return <p>Redirecting to login...</p>;
+  }
+
+  if (authHydrated && cart.length === 0) {
     return <p>Your cart is empty.</p>;
   }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
+
+      {cartSyncStatus === 'loading' && (
+        <div className="mb-4 text-sm text-gray-600">Syncing cart with server...</div>
+      )}
+      {cartSyncStatus === 'error' && (
+        <div className="mb-4 text-sm text-red-600">
+          Cart sync failed.{' '}
+          <button
+            type="button"
+            className="underline"
+            onClick={() => syncCartFromServer()}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      {cartMergeNotice && (
+        <div className="mb-4 flex items-start justify-between gap-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <span>{cartMergeNotice}</span>
+          <button
+            type="button"
+            className="text-amber-900 underline"
+            onClick={() => clearCartMergeNotice()}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {loading && <p>Loading product details...</p>}
       {error && <p className="text-red-500">{error}</p>}

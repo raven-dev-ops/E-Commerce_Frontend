@@ -12,18 +12,23 @@ interface ProductItemProps {
 
 const FALLBACK_IMAGE = '/images/products/missing-image.png';
 
-function getPublicImageUrl(input?: string) {
-  if (!input) return undefined;
-  const fileName = input.split('/').pop();
-  return fileName ? `/images/products/${fileName}` : undefined;
+function getPublicImageUrl(path?: string): string | undefined {
+  if (!path) return undefined;
+  if (/^https?:\/\//.test(path)) return path;
+  if (path.startsWith('/images/')) return path;
+  if (path.startsWith('images/')) return '/' + path;
+  if (path.includes('images/products/')) {
+    return path.startsWith('/') ? path : '/' + path;
+  }
+  return `/images/products/${path}`;
 }
 
 function getDisplayImage(product: Product) {
   if (Array.isArray(product.images) && product.images.length > 0) {
     return getPublicImageUrl(product.images[0]);
   }
-  if ((product as any).image) {
-    return getPublicImageUrl((product as any).image);
+  if (product.image) {
+    return getPublicImageUrl(product.image);
   }
   return undefined;
 }

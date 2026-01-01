@@ -1,33 +1,38 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
-
-interface Address {
-  id?: number | string;
-  line1: string;
-  line2?: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  country: string;
-  is_default_shipping?: boolean;
-  is_default_billing?: boolean;
-}
+import {
+  createAddress,
+  deleteAddress,
+  fetchAddresses,
+  updateAddress,
+  type Address,
+  type AddressInput,
+} from '@/lib/apiClient';
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [form, setForm] = useState<Address>({ line1: '', city: '', state: '', postal_code: '', country: 'US', is_default_billing: false, is_default_shipping: false });
+  const [form, setForm] = useState<AddressInput>({
+    line1: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: 'US',
+    is_default_billing: false,
+    is_default_shipping: false,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const errorId = 'addresses-form-error';
+  const describedBy = error ? errorId : undefined;
 
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get<Address[]>('/addresses/');
+      const data = await fetchAddresses();
       setAddresses(data);
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Failed to load addresses');
+    } catch (e) {
+      setError((e as Error).message);
     } finally {
       setLoading(false);
     }
@@ -43,30 +48,42 @@ export default function AddressesPage() {
     try {
       if (form.is_default_billing) {
         await Promise.all(addresses.map((a) => (
-          a.is_default_billing ? api.patch(`/addresses/${a.id}/`, { is_default_billing: false }) : Promise.resolve()
+          a.is_default_billing && a.id != null
+            ? updateAddress(a.id, { is_default_billing: false })
+            : Promise.resolve()
         ))
         );
       }
       if (form.is_default_shipping) {
         await Promise.all(addresses.map((a) => (
-          a.is_default_shipping ? api.patch(`/addresses/${a.id}/`, { is_default_shipping: false }) : Promise.resolve()
+          a.is_default_shipping && a.id != null
+            ? updateAddress(a.id, { is_default_shipping: false })
+            : Promise.resolve()
         ))
         );
       }
-      await api.post('/addresses/', form);
-      setForm({ line1: '', city: '', state: '', postal_code: '', country: 'US', is_default_billing: false, is_default_shipping: false });
+      await createAddress(form);
+      setForm({
+        line1: '',
+        city: '',
+        state: '',
+        postal_code: '',
+        country: 'US',
+        is_default_billing: false,
+        is_default_shipping: false,
+      });
       await load();
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Failed to create address');
+    } catch (e) {
+      setError((e as Error).message);
     }
   };
 
   const remove = async (id: string | number) => {
     try {
-      await api.delete(`/addresses/${id}/`);
+      await deleteAddress(id);
       await load();
-    } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Failed to delete address');
+    } catch (e) {
+      setError((e as Error).message);
     }
   };
 
@@ -74,7 +91,7 @@ export default function AddressesPage() {
     <div className="max-w-3xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Addresses</h1>
       {loading ? (
-        <div>Loading…</div>
+        <div>Loading...</div>
       ) : (
         <ul className="space-y-2 mb-6">
           {addresses.map((a) => (
@@ -93,8 +110,16 @@ export default function AddressesPage() {
       )}
 
       <h2 className="text-xl font-semibold mb-2">Add New Address</h2>
-      {error && <div className="text-red-600 mb-2">{error}</div>}
-      <form onSubmit={create} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {error && (
+        <div id={errorId} role="alert" aria-live="assertive" className="text-red-600 mb-2">
+          {error}
+        </div>
+      )}
+      <form
+        onSubmit={create}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+        aria-describedby={describedBy}
+      >
         <input className="border p-2 rounded" placeholder="Line 1" value={form.line1} onChange={(e) => setForm({ ...form, line1: e.target.value })} required />
         <input className="border p-2 rounded" placeholder="Line 2 (optional)" value={form.line2 || ''} onChange={(e) => setForm({ ...form, line2: e.target.value })} />
         <input className="border p-2 rounded" placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required />

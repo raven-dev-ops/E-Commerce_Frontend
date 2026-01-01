@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 
-import { getBaseUrl } from '@/lib/baseUrl';
-const BASE_URL = getBaseUrl();
+import { registerWithEmailPassword } from '@/lib/auth';
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -17,13 +16,18 @@ export default function Register() {
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { isAuthenticated } = useStore();
+  const { isAuthenticated, authHydrated } = useStore();
+  const errorId = 'register-form-error';
+  const infoId = 'register-form-info';
+  const describedBy = [errorMsg ? errorId : null, infoMsg ? infoId : null]
+    .filter(Boolean)
+    .join(' ') || undefined;
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (authHydrated && isAuthenticated) {
       router.push('/');
     }
-  }, [isAuthenticated, router]);
+  }, [authHydrated, isAuthenticated, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -42,35 +46,12 @@ export default function Register() {
     }
 
     try {
-      // 1) Try dj-rest-auth registration
-      const res = await fetch(`${BASE_URL}/auth/registration/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, password1: form.password1, password2: form.password2 }),
-      });
-
-      if (res.ok) {
-        setInfoMsg('Registration successful. Please check your email to verify your account.');
-        setTimeout(() => router.push('/auth/login'), 2000);
-        return;
-      }
-
-      // 2) Fallback to custom auth register
-      const res2 = await fetch(`${BASE_URL}/authentication/register/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, password: form.password1 }),
-      });
-
-      if (!res2.ok) {
-        const errorData = await res2.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Registration failed');
-      }
-
+      await registerWithEmailPassword(form.email, form.password1);
       setInfoMsg('Registration successful. Please check your email to verify your account.');
       setTimeout(() => router.push('/auth/login'), 1500);
-    } catch (error: any) {
-      setErrorMsg(error.message || 'Registration failed');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Registration failed';
+      setErrorMsg(message);
     } finally {
       setLoading(false);
     }
@@ -79,7 +60,7 @@ export default function Register() {
   return (
     <div className="max-w-sm mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Register</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} aria-describedby={describedBy}>
         <label className="block mb-2">
           Email
           <input
@@ -116,8 +97,16 @@ export default function Register() {
             autoComplete="new-password"
           />
         </label>
-        {errorMsg && <div className="text-red-600 mb-2">{errorMsg}</div>}
-        {infoMsg && <div className="text-green-600 mb-2">{infoMsg}</div>}
+        {errorMsg && (
+          <div id={errorId} role="alert" aria-live="assertive" className="text-red-600 mb-2">
+            {errorMsg}
+          </div>
+        )}
+        {infoMsg && (
+          <div id={infoId} role="status" aria-live="polite" className="text-green-600 mb-2">
+            {infoMsg}
+          </div>
+        )}
         <button
           type="submit"
           disabled={loading}
