@@ -58,7 +58,8 @@ jobs:
           const body = `${prefix}${notes}`.trim();
 
           const output = process.env.GITHUB_OUTPUT;
-          fs.appendFileSync(output, `notes<<'EOF'\\n${body}\\nEOF\\n`);
+          const safeBody = body.replace(/\r/g, '');
+          fs.appendFileSync(output, `notes<<EOF\\n${safeBody}\\nEOF\\n`);
           NODE
 
       - name: Publish release
