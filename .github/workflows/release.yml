@@ -9,7 +9,38 @@ permissions:
   contents: write
 
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: E2E tests
+        run: npm run test:e2e
+
   publish:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -72,3 +103,4 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           body: ${{ steps.changelog.outputs.notes }}
+          prerelease: ${{ contains(github.ref_name, '-') }}

@@ -44,6 +44,8 @@ Thanks for considering a contribution. Please follow these guidelines to keep ch
    - `git push`
    - `git push --tags`
 5) GitHub Actions will publish the release automatically from `CHANGELOG.md`.
+   - Release runs lint, typecheck, unit, and e2e tests before publishing.
+   - Tags with a hyphen (e.g. `v1.2.3-rc.1`) are published as prereleases.
 
 ## Reporting Issues
 
