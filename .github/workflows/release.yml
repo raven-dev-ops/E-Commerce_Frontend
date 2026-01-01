@@ -29,28 +29,29 @@ jobs:
           }
 
           const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+          const normalized = changelog.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
           const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const header = new RegExp(`^## \\[${escaped}\\] - .*?$`, 'm');
-          const match = changelog.match(header);
+          const match = normalized.match(header);
           let start = -1;
           let prefix = '';
 
           if (match && match.index !== undefined) {
             start = match.index + match[0].length;
           } else if (version.includes('-')) {
-            const unreleased = changelog.match(/^## \\[Unreleased\\]/m);
-            if (!unreleased || unreleased.index === undefined) {
+            const unreleasedIndex = normalized.indexOf('## [Unreleased]');
+            if (unreleasedIndex === -1) {
               console.error('No CHANGELOG.md entry for Unreleased.');
               process.exit(1);
             }
-            start = unreleased.index + unreleased[0].length;
+            start = unreleasedIndex + '## [Unreleased]'.length;
             prefix = `Release candidate for ${tag}.\\n\\n`;
           } else {
             console.error(`No CHANGELOG.md entry for ${version}.`);
             process.exit(1);
           }
 
-          const rest = changelog.slice(start);
+          const rest = normalized.slice(start);
           const nextHeader = new RegExp('^## \\[', 'm');
           const next = rest.search(nextHeader);
           const notes = (next === -1 ? rest : rest.slice(0, next)).trim() || 'No changelog entries.';
