@@ -38,7 +38,7 @@ jobs:
           if (match && match.index !== undefined) {
             start = match.index + match[0].length;
           } else if (version.includes('-')) {
-            const unreleased = changelog.match(/^## \\[Unreleased\\]\\s*$/m);
+            const unreleased = changelog.match(/^## \\[Unreleased\\]/m);
             if (!unreleased || unreleased.index === undefined) {
               console.error('No CHANGELOG.md entry for Unreleased.');
               process.exit(1);
