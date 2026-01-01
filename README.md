@@ -49,6 +49,7 @@ This repo ships a `.editorconfig` that standardizes UTF-8, LF line endings, and 
 - `docs/ENVIRONMENT.md` environment variables and third-party setup.
 - `docs/ARCHITECTURE.md` application architecture and data flow overview.
 - `CONTRIBUTING.md` contribution guidelines and PR checklist.
+- GitHub wiki: https://github.com/raven-dev-ops/E-Commerce_Frontend/wiki
 
 ## Key Routes
 
@@ -81,6 +82,8 @@ The application ships with baseline security headers in `next.config.ts`. If you
 This repository is public so others can view the code and contribute via issues and pull requests. Do not commit real secrets (e.g. Stripe keys, database URIs, JWT secrets) to the repo; only use placeholder values in example configuration files and keep real credentials in local, untracked `.env` files.
 
 If you have previously pushed real secrets to a public repository, you should rotate those keys (e.g. in Stripe and your database provider) and remove the secrets from the git history.
+
+Please follow `SECURITY.md` for reporting vulnerabilities and coordinated disclosure.
 
 ## License
 
