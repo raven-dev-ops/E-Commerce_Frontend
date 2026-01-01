@@ -1,5 +1,8 @@
 # Art Bay Frontend
 
+[![CI](https://github.com/raven-dev-ops/E-Commerce_Frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/raven-dev-ops/E-Commerce_Frontend/actions/workflows/ci.yml)
+[![Release](https://github.com/raven-dev-ops/E-Commerce_Frontend/actions/workflows/release.yml/badge.svg)](https://github.com/raven-dev-ops/E-Commerce_Frontend/actions/workflows/release.yml)
+
 This is a Next.js 15 storefront for the Art Bay marketplace API (`https://art-bay-e7451b528caa.herokuapp.com/`). It supports JWT and DRF Token auth flows, Stripe checkout, products loaded from the Art Bay API or static example data, and user profile/addresses/orders.
 
 ## Environment
@@ -51,6 +54,12 @@ This repo ships a `.editorconfig` that standardizes UTF-8, LF line endings, and 
 - `CONTRIBUTING.md` contribution guidelines and PR checklist.
 - `CHANGELOG.md` release notes.
 - GitHub wiki: https://github.com/raven-dev-ops/E-Commerce_Frontend/wiki
+
+## Releases
+
+- Keep `CHANGELOG.md` updated; the release workflow publishes notes from it.
+- Push a tag like `v1.2.3` to publish a release.
+- Tags with a hyphen (e.g. `v1.2.3-rc.1`) are published as prereleases.
 
 ## Key Routes
 
