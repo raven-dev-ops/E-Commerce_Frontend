@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/raven-dev-ops/E-Commerce_Frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/raven-dev-ops/E-Commerce_Frontend/actions/workflows/ci.yml)
 [![Release](https://github.com/raven-dev-ops/E-Commerce_Frontend/actions/workflows/release.yml/badge.svg)](https://github.com/raven-dev-ops/E-Commerce_Frontend/actions/workflows/release.yml)
+[![Dependabot Alerts](https://img.shields.io/github/dependabot/alerts/raven-dev-ops/E-Commerce_Frontend)](https://github.com/raven-dev-ops/E-Commerce_Frontend/security/dependabot)
 
 This is a Next.js 15 storefront for the Art Bay marketplace API (`https://art-bay-e7451b528caa.herokuapp.com/`). It supports JWT and DRF Token auth flows, Stripe checkout, products loaded from the Art Bay API or static example data, and user profile/addresses/orders.
 
